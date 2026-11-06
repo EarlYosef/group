@@ -1,0 +1,565 @@
+/* ============================================================
+   VetQueue styles  (for index.html, the staff page)
+   display.html has its own file: display.css
+
+   CONTENTS
+     1. Colors and settings   (change the look of the whole page here)
+     2. Page basics
+     3. Top bar
+     4. Layout and cards
+     5. Form and queue ticket
+     6. Buttons
+     7. Patient queue
+     8. Badges
+     9. Pet records table
+    10. Footer and small screens
+
+   WHERE TO CHANGE THINGS
+     Main color ........ --primary in section 1
+     Emergency color ... --emergency and --emergency-bg in section 1
+     Card spacing ...... .card in section 4
+     Queue ticket ...... .ticket in section 5
+   ============================================================ */
+
+
+/* ============================================================
+   1. COLORS AND SETTINGS
+   ============================================================ */
+:root {
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --bg-main: #f4f7f6;
+  --card-bg: #ffffff;
+  --text-main: #2d3748;
+  --text-muted: #718096;
+  --border-color: #e2e8f0;
+
+  --primary: #0d9488;
+  --primary-hover: #0f766e;
+  --accent: #d97706;
+  --accent-hover: #b45309;
+
+  --emergency: #e11d48;
+  --emergency-bg: #ffe4e6;
+  --success: #166534;
+
+  --radius: 10px;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+
+/* ============================================================
+   2. PAGE BASICS
+   ============================================================ */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+
+/* ============================================================
+   3. TOP BAR
+   ============================================================ */
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  background-color: var(--card-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand .paw { font-size: 2rem; }
+
+.brand h1 {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  color: var(--primary);
+}
+
+.brand p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Link that opens the waiting-room screen */
+.display-link {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  border: 1px solid var(--primary);
+  border-radius: 6px;
+}
+
+.display-link:hover {
+  color: white;
+  background-color: var(--primary);
+}
+
+.stats {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+  padding: 0.5rem 1rem;
+  background: var(--bg-main);
+  border-radius: var(--radius);
+}
+
+.stat strong {
+  font-size: 1.25rem;
+  color: var(--primary);
+}
+
+.stat span {
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+
+/* ============================================================
+   4. LAYOUT AND CARDS
+   ============================================================ */
+.layout {
+  display: grid;
+  /* minmax(0, 1fr) lets a column shrink below its content, so the wide
+     records table scrolls inside its card instead of stretching the page */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.card {
+  padding: 1.5rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.card.wide { grid-column: 1 / -1; }
+
+.card h2 {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.card-head h2 { margin-bottom: 0; }
+
+
+/* ============================================================
+   5. FORM AND QUEUE TICKET
+   ============================================================ */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Every text box, number box, search box and drop-down.
+   (The check box is left out so it keeps its normal size.) */
+input:not([type="checkbox"]),
+select {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: normal;
+  color: var(--text-main);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input:focus,
+select:focus {
+  border-color: var(--primary);
+}
+
+/* The "Emergency case" check box */
+label.check {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-weight: normal;
+}
+
+label.check input { margin-top: 0.25rem; }
+
+label.check small {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Message under the form: green when it worked, red when there is an error */
+.msg {
+  min-height: 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--success);
+}
+
+.msg.error { color: var(--emergency); }
+
+/* The number card given to the owner after registering */
+.ticket {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  text-align: center;
+  background: var(--bg-main);
+  border: 2px dashed var(--primary);
+  border-radius: var(--radius);
+}
+
+.ticket[hidden] { display: none; }
+
+.ticket-label {
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.ticket-number {
+  font-size: 3.5rem;
+  line-height: 1.1;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ticket-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.ticket-info {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+
+/* ============================================================
+   6. BUTTONS
+   ============================================================ */
+.btn {
+  padding: 0.65rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, opacity 0.2s;
+}
+
+.btn.primary { background-color: var(--primary); }
+.btn.primary:hover { background-color: var(--primary-hover); }
+
+.btn.accent { background-color: var(--accent); }
+.btn.accent:hover { background-color: var(--accent-hover); }
+
+/* "Call next patient" is greyed out when nobody is waiting */
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Search box and the Queue # / Name / Age buttons */
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tools input[type="search"] { width: 220px; }
+
+.seg {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+
+.seg button {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  background: white;
+  border: none;
+  border-right: 1px solid var(--border-color);
+  cursor: pointer;
+}
+
+.seg button:last-child { border-right: none; }
+
+.seg button.active {
+  background-color: var(--primary);
+  color: white;
+}
+
+
+/* ============================================================
+   7. PATIENT QUEUE
+   ============================================================ */
+
+/* Green "Now calling ..." box */
+.now {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  color: var(--success);
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+}
+
+.queue {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  list-style: none;
+}
+
+/* One waiting pet: [number] [name and details] [badge] [remove button] */
+.queue li {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  background-color: var(--bg-main);
+  border-left: 4px solid var(--primary);
+  border-radius: 6px;
+}
+
+.queue li.priority {
+  background-color: var(--emergency-bg);
+  border-left-color: var(--emergency);
+}
+
+.q-num {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.q-name { font-weight: 600; }
+
+.q-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* "Stored in: priority queue (heap)" - helps explain the data structures */
+.q-struct {
+  font-size: 0.75rem;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+/* The small "x" that removes a pet from the line */
+.cancel-btn {
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  color: white;
+  background-color: var(--emergency);
+  border-color: var(--emergency);
+}
+
+.empty {
+  padding: 1.5rem 0;
+  font-size: 0.9rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+
+/* ============================================================
+   8. BADGES  (Regular / Priority / Done / Cancelled)
+   ============================================================ */
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-main);
+  background-color: var(--border-color);
+  border-radius: 4px;
+}
+
+.badge.priority {
+  color: white;
+  background-color: var(--emergency);
+}
+
+.badge.done {
+  color: var(--text-muted);
+  background-color: var(--bg-main);
+}
+
+.badge.cancelled {
+  color: var(--text-muted);
+  text-decoration: line-through;
+  background-color: var(--bg-main);
+}
+
+
+/* ============================================================
+   9. PET RECORDS TABLE
+   ============================================================ */
+
+/* Lines like "Sorted by name (bubble sort): 6 comparisons, 2 swaps." */
+.algo-info {
+  margin-bottom: 1rem;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: var(--bg-main);
+  border-radius: 6px;
+}
+
+.table-wrap { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+th,
+td {
+  padding: 0.75rem 1rem;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border-color);
+}
+
+th {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background-color: var(--bg-main);
+}
+
+td.num {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* ============================================================
+   10. FOOTER AND SMALL SCREENS
+   ============================================================ */
+footer {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  font-size: 0.8rem;
+  text-align: center;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-color);
+}
+
+/* "Load sample pets" and "Reset all data" */
+.demo-tools {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 0.75rem;
+}
+
+.link-btn {
+  font-size: 0.8rem;
+  color: var(--primary);
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

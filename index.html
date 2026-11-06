@@ -15,6 +15,12 @@
         <p>Veterinary Clinic Patient Sorting and Queuing System</p>
       </div>
     </div>
+
+    <!-- Opens the screen for the waiting room (shows the queue numbers) -->
+    <a class="display-link" href="display.html" target="_blank" rel="noopener">
+      Open waiting-room screen ↗
+    </a>
+
     <div class="stats">
       <div class="stat"><strong id="stat-waiting">0</strong><span>Waiting</span></div>
       <div class="stat"><strong id="stat-emergency">0</strong><span>Priority</span></div>
@@ -57,6 +63,15 @@
           </span>
         </label>
         <p id="form-msg" class="msg" role="status" aria-live="polite"></p>
+
+        <!-- The number to give to the owner (shown after registering) -->
+        <div id="ticket" class="ticket" hidden>
+          <span class="ticket-label">Queue number</span>
+          <strong id="ticket-number" class="ticket-number">#001</strong>
+          <span id="ticket-name" class="ticket-name"></span>
+          <span id="ticket-info" class="ticket-info"></span>
+        </div>
+
         <button type="submit" class="btn primary">Register and add to queue</button>
       </form>
     </section>
@@ -85,6 +100,10 @@
           </div>
         </div>
       </div>
+
+      <!-- How much work the last sort / search did (for explaining the algorithms) -->
+      <div id="algo-info" class="algo-info" aria-live="polite"></div>
+
       <div class="table-wrap">
         <table>
           <thead>
@@ -97,9 +116,16 @@
     </section>
   </main>
 
-  <footer>Queue: linked-list FIFO · Priority: binary heap · Sort: bubble sort · Search: linear search</footer>
+  <footer>
+    <p>Queue: linked-list FIFO · Priority: binary heap · Sort: bubble sort · Search: linear and binary search</p>
+    <div class="demo-tools">
+      <button id="load-sample" class="link-btn">Load sample pets</button>
+      <button id="reset-all" class="link-btn">Reset all data</button>
+    </div>
+  </footer>
 
   <script src="vetqueue-core.js"></script>
+  <script src="storage.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VetQueue - Waiting Room</title>
+  <link rel="stylesheet" href="display.css">
+</head>
+<body>
+  <header class="top">
+    <h1><span aria-hidden="true">🐾</span> VetQueue</h1>
+    <p id="clock" class="clock"></p>
+  </header>
+
+  <main class="board">
+    <!-- The number being served right now -->
+    <section class="serving" aria-live="polite">
+      <h2>Now serving</h2>
+      <div id="serving-number" class="serving-number">---</div>
+      <div id="serving-name" class="serving-name"></div>
+    </section>
+
+    <!-- The numbers still waiting, in the order they will be called -->
+    <section class="next">
+      <h2>Next in line</h2>
+      <ol id="next-list" class="next-list"></ol>
+      <p id="next-empty" class="next-empty">No patients waiting</p>
+      <p id="next-more" class="next-more" hidden></p>
+    </section>
+  </main>
+
+  <footer id="status" class="status">Waiting for the clinic desk...</footer>
+
+  <script src="storage.js"></script>
+  <script src="display.js"></script>
+</body>
+</html>

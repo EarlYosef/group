@@ -1,0 +1,195 @@
+/* ============================================================
+   VetQueue waiting-room screen styles  (display.html)
+
+   Made to be read from across a room: big numbers, high contrast.
+
+   CONTENTS
+     1. Colors and settings
+     2. Page and top bar
+     3. Now serving
+     4. Next in line
+     5. Status line and small screens
+
+   WHERE TO CHANGE THINGS
+     Colors ................... section 1
+     Size of the big number ... .serving-number in section 3
+   ============================================================ */
+
+
+/* ============================================================
+   1. COLORS AND SETTINGS
+   ============================================================ */
+:root {
+  --bg: #0b3b38;
+  --panel: #0f4d49;
+  --text: #f0fdfa;
+  --muted: #99d5cf;
+  --accent: #fbbf24;
+  --emergency: #fb7185;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+
+/* ============================================================
+   2. PAGE AND TOP BAR
+   ============================================================ */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  color: var(--text);
+  background: var(--bg);
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 2.5rem;
+}
+
+.top h1 { font-size: 1.75rem; }
+
+.clock {
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.board {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 2rem;
+  padding: 0 2.5rem 2rem;
+}
+
+h2 {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+
+/* ============================================================
+   3. NOW SERVING
+   ============================================================ */
+.serving {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  background: var(--panel);
+  border-radius: 24px;
+}
+
+.serving-number {
+  font-size: clamp(5rem, 18vw, 15rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.serving-name {
+  margin-top: 1rem;
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+/* Short flash when the number changes */
+.serving-number.flash {
+  animation: flash 1.2s ease-out;
+}
+
+@keyframes flash {
+  0%   { transform: scale(1.25); color: #ffffff; }
+  100% { transform: scale(1);    color: var(--accent); }
+}
+
+
+/* ============================================================
+   4. NEXT IN LINE
+   ============================================================ */
+.next {
+  padding: 2rem;
+  background: var(--panel);
+  border-radius: 24px;
+}
+
+.next-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  list-style: none;
+}
+
+.next-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 1rem;
+  font-size: clamp(1.2rem, 2.2vw, 2rem);
+  background: rgba(255, 255, 255, 0.07);
+  border-left: 6px solid var(--muted);
+  border-radius: 10px;
+}
+
+.next-item.priority { border-left-color: var(--emergency); }
+
+.next-number {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.next-name {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted);
+}
+
+.next-tag {
+  padding: 0.1rem 0.6rem;
+  font-size: 0.7em;
+  font-weight: 700;
+  color: #4c0519;
+  background: var(--emergency);
+  border-radius: 6px;
+}
+
+.next-empty,
+.next-more {
+  margin-top: 1rem;
+  font-size: 1.25rem;
+  color: var(--muted);
+}
+
+.next-empty[hidden],
+.next-more[hidden] { display: none; }
+
+
+/* ============================================================
+   5. STATUS LINE AND SMALL SCREENS
+   ============================================================ */
+.status {
+  padding: 0.75rem 2.5rem 1.25rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+@media (max-width: 800px) {
+  .board { grid-template-columns: minmax(0, 1fr); }
+  .top, .board, .status { padding-left: 1rem; padding-right: 1rem; }
+}

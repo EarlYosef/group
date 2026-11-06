@@ -1,3 +1,31 @@
+// ============================================================
+//  VetQueue CORE  (the "brain" - no buttons, no screen code)
+//
+//  This file is loaded by index.html BEFORE storage.js and app.js.
+//  It contains everything about queues, sorting and searching.
+//
+//  WHERE TO CHANGE THINGS
+//    What is stored about each pet ..... class Pet (section 1)
+//    Who is called first ............... class QueueManager (section 5)
+//    How emergencies are ordered ....... compare function in the QueueManager constructor
+//    Remove a pet from the middle ...... remove() in sections 2 and 3, removePet() in section 5
+//    Add a new way to sort ............. section 6 (copy sortByAge and change it)
+//    Change how searching works ........ section 7
+//
+//  CONTENTS
+//    1. Owner and Pet
+//    2. Queue            first come, first served (FIFO)
+//    3. Priority Queue   emergencies are served first
+//    4. Pet Registry     list of every registered pet
+//    5. Queue Manager    uses the two queues above
+//    6. Sorting          bubble sort
+//    7. Searching        linear search and binary search
+// ============================================================
+
+
+// ============================================================
+// 1. OWNER AND PET
+// ============================================================
 
 class Owner {
   constructor(name, contact) {
@@ -15,7 +43,7 @@ class Pet {
     this.reason = reason;
     this.isEmergency = isEmergency; // chosen by clinic staff, never by the program
     this.queueNumber = null;        // given later by the QueueManager
-    this.status = "Registered";     // Registered -> Waiting -> Done
+    this.status = "Registered";     // Registered -> Waiting -> Done (or Cancelled)
   }
 
   // Shows the queue number as #001, #002, ...
@@ -30,6 +58,7 @@ class Pet {
 // 2. QUEUE (first in, first out)
 //    Built with a linked list: each node points to the next one.
 //    Add at the back, remove from the front. Both are O(1).
+//    Removing from the middle is O(n): we walk the list to find it.
 // ============================================================
 
 class QueueNode {
@@ -72,6 +101,29 @@ class Queue {
     if (this.head === null) this.tail = null; // the line is now empty
     this.size--;
     return value;
+  }
+
+  // Take one specific item out of the line, wherever it is.
+  // Returns true if it was found and removed.
+  remove(value) {
+    let previous = null;
+    let current = this.head;
+
+    while (current !== null) {
+      if (current.value === value) {
+        if (previous === null) {
+          this.head = current.next;     // it was the first one
+        } else {
+          previous.next = current.next; // skip over it
+        }
+        if (current === this.tail) this.tail = previous; // it was the last one
+        this.size--;
+        return true;
+      }
+      previous = current;
+      current = current.next;
+    }
+    return false;
   }
 
   // Copy of the line, front to back (does not change the queue).
@@ -127,6 +179,21 @@ class PriorityQueue {
       this.moveDown(0);     // ...then move it down to its place
     }
     return best;
+  }
+
+  // Take one specific item out of the heap, wherever it is.
+  // Returns true if it was found and removed.
+  remove(value) {
+    const index = this.heap.indexOf(value);
+    if (index === -1) return false;
+
+    const last = this.heap.pop();       // take the last item out of the array
+    if (index < this.heap.length) {     // we removed a spot that is not the end
+      this.heap[index] = last;          // so the last item fills the gap...
+      this.moveUp(index);               // ...and then moves to its right place
+      this.moveDown(index);
+    }
+    return true;
   }
 
   // Items in the order they will be served (does not change the queue).
@@ -215,12 +282,7 @@ class QueueManager {
     pet.queueNumber = this.nextNumber;
     this.nextNumber++;
     pet.status = "Waiting";
-
-    if (pet.isEmergency) {
-      this.emergencyQueue.enqueue(pet);
-    } else {
-      this.regularQueue.enqueue(pet);
-    }
+    this.putInQueue(pet);
   }
 
   // Call the next pet and remove it from the waiting line.
@@ -236,9 +298,38 @@ class QueueManager {
     return pet;
   }
 
+  // Take a waiting pet out of the line (for example, the owner left).
+  // Returns true if the pet was waiting and is now removed.
+  removePet(pet) {
+    let removed;
+    if (pet.isEmergency) {
+      removed = this.emergencyQueue.remove(pet);
+    } else {
+      removed = this.regularQueue.remove(pet);
+    }
+
+    if (removed) pet.status = "Cancelled";
+    return removed;
+  }
+
+  // Used when saved data is loaded: puts a pet back in its queue
+  // WITHOUT giving it a new number.
+  restorePet(pet) {
+    this.putInQueue(pet);
+  }
+
   // Everyone still waiting, in the order they will be called.
   getWaitingList() {
     return [...this.emergencyQueue.toArray(), ...this.regularQueue.toArray()];
+  }
+
+  // Emergency pets go to the heap, regular pets to the FIFO queue.
+  putInQueue(pet) {
+    if (pet.isEmergency) {
+      this.emergencyQueue.enqueue(pet);
+    } else {
+      this.regularQueue.enqueue(pet);
+    }
   }
 }
 
@@ -248,20 +339,31 @@ class QueueManager {
 //    Compare neighbors and swap them if they are in the wrong
 //    order. Repeat until nothing needs swapping. O(n^2).
 //    It returns a NEW sorted list and leaves the original alone.
+//
+//    Optional "stats": pass createStats() to count the work done.
 // ============================================================
 
-function bubbleSort(items, compare) {
+// A small counter. After a sort or search, stats.comparisons
+// (and stats.swaps for sorting) tell how much work it did.
+function createStats() {
+  return { comparisons: 0, swaps: 0 };
+}
+
+function bubbleSort(items, compare, stats) {
   const list = items.slice();
 
   for (let pass = 0; pass < list.length - 1; pass++) {
     let swapped = false;
 
     for (let i = 0; i < list.length - 1 - pass; i++) {
+      if (stats) stats.comparisons++;
+
       if (compare(list[i], list[i + 1]) > 0) {
         const temp = list[i];
         list[i] = list[i + 1];
         list[i + 1] = temp;
         swapped = true;
+        if (stats) stats.swaps++;
       }
     }
 
@@ -270,40 +372,63 @@ function bubbleSort(items, compare) {
   return list;
 }
 
-function sortByName(pets) {
-  return bubbleSort(pets, (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+function sortByName(pets, stats) {
+  return bubbleSort(pets, (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()), stats);
 }
 
-function sortByAge(pets) {
-  return bubbleSort(pets, (a, b) => a.age - b.age);
+function sortByAge(pets, stats) {
+  return bubbleSort(pets, (a, b) => a.age - b.age, stats);
 }
 
-function sortByQueueNumber(pets) {
-  return bubbleSort(pets, (a, b) => a.queueNumber - b.queueNumber);
+function sortByQueueNumber(pets, stats) {
+  return bubbleSort(pets, (a, b) => a.queueNumber - b.queueNumber, stats);
 }
 
 
 // ============================================================
-// 7. SEARCHING (linear search)
-//    Look at every pet one by one until we have checked them all.
-//    O(n).
+// 7. SEARCHING
+//    Linear search: look at every pet one by one. O(n).
+//    Binary search: needs a list sorted by queue number. Look at
+//    the middle, then throw away the half that cannot contain the
+//    answer. O(log n).
+//
+//    Optional "stats": pass createStats() to count comparisons.
 // ============================================================
 
 // Finds every pet whose name contains the text ("ma" finds Max and Mamba).
-function searchByName(pets, text) {
+function searchByName(pets, text, stats) {
   const wanted = text.trim().toLowerCase();
   const found = [];
 
   for (const pet of pets) {
+    if (stats) stats.comparisons++;
     if (pet.name.toLowerCase().includes(wanted)) found.push(pet);
   }
   return found;
 }
 
-// Queue numbers are unique, so there is at most one match.
-function searchByQueueNumber(pets, number) {
+// Linear search. Queue numbers are unique, so there is at most one match.
+function searchByQueueNumber(pets, number, stats) {
   for (const pet of pets) {
+    if (stats) stats.comparisons++;
     if (pet.queueNumber === number) return pet;
+  }
+  return null;
+}
+
+// Binary search. The list MUST already be sorted by queue number.
+function binarySearchByQueueNumber(sortedPets, number, stats) {
+  let low = 0;
+  let high = sortedPets.length - 1;
+
+  while (low <= high) {
+    const middle = Math.floor((low + high) / 2);
+    const middleNumber = sortedPets[middle].queueNumber;
+    if (stats) stats.comparisons++;
+
+    if (middleNumber === number) return sortedPets[middle];
+    if (middleNumber < number) low = middle + 1;  // look in the right half
+    else high = middle - 1;                       // look in the left half
   }
   return null;
 }
