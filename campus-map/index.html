@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- viewport-fit=cover lets the page use the whole iPhone screen (style.css keeps it clear of the notch) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b2e38">
+
+  <!-- "Add to Home Screen" on iPhone and Android: opens like an app -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="SAC Map">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <title>SAC Campus Navigator 3D</title>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- The 3D map fills the whole screen. Everything else floats on top. -->
+  <div id="map" aria-label="3D campus map"></div>
+
+  <div id="dock">
+
+    <!-- Top card: name, search and status -->
+    <section id="hud">
+      <div class="brand">
+        <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="#ffc72c"></rect>
+          <path d="M16 6 L24 25 L16 20.5 L8 25 Z" fill="#261c00"></path>
+        </svg>
+        <div>
+          <h1>SAC Campus Navigator</h1>
+          <p class="place">St. Anthony's College, San Jose, Antique</p>
+        </div>
+      </div>
+
+      <form id="searchForm" class="search">
+        <input id="roomInput" type="text" placeholder="Type a room, e.g. D112" aria-label="Room to find"
+               autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="go">
+        <button id="goButton" type="submit">Go</button>
+      </form>
+
+      <div id="status" role="status" aria-live="polite">Loading the 3D map...</div>
+    </section>
+
+    <!-- Bottom card: floors, options and the route steps -->
+    <section id="sheet">
+      <header class="sheet-head">
+        <h2>Directions</h2>
+        <button id="viewToggle" class="chip" type="button" aria-pressed="true" aria-label="Switch between 3D and flat view">3D</button>
+        <button id="sheetToggle" class="chip" type="button" aria-expanded="true">Hide</button>
+      </header>
+
+      <div class="sheet-body">
+        <div class="floor-row">
+          <span class="label">Floor</span>
+          <div id="floorPicker" role="group" aria-label="Floors"></div>
+        </div>
+
+        <div class="options">
+          <label class="field">Start from
+            <select id="startSelect"></select>
+          </label>
+          <label class="field">Algorithm
+            <select id="algoSelect">
+              <option value="bfs">BFS (fewest steps)</option>
+              <option value="dfs">DFS</option>
+              <option value="both">Compare both</option>
+            </select>
+          </label>
+          <button id="locateButton" class="btn-outline" type="button">Use my location</button>
+        </div>
+
+        <details class="devtools">
+          <summary>Testing tools</summary>
+          <label class="check"><input type="checkbox" id="testMode"> Test mode (click map = my location)</label>
+          <label class="check"><input type="checkbox" id="coordMode"> Coordinate helper (click map = show plan x, y)</label>
+
+          <fieldset class="plan-tools">
+            <legend>Line up the plan</legend>
+            <p class="hint">Tick Show street map, then turn and resize the plan until the National Road on the plan covers the real road. Untick it when you are done, and copy the numbers below into <code>PLAN</code> in data.js.</p>
+
+            <label class="check"><input type="checkbox" id="streetMap"> Show street map</label>
+
+            <label class="slider">Rotation <output id="planRotationOut"></output>
+              <input id="planRotation" type="range" min="-180" max="180" step="0.5">
+            </label>
+            <label class="slider">Size (meters per pixel) <output id="planSizeOut"></output>
+              <input id="planSize" type="range" min="0.25" max="1" step="0.01">
+            </label>
+            <label class="slider">Plan opacity <output id="planOpacityOut"></output>
+              <input id="planOpacity" type="range" min="0.2" max="1" step="0.05">
+            </label>
+
+            <label class="check"><input type="checkbox" id="planMove"> Move plan (click map = new plan center)</label>
+            <div class="nudge" role="group" aria-label="Move the plan 2 meters">
+              <button class="chip" type="button" data-nudge="-2,0" aria-label="Move west">&larr;</button>
+              <button class="chip" type="button" data-nudge="0,2" aria-label="Move north">&uarr;</button>
+              <button class="chip" type="button" data-nudge="0,-2" aria-label="Move south">&darr;</button>
+              <button class="chip" type="button" data-nudge="2,0" aria-label="Move east">&rarr;</button>
+            </div>
+
+            <pre id="planReadout" aria-label="Numbers to copy into data.js"></pre>
+          </fieldset>
+        </details>
+
+        <div id="results"></div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Order matters: map library, then our files from top to bottom -->
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="plan-image.js"></script>
+  <script src="data.js"></script>
+  <script src="plan.js"></script>
+  <script src="graph.js"></script>
+  <script src="map3d.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
