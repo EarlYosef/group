@@ -83,7 +83,7 @@ function dfs(current, goal, visited = new Set(), path = []) {
 // To add another one, write the function above and add a line here.
 const ALGORITHMS = {
   bfs: { label: "BFS", color: "#08a597", dashed: false, find: bfs },   // teal, solid line
-  dfs: { label: "DFS", color: "#e0457b", dashed: true,  find: dfs }    // pink, dashed line
+  dfs: { label: "DFS", color: "#5b4bdb", dashed: true,  find: dfs }    // indigo, dashed line
 };
 
 

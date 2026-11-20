@@ -6,12 +6,13 @@
    FUNCTIONS app.js CAN USE
    createMap(id)          start the map          onMapReady(fn)     run fn when loaded
    drawRoutes(routes)     draw route lines       clearRoutes()      remove them
-   showDestination(id)    pulsing yellow dot     showUser(lat,lng)  blue dot = you
+   showDestination(id)    pulsing yellow dot     showUser(lat,lng,meters,heading)  blue dot = you
    setFloor(floor)        highlight one floor    setTilt(is3D)      3D or flat view
    flyToRoute(path,pad)   move the camera        focusOn(lat,lng)   center on a point
    refreshCampus()        redraw after the PLAN numbers changed
    setStreetMap(show)     street map on or off
    onMapClick(fn)         clicks on the map      showPopup(...)     small info bubble
+   followUser(lat,lng)    keep the camera on you onMapDrag(fn)      run fn when the user drags the map
 
    SECTIONS
    1. Settings          4. Campus layers (plan, floors, routes, dots)
@@ -25,9 +26,12 @@
 const TILT_3D = 60;                  // camera tilt in 3D view (degrees)
 const FLOOR_GAP_METERS = 0.3;        // thin gap between stacked floors
 
-const COLOR_FLOOR        = "#3a8fa3";   // a floor that is not selected
-const COLOR_FLOOR_ACTIVE = "#ffc72c";   // the selected floor
-const COLOR_CASING       = "#0b2e38";   // dark outline under route lines
+const COLOR_FLOOR        = "#d9a99c";   // a floor that is not selected
+const COLOR_FLOOR_ACTIVE = "#e8604c";   // the selected floor
+const COLOR_CASING       = "#2d1a15";   // dark brown outline under route lines
+const COLOR_USER         = "#1a73e8";   // the blue "you are here" color
+
+let userHeading = null;              // which way you are walking (degrees), or null
 
 let map = null;                      // the MapLibre map (set in createMap)
 let is3DView = true;
@@ -163,6 +167,7 @@ function addCampusLayers() {
   map.addSource("floors", { type: "geojson", data: buildFloorsGeoJSON() });
   map.addSource("routes", { type: "geojson", data: emptyCollection() });
   map.addSource("nodes",  { type: "geojson", data: buildNodesGeoJSON() });
+  map.addSource("user-accuracy", { type: "geojson", data: emptyCollection() });
 
   // Your plan picture, lying flat on the ground.
   map.addLayer({
@@ -193,7 +198,7 @@ function addCampusLayers() {
     paint: { "line-color": COLOR_CASING, "line-width": 10, "line-opacity": 0.85 }
   });
 
-  // One line layer per algorithm (BFS solid teal, DFS dashed pink).
+  // One line layer per algorithm (BFS solid teal, DFS dashed indigo).
   Object.keys(ALGORITHMS).forEach((key) => {
     const algo = ALGORITHMS[key];
     const paint = { "line-color": algo.color, "line-width": 6 };
@@ -219,6 +224,14 @@ function addCampusLayers() {
       "circle-stroke-color": COLOR_CASING,
       "circle-stroke-width": 2
     }
+  });
+
+  // The pale blue circle around "you": how sure the GPS is (like Google Maps).
+  map.addLayer({
+    id: "user-accuracy",
+    type: "fill",
+    source: "user-accuracy",
+    paint: { "fill-color": COLOR_USER, "fill-opacity": 0.16, "fill-outline-color": COLOR_USER }
   });
 }
 
@@ -295,15 +308,63 @@ function showDestination(id) {
   destinationMarker = new maplibregl.Marker({ element: el }).setLngLat(toLngLat(id)).addTo(map);
 }
 
-// Blue dot = you.
-function showUser(lat, lng) {
+// Blue dot = you (like Google Maps): a dot, a pulsing halo, a pale circle for the
+// GPS accuracy, and a small beam showing the direction you walk (when the phone knows it).
+//   meters  = accuracy radius, or undefined for none (test mode)
+//   heading = degrees clockwise from north, or null
+function showUser(lat, lng, meters, heading) {
   if (!userMarker) {
     const el = document.createElement("div");
     el.className = "user-dot";
+    el.innerHTML = '<span class="user-halo"></span><span class="user-beam"></span><span class="user-core"></span>';
     userMarker = new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map);
+    map.on("rotate", () => pointBeam());   // keep the beam right when the map turns
   } else {
     userMarker.setLngLat([lng, lat]);
   }
+
+  userHeading = (typeof heading === "number" && !isNaN(heading)) ? heading : null;
+  pointBeam();
+
+  const circle = meters > 0 ? circlePolygon(lat, lng, Math.min(meters, 150)) : null;
+  map.getSource("user-accuracy").setData(circle ? { type: "FeatureCollection", features: [circle] } : emptyCollection());
+}
+
+// Turn the direction beam (hidden when there is no heading).
+function pointBeam() {
+  if (!userMarker) return;
+  const el = userMarker.el || userMarker.getElement && userMarker.getElement();
+  const beam = el && el.querySelector(".user-beam");
+  if (!beam) return;
+  if (userHeading === null) {
+    beam.style.display = "none";
+    return;
+  }
+  const bearing = map.getBearing ? map.getBearing() : 0;
+  beam.style.display = "block";
+  beam.style.webkitTransform = beam.style.transform = "rotate(" + (userHeading - bearing) + "deg)";
+}
+
+// A circle of `meters` radius around a point, as a GeoJSON polygon (64 corners).
+function circlePolygon(lat, lng, meters) {
+  const ring = [];
+  const metersPerDegLng = metersPerDegreeLng();
+  for (let i = 0; i <= 64; i++) {
+    const angle = (i / 64) * 2 * Math.PI;
+    ring.push([lng + (meters * Math.cos(angle)) / metersPerDegLng,
+               lat + (meters * Math.sin(angle)) / METERS_PER_DEGREE]);
+  }
+  return { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [ring] } };
+}
+
+// Keep the camera on you while you walk (zoom and tilt stay as they are).
+function followUser(lat, lng) {
+  map.easeTo({ center: [lng, lat], duration: 500 });
+}
+
+// Run fn when the user drags the map with a finger or mouse.
+function onMapDrag(fn) {
+  map.on("dragstart", fn);
 }
 
 // Zoom to the route and turn the camera so the route points up the screen.

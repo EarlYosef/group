@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <!-- viewport-fit=cover lets the page use the whole iPhone screen (style.css keeps it clear of the notch) -->
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0b2e38">
+  <meta name="theme-color" content="#e8604c">
 
   <!-- "Add to Home Screen" on iPhone and Android: opens like an app -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -18,17 +18,42 @@
 </head>
 <body>
 
-  <!-- The 3D map fills the whole screen. Everything else floats on top. -->
+  <!-- The 3D map fills the whole screen. Everything else floats on top as frosted glass. -->
   <div id="map" aria-label="3D campus map"></div>
 
-  <div id="dock">
+  <!-- Top buttons: open the side panel, switch 3D / flat -->
+  <div id="topbar">
+    <button id="menuButton" class="glass-btn" type="button" aria-controls="dock" aria-expanded="false">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4.5 4.5"></path></svg>
+      <span id="menuLabel">Find a room</span>
+    </button>
+    <button id="viewToggle" class="glass-btn small" type="button" aria-pressed="true" aria-label="Switch between 3D and flat view">3D</button>
+  </div>
 
-    <!-- Top card: name, search and status -->
-    <section id="hud">
+  <!-- Round "my location" button, like Google Maps: tap to find yourself and follow your blue dot -->
+  <button id="myLocation" class="locate-fab" type="button" aria-label="Show my location" aria-pressed="false">
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"></circle><circle cx="12" cy="12" r="7.5"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"></path></svg>
+  </button>
+
+  <!-- "Start AR guide": appears once a route exists. Opens the camera view (ar.js). -->
+  <button id="arButton" class="ar-start glass-btn" type="button">
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5h3l1.5-2.5h7L17 8.5h3a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5a1 1 0 0 1 1-1z"></path><circle cx="12" cy="13.2" r="3.4"></circle></svg>
+    Start AR guide
+  </button>
+
+  <!-- The side panel (frosted glass). Opens from the menu button. -->
+  <aside id="dock" aria-label="Campus directions">
+    <button id="panelToggle" type="button" aria-label="Hide the side panel" aria-expanded="true">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6l-6 6 6 6"></path></svg>
+    </button>
+
+    <div class="dock-scroll">
+
+      <!-- Name and logo -->
       <div class="brand">
         <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
-          <rect width="32" height="32" rx="8" fill="#ffc72c"></rect>
-          <path d="M16 6 L24 25 L16 20.5 L8 25 Z" fill="#261c00"></path>
+          <rect width="32" height="32" rx="9" fill="#e8604c"></rect>
+          <path d="M16 6 L24 25 L16 20.5 L8 25 Z" fill="#fff7f2"></path>
         </svg>
         <div>
           <h1>SAC Campus Navigator</h1>
@@ -36,28 +61,21 @@
         </div>
       </div>
 
-      <form id="searchForm" class="search">
-        <input id="roomInput" type="text" placeholder="Type a room, e.g. D112" aria-label="Room to find"
-               autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="go">
-        <button id="goButton" type="submit">Go</button>
-      </form>
+      <!-- Hero card: the search -->
+      <section class="hero">
+        <h2>Where to, <em>today?</em></h2>
+        <form id="searchForm" class="search">
+          <input id="roomInput" type="text" placeholder="Type a room, e.g. D112" aria-label="Room to find"
+                 autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="go">
+          <button id="goButton" type="submit">Go</button>
+        </form>
+        <div id="status" role="status" aria-live="polite">Loading the 3D map...</div>
+      </section>
 
-      <div id="status" role="status" aria-live="polite">Loading the 3D map...</div>
-    </section>
-
-    <!-- Bottom card: floors, options and the route steps -->
-    <section id="sheet">
-      <header class="sheet-head">
-        <h2>Directions</h2>
-        <button id="viewToggle" class="chip" type="button" aria-pressed="true" aria-label="Switch between 3D and flat view">3D</button>
-        <button id="sheetToggle" class="chip" type="button" aria-expanded="true">Hide</button>
-      </header>
-
-      <div class="sheet-body">
-        <div class="floor-row">
-          <span class="label">Floor</span>
-          <div id="floorPicker" role="group" aria-label="Floors"></div>
-        </div>
+      <!-- Floors and options -->
+      <section class="card">
+        <p class="section-title">Floor</p>
+        <div id="floorPicker" role="group" aria-label="Floors"></div>
 
         <div class="options">
           <label class="field">Start from
@@ -72,44 +90,106 @@
           </label>
           <button id="locateButton" class="btn-outline" type="button">Use my location</button>
         </div>
+      </section>
 
-        <details class="devtools">
-          <summary>Testing tools</summary>
-          <label class="check"><input type="checkbox" id="testMode"> Test mode (click map = my location)</label>
-          <label class="check"><input type="checkbox" id="coordMode"> Coordinate helper (click map = show plan x, y)</label>
+      <!-- The route steps appear here -->
+      <section class="card" id="stepsCard">
+        <p class="section-title">Directions</p>
+        <div id="results"><p class="empty">Your route will show here.</p></div>
+      </section>
 
-          <fieldset class="plan-tools">
-            <legend>Line up the plan</legend>
-            <p class="hint">Tick Show street map, then turn and resize the plan until the National Road on the plan covers the real road. Untick it when you are done, and copy the numbers below into <code>PLAN</code> in data.js.</p>
+      <details class="devtools">
+        <summary>Testing tools</summary>
+        <label class="check"><input type="checkbox" id="testMode"> Test mode (click map = my location)</label>
+        <label class="check"><input type="checkbox" id="coordMode"> Coordinate helper (click map = show plan x, y)</label>
 
-            <label class="check"><input type="checkbox" id="streetMap"> Show street map</label>
+        <fieldset class="plan-tools">
+          <legend>Line up the plan</legend>
+          <p class="hint">Tick Show street map, then turn and resize the plan until the National Road on the plan covers the real road. Untick it when you are done, and copy the numbers below into <code>PLAN</code> in data.js.</p>
 
-            <label class="slider">Rotation <output id="planRotationOut"></output>
-              <input id="planRotation" type="range" min="-180" max="180" step="0.5">
-            </label>
-            <label class="slider">Size (meters per pixel) <output id="planSizeOut"></output>
-              <input id="planSize" type="range" min="0.25" max="1" step="0.01">
-            </label>
-            <label class="slider">Plan opacity <output id="planOpacityOut"></output>
-              <input id="planOpacity" type="range" min="0.2" max="1" step="0.05">
-            </label>
+          <!-- Fix "the plan is far from me": use your phone's GPS to put the plan where you really are -->
+          <p class="hint"><strong>Plan far from you?</strong> Stand on campus, tap the round location button, then press the button below. Then tick the box and tap the spot on the plan where you are standing.</p>
+          <button id="planToMe" class="btn-outline" type="button">Bring the plan to my location</button>
+          <label class="check"><input type="checkbox" id="planPin"> I'm standing here: tap my spot on the plan</label>
+          <button id="planReset" class="btn-outline" type="button">Undo: use the numbers from data.js</button>
 
-            <label class="check"><input type="checkbox" id="planMove"> Move plan (click map = new plan center)</label>
-            <div class="nudge" role="group" aria-label="Move the plan 2 meters">
-              <button class="chip" type="button" data-nudge="-2,0" aria-label="Move west">&larr;</button>
-              <button class="chip" type="button" data-nudge="0,2" aria-label="Move north">&uarr;</button>
-              <button class="chip" type="button" data-nudge="0,-2" aria-label="Move south">&darr;</button>
-              <button class="chip" type="button" data-nudge="2,0" aria-label="Move east">&rarr;</button>
-            </div>
+          <label class="check"><input type="checkbox" id="streetMap"> Show street map</label>
 
-            <pre id="planReadout" aria-label="Numbers to copy into data.js"></pre>
-          </fieldset>
-        </details>
+          <label class="slider">Rotation <output id="planRotationOut"></output>
+            <input id="planRotation" type="range" min="-180" max="180" step="0.5">
+          </label>
+          <label class="slider">Size (meters per pixel) <output id="planSizeOut"></output>
+            <input id="planSize" type="range" min="0.15" max="1" step="0.01">
+          </label>
+          <label class="slider">Plan opacity <output id="planOpacityOut"></output>
+            <input id="planOpacity" type="range" min="0.2" max="1" step="0.05">
+          </label>
 
-        <div id="results"></div>
+          <label class="check"><input type="checkbox" id="planMove"> Move plan (click map = new plan center)</label>
+          <div class="nudge" role="group" aria-label="Move the plan 2 meters">
+            <button class="chip" type="button" data-nudge="-2,0" aria-label="Move west">&larr;</button>
+            <button class="chip" type="button" data-nudge="0,2" aria-label="Move north">&uarr;</button>
+            <button class="chip" type="button" data-nudge="0,-2" aria-label="Move south">&darr;</button>
+            <button class="chip" type="button" data-nudge="2,0" aria-label="Move east">&rarr;</button>
+          </div>
+
+          <pre id="planReadout" aria-label="Numbers to copy into data.js"></pre>
+        </fieldset>
+      </details>
+
+    </div>
+  </aside>
+
+  <!-- AR guide: camera + arrow on the floor + instruction banner (ar.js controls it) -->
+  <div id="ar" class="ar" hidden>
+    <video id="arVideo" class="ar-video" playsinline muted autoplay></video>
+    <div class="ar-shade"></div>
+
+    <div class="ar-banner">
+      <span class="ar-banner-icon">
+        <svg id="arBannerIcon" viewBox="0 0 100 120" aria-hidden="true"><path d="M50 6 L90 58 H66 V114 H34 V58 H10 Z" fill="#ffffff"></path></svg>
+      </span>
+      <div class="ar-banner-text">
+        <div id="arAction" class="ar-action">Go straight</div>
+        <div id="arSub" class="ar-sub"></div>
       </div>
-    </section>
+      <button id="arClose" class="ar-close" type="button" aria-label="Close the AR guide">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </button>
+    </div>
 
+    <!-- The arrow lies on the "floor": style.css tilts this box back -->
+    <div class="ar-floor">
+      <div class="ar-tilt">
+      <svg id="arArrow" class="ar-arrow" viewBox="0 0 100 120" aria-hidden="true">
+        <defs>
+          <linearGradient id="arArrowFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#7fb0ff"></stop>
+            <stop offset="1" stop-color="#1f4fd8"></stop>
+          </linearGradient>
+        </defs>
+        <path d="M50 6 L90 58 H66 V114 H34 V58 H10 Z" fill="url(#arArrowFill)" stroke="#ffffff" stroke-width="4" stroke-linejoin="round"></path>
+      </svg>
+      </div>
+    </div>
+
+    <div id="arHint" class="ar-hint" role="status" aria-live="polite"></div>
+
+    <div class="ar-bar">
+      <button id="arBack" class="ar-btn" type="button">Back</button>
+      <span id="arProgress" class="ar-progress"></span>
+      <button id="arNext" class="ar-btn ar-btn-main" type="button">Next</button>
+    </div>
+
+    <!-- Green "You've arrived" screen -->
+    <div id="arArrived" class="ar-arrived" hidden>
+      <div class="ar-door">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v18H7z"></path><circle cx="14" cy="12.5" r="1"></circle></svg>
+      </div>
+      <h2>You've arrived</h2>
+      <p id="arArrivedPlace"></p>
+      <button id="arDone" class="ar-btn ar-btn-main" type="button">Done</button>
+    </div>
   </div>
 
   <!-- Order matters: map library, then our files from top to bottom -->
@@ -119,6 +199,7 @@
   <script src="plan.js"></script>
   <script src="graph.js"></script>
   <script src="map3d.js"></script>
+  <script src="ar.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

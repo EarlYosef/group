@@ -61,10 +61,10 @@ const PLAN = {
   image: PLAN_IMAGE,        // the picture itself (plan-image.js). On a web host you can write "plan.png" instead.
   width: 844,               // picture size in pixels
   height: 526,
-  lat: 10.74236,            // where the CENTER of the picture sits on the real map
-  lng: 121.94186,
-  metersPerPixel: 0.5,      // size: one pixel of the picture = this many meters (about 420 m wide)
-  rotation: 0,              // turn the picture clockwise by this many degrees
+  lat: 10.739923,           // where the CENTER of the picture sits on the real map
+  lng: 121.949430,        // (set so the Main Gate lands on its real spot: Plus Code PXQ2+X3C)
+  metersPerPixel: 0.3,      // size: one pixel of the picture = this many meters (about 250 m wide). A guess: fix it with the Testing tools
+  rotation: -120,           // turn the picture clockwise by this many degrees (the road on the real map runs NNW to SSE)
   opacity: 1                // 1 = solid, lower = see the street map through it
 };
 
@@ -78,7 +78,7 @@ const PLAN = {
 // NOTE: these places are SAMPLES, only here so you can try the app.
 // Replace them with your final rooms.
 const NODES = {
-  GATE:          { name: "Main Gate (sample)",    x: 297, y: 490, floor: 1 },
+  GATE:          { name: "Main Gate",    x: 297, y: 490, floor: 1 },
   BOTTOM_WALK:   { name: "Bottom Walkway",        x: 297, y: 450, floor: 1 },
   SOUTH_WALK:    { name: "South Walkway",         x: 346, y: 442, floor: 1 },
   SOUTH_EAST:    { name: "South-East Walkway",    x: 378, y: 440, floor: 1 },

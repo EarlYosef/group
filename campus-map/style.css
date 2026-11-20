@@ -1,35 +1,40 @@
-@import url("https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
 
 /* =====================================================================
-   Look: a campus wayfinding board floating over a 3D map.
-   Deep lagoon panels (Antique is coastal), signal yellow like airport
-   signs, elevator-style floor buttons, and route steps drawn as a
-   transit line. Change the colors below and everything follows.
+   Look: "glassy dashboard". Frosted glass panels floating over the map,
+   warm coral and cream colors, white pill buttons, black action buttons.
+   Change the colors in section 1 and everything follows.
 
    1. Colors and fonts      5. Route steps (transit line)
    2. Page layout           6. Map markers + MapLibre tweaks
-   3. Top card              7. Phones
-   4. Directions card
+   3. Top buttons           7. Phones
+   4. Side panel            8. AR guide (camera view)
    ===================================================================== */
 
 
 /* ---------- 1. Colors and fonts ---------- */
 
 :root {
-  --lagoon: #0b2e38;                    /* panel background */
-  --panel: rgba(11, 46, 56, 0.93);      /* panel, slightly see-through */
-  --lagoon-raised: #124150;             /* inputs, status box */
-  --lagoon-edge: #25606f;               /* thin borders */
-  --signal: #ffc72c;                    /* accent: plaque, active buttons, destination */
-  --signal-ink: #261c00;                /* text on top of the yellow */
-  --text: #e9f2f3;
-  --muted: #9bbcc2;
+  --coral: #e8604c;                      /* main accent */
+  --coral-deep: #c9452f;                 /* the dark end of the coral gradient */
+  --ink: #2d1a15;                        /* main text */
+  --muted: #7d625a;                      /* small gray-brown text */
+  --black: #17110f;                      /* black pill buttons (Go) */
 
-  --radius: 16px;
-  --shadow: 0 12px 32px rgba(3, 18, 23, 0.45);
+  --glass: rgba(255, 246, 240, 0.68);    /* side panel */
+  --glass-solid: #fbf1ea;                /* used when the phone can't blur */
+  --card: rgba(255, 255, 255, 0.62);     /* cards inside the panel */
+  --field: rgba(255, 255, 255, 0.92);    /* inputs and dropdowns */
+  --edge: rgba(255, 255, 255, 0.75);     /* light glass border */
+  --line: rgba(125, 98, 90, 0.22);       /* thin dividers */
 
-  --font-body: "Barlow", "Segoe UI", system-ui, sans-serif;
-  --font-sign: "Barlow Semi Condensed", "Arial Narrow", "Segoe UI", sans-serif;
+  --radius: 22px;
+  --radius-small: 14px;
+  --shadow: 0 18px 48px rgba(110, 50, 35, 0.22);
+
+  --panel-width: 384px;
+  --font-body: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
+  --font-accent: "Fraunces", Georgia, "Times New Roman", serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -45,8 +50,8 @@ body {
   margin: 0;
   overflow: hidden;
   font-family: var(--font-body);
-  background: var(--lagoon);
-  color: var(--text);
+  background: #f6f5f1;
+  color: var(--ink);
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -59,264 +64,406 @@ body {
   left: 0;
 }
 
-/* Desktop: one column on the left holding both cards. */
-#dock {
-  position: absolute;
-  top: 16px;
-  bottom: 16px;
-  left: 16px;
-  width: 392px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  pointer-events: none;           /* clicks pass through the gaps to the map */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 0.18s, color 0.18s, border-color 0.18s, transform 0.18s;
 }
 
-#dock > * { pointer-events: auto; }
+.icon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 
-#hud,
-#sheet {
-  background: var(--panel);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--lagoon-edge);
-  border-radius: var(--radius);
+:focus-visible {
+  outline: 3px solid var(--coral);
+  outline-offset: 2px;
+}
+
+
+/* ---------- 3. Top buttons ---------- */
+
+#topbar {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;            /* clicks pass through the gap to the map */
+}
+
+#topbar > * { pointer-events: auto; }
+
+/* Frosted-glass pill button */
+.glass-btn {
+  display: -webkit-inline-flex;
+  display: inline-flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 20px 0 16px;
+  font: 600 15px var(--font-body);
+  color: var(--ink);
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid var(--edge);
+  border-radius: 24px;
   box-shadow: var(--shadow);
 }
 
+.glass-btn .icon { margin-right: 10px; color: var(--coral); }
 
-/* ---------- 3. Top card: name, search, status ---------- */
+.glass-btn:hover { background: rgba(255, 255, 255, 0.9); }
 
-#hud { padding: 16px; }
+.glass-btn.small {
+  min-width: 56px;
+  padding: 0 16px;
+  justify-content: center;
+}
 
-.brand {
+.glass-btn.small[aria-pressed="true"] {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--coral), var(--coral-deep));
+  border-color: transparent;
+}
+
+#menuLabel {
+  max-width: 52vw;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* While the panel is open on a computer the menu button is not needed. */
+body.panel-open #menuButton { opacity: 0; pointer-events: none; }
+
+
+/* ---------- 4. Side panel ---------- */
+
+#dock {
+  position: absolute;
+  z-index: 4;
+  top: 16px;
+  bottom: 16px;
+  left: 16px;
+  width: var(--panel-width);
+  background: var(--glass-solid);                     /* fallback for phones that can't blur */
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  backdrop-filter: blur(22px) saturate(1.5);
+  border: 1px solid var(--edge);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+
+  /* closed: slid off the screen to the left */
+  -webkit-transform: translateX(calc(-100% - 40px));
+  transform: translateX(calc(-100% - 40px));
+  visibility: hidden;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear 0.35s;
+}
+
+body.panel-open #dock {
+  -webkit-transform: none;
+  transform: none;
+  visibility: visible;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s;
+}
+
+/* The scrolling part. (The round arrow sits outside it, so it is not clipped.) */
+.dock-scroll {
+  height: 100%;
+  padding: 18px 16px 16px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Round arrow on the panel's edge: hides the panel */
+#panelToggle {
+  position: absolute;
+  z-index: 2;
+  top: 26px;
+  right: -15px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: -webkit-flex;
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
+  justify-content: center;
+  color: var(--ink);
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(110, 50, 35, 0.25);
+}
+
+#panelToggle .icon { width: 16px; height: 16px; }
+#panelToggle:hover { color: var(--coral); }
+
+.brand {
+  display: -webkit-flex;
+  display: flex;
+  align-items: center;
+  margin: 0 0 16px;
+  padding-right: 10px;
 }
 
 .logo {
   flex: none;
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
+  margin-right: 12px;
 }
 
 h1 {
   margin: 0;
-  font: 700 22px/1.05 var(--font-sign);
-  letter-spacing: 0.01em;
+  font: 700 17px/1.15 var(--font-body);
+  letter-spacing: -0.01em;
 }
 
 .place {
   margin: 3px 0 0;
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--muted);
 }
 
-/* The search plaque: the yellow box and the Go button are one piece. */
+/* Hero card: the coral gradient card with the search */
+.hero {
+  position: relative;
+  margin-bottom: 14px;
+  padding: 20px 18px 18px;
+  color: #ffffff;
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(255, 190, 160, 0.55), rgba(255, 190, 160, 0) 60%),
+    linear-gradient(145deg, #ef6f59, var(--coral-deep));
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 28px rgba(201, 69, 47, 0.35);
+}
+
+.hero h2 {
+  margin: 0 0 14px;
+  font: 700 26px/1.1 var(--font-body);
+  letter-spacing: -0.02em;
+}
+
+/* the one serif, italic word (like "roll" in the video) */
+.hero h2 em {
+  font: italic 500 29px var(--font-accent);
+  letter-spacing: 0;
+}
+
+/* The search: a white pill with the black Go button inside it */
 .search {
+  display: -webkit-flex;
   display: flex;
+  align-items: center;
+  padding: 5px;
   margin-bottom: 12px;
+  background: var(--field);
+  border-radius: 28px;
+  box-shadow: 0 6px 16px rgba(80, 25, 15, 0.22);
 }
 
 #roomInput {
   flex: 1;
   min-width: 0;
-  padding: 11px 14px;
-  font: 600 24px var(--font-sign);
-  color: var(--signal-ink);
-  background: var(--signal);
-  border: 2px solid var(--signal);
-  border-radius: 10px 0 0 10px;
+  height: 46px;
+  padding: 0 14px;
+  font: 600 18px var(--font-body);
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-radius: 23px;
 }
 
 #roomInput::placeholder {
-  color: rgba(38, 28, 0, 0.55);
+  color: var(--muted);
   font-weight: 500;
+  font-size: 16px;
+  opacity: 0.8;
 }
+
+#roomInput:focus-visible { outline: 0; }          /* the white pill shows focus below */
+.search:focus-within { box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.7), 0 6px 16px rgba(80, 25, 15, 0.22); }
 
 #goButton {
-  padding: 0 22px;
-  font: 700 18px var(--font-sign);
-  color: var(--signal);
-  background: var(--lagoon-raised);
-  border: 2px solid var(--signal);
-  border-left: 0;
-  border-radius: 0 10px 10px 0;
+  flex: none;
+  height: 46px;
+  padding: 0 26px;
+  font: 700 16px var(--font-body);
+  color: #ffffff;
+  background: var(--black);
+  border: 0;
+  border-radius: 23px;
 }
 
-#goButton:hover {
-  background: var(--signal);
-  color: var(--signal-ink);
-}
+#goButton:hover { background: #3a2a25; }
+#goButton:active { -webkit-transform: scale(0.97); transform: scale(0.97); }
 
 #status {
-  padding: 10px 12px;
-  font-size: 14px;
-  line-height: 1.4;
-  background: var(--lagoon-raised);
-  border-left: 4px solid var(--signal);
-  border-radius: 0 8px 8px 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.95);
 }
 
-
-/* ---------- 4. Directions card ---------- */
-
-#sheet {
-  flex: 0 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.sheet-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-}
-
-h2 {
-  flex: 1;
-  margin: 0;
-  font: 700 18px var(--font-sign);
-}
-
-.sheet-body {
-  min-height: 0;
-  padding: 0 16px 16px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-#sheet.collapsed .sheet-body { display: none; }
-
-/* Floors: round elevator buttons */
-.floor-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+/* White glass cards for floors, options and the steps */
+.card {
   margin-bottom: 14px;
+  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 18px rgba(110, 50, 35, 0.08);
 }
 
-.label {
-  font-size: 13px;
+.section-title {
+  margin: 0 0 10px;
+  font: 700 11.5px var(--font-body);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   color: var(--muted);
 }
 
+.empty {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* Floors: round pill buttons. The chosen one is white and lifted, like the active menu item in the video. */
 #floorPicker {
+  display: -webkit-flex;
   display: flex;
+  -webkit-flex-wrap: wrap;
   flex-wrap: wrap;
-  gap: 8px;
+  margin: 0 -4px 14px;
 }
 
 .floor-btn {
-  min-width: 40px;
-  height: 40px;
+  min-width: 44px;
+  height: 44px;
+  margin: 4px;
   padding: 0;
-  font: 700 17px var(--font-sign);
-  color: var(--text);
-  background: var(--lagoon-raised);
-  border: 2px solid var(--lagoon-edge);
-  border-radius: 20px;
+  font: 700 16px var(--font-body);
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid var(--line);
+  border-radius: 22px;
 }
 
-.floor-btn.all { padding: 0 16px; }
+.floor-btn.all { padding: 0 18px; }
+
+.floor-btn:hover { background: rgba(255, 255, 255, 0.85); }
 
 .floor-btn[aria-pressed="true"] {
-  color: var(--signal-ink);
-  background: var(--signal);
-  border-color: var(--signal);
-  box-shadow: 0 0 0 4px rgba(255, 199, 44, 0.25);   /* glow, like a lit elevator button */
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--coral), var(--coral-deep));
+  border-color: transparent;
+  box-shadow: 0 6px 14px rgba(201, 69, 47, 0.4);
 }
 
-/* Dropdowns and buttons */
+/* Dropdowns and the location button */
 .options {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);   /* minmax(0, ...) lets the dropdowns shrink instead of overflowing the card */
-  gap: 10px;
-  margin-bottom: 12px;
+  grid-template-columns: minmax(0, 1fr);   /* one column: full-width dropdowns, nothing gets cut off */
+  grid-gap: 12px;
+  gap: 12px;
 }
 
-.options .btn-outline { grid-column: 1 / -1; }
-
 .field {
+  display: -webkit-flex;
   display: flex;
+  -webkit-flex-direction: column;
   flex-direction: column;
   min-width: 0;
-  gap: 4px;
-  font-size: 13px;
+  font-size: 12.5px;
+  font-weight: 600;
   color: var(--muted);
 }
 
+.field select { margin-top: 5px; }
+
 select {
+  -webkit-appearance: none;
+  appearance: none;
   width: 100%;
   min-width: 0;
-  min-height: 44px;
-  padding: 9px 10px;
+  min-height: 46px;
+  padding: 9px 34px 9px 12px;
   font: 500 16px var(--font-body);   /* 16px stops iPhones zooming in on tap */
-  color: var(--text);
-  background: var(--lagoon-raised);
-  border: 1px solid var(--lagoon-edge);
-  border-radius: 10px;
-}
-
-button {
-  cursor: pointer;
-  touch-action: manipulation;
-  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+  color: var(--ink);
+  background: var(--field) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%237d625a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-small);
 }
 
 .btn-outline {
-  min-height: 44px;
-  padding: 9px 14px;
+  min-height: 46px;
+  padding: 9px 16px;
   font: 600 15px var(--font-body);
-  color: var(--text);
-  background: transparent;
-  border: 1px solid var(--lagoon-edge);
-  border-radius: 10px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid var(--line);
+  border-radius: 23px;
 }
 
 .btn-outline:hover,
 .chip:hover {
-  color: var(--signal);
-  border-color: var(--signal);
+  color: #ffffff;
+  background: var(--coral);
+  border-color: var(--coral);
 }
 
-/* Small pill buttons in the card header: 3D / Hide */
+/* Small pill buttons (arrows in the testing tools) */
 .chip {
   min-width: 44px;
-  height: 34px;
+  height: 36px;
   padding: 0 12px;
   font: 600 14px var(--font-body);
-  color: var(--text);
-  background: transparent;
-  border: 1px solid var(--lagoon-edge);
-  border-radius: 17px;
-}
-
-.chip[aria-pressed="true"] {
-  color: var(--signal);
-  border-color: var(--signal);
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid var(--line);
+  border-radius: 18px;
 }
 
 /* Testing tools: line up the plan */
+.devtools {
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.devtools summary {
+  padding: 8px 4px;
+  cursor: pointer;
+}
+
 .plan-tools {
   min-width: 0;
   margin: 10px 0 4px;
   padding: 10px 12px 12px;
-  border: 1px solid var(--lagoon-edge);
-  border-radius: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-small);
 }
 
 .plan-tools legend {
   padding: 0 6px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--ink);
 }
 
-.plan-tools code { color: var(--signal); }
+.plan-tools code { color: var(--coral-deep); }
 
 .hint {
   margin: 4px 0 10px;
@@ -334,62 +481,45 @@ button {
 .slider input[type=range] {
   grid-column: 1 / -1;
   width: 100%;
-  accent-color: var(--signal);
+  accent-color: var(--coral);
 }
 
-.slider output { color: var(--text); }
+.slider output { color: var(--ink); }
 
 .nudge {
+  display: -webkit-flex;
   display: flex;
-  gap: 6px;
   margin: 6px 0 10px;
 }
+
+.nudge .chip { margin-right: 6px; }
 
 /* Click once to select all the numbers, then copy. */
 #planReadout {
   margin: 0;
   padding: 8px 10px;
   font: 12px/1.5 ui-monospace, Menlo, Consolas, monospace;
-  color: var(--text);
-  background: var(--lagoon-raised);
-  border-radius: 8px;
+  color: var(--ink);
+  background: var(--field);
+  border-radius: 10px;
   white-space: pre-wrap;
   -webkit-user-select: all;
   user-select: all;
 }
 
-/* Testing tools */
-.devtools {
-  margin-bottom: 8px;
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.devtools summary {
-  padding: 6px 0;
-  cursor: pointer;
-}
-
 .check {
+  display: -webkit-flex;
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 32px;
+  min-height: 34px;
 }
 
 input[type=checkbox] {
   width: 20px;
   height: 20px;
-  margin: 0;
-  accent-color: var(--signal);
+  margin: 0 8px 0 0;
+  accent-color: var(--coral);
 }
-
-:focus-visible {
-  outline: 3px solid var(--signal);
-  outline-offset: 2px;
-}
-
-#roomInput:focus-visible { outline-color: #ffffff; }   /* white ring: yellow would vanish on the yellow plaque */
 
 
 /* ---------- 5. Route steps, drawn like a transit line ---------- */
@@ -397,22 +527,26 @@ input[type=checkbox] {
 
 h3,
 ol {
-  --accent: var(--route, var(--signal));   /* route color, or yellow if none is set */
+  --accent: var(--route, var(--coral));    /* route color, or coral if none is set */
 }
 
 h3 {
+  display: -webkit-flex;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 16px 0 10px;
-  font: 700 18px/1.1 var(--font-sign);
+  margin: 14px 0 10px;
+  font: 700 16px/1.1 var(--font-body);
 }
+
+h3:first-child { margin-top: 0; }
 
 /* Little line sample before the title: solid for BFS, dashed for DFS. */
 h3::before {
   content: "";
+  flex: none;
   width: 28px;
   height: 6px;
+  margin-right: 10px;
   border-radius: 3px;
   background: var(--accent);
 }
@@ -443,7 +577,7 @@ li::before {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: var(--lagoon);
+  background: #ffffff;
   border: 3px solid var(--accent);
 }
 
@@ -465,7 +599,7 @@ ol[data-algo="dfs"] li:not(:last-child)::after {
 /* Last stop = the destination */
 li:last-child {
   padding-bottom: 0;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 li:last-child::before {
@@ -473,85 +607,438 @@ li:last-child::before {
   top: 0;
   width: 16px;
   height: 16px;
-  background: var(--signal);
-  border-color: var(--text);
+  background: var(--coral);
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px var(--coral);
 }
 
 
 /* ---------- 6. Map markers + MapLibre tweaks ---------- */
 
-/* Destination: a yellow dot that sends out a ring (the one animation on the page) */
+/* Destination: a coral dot that sends out a ring (the one animation on the map) */
 .dest-pin {
   width: 22px;
   height: 22px;
-  background: var(--signal);
-  border: 3px solid var(--lagoon);
+  background: var(--coral);
+  border: 3px solid #ffffff;
   border-radius: 50%;
-  box-shadow: 0 0 0 0 rgba(255, 199, 44, 0.7);
+  box-shadow: 0 0 0 0 rgba(232, 96, 76, 0.7);
   animation: pulse 1.8s ease-out infinite;
 }
 
 @keyframes pulse {
-  70%  { box-shadow: 0 0 0 20px rgba(255, 199, 44, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 199, 44, 0); }
+  70%  { box-shadow: 0 0 0 20px rgba(232, 96, 76, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(232, 96, 76, 0); }
 }
 
-/* You: a blue dot with a white ring */
+/* You: the blue dot, like Google Maps. Three layers: halo (pulses), beam (walking direction), core (the dot). */
 .user-dot {
-  width: 18px;
-  height: 18px;
+  position: relative;
+  width: 22px;
+  height: 22px;
+}
+
+.user-halo,
+.user-beam,
+.user-core {
+  position: absolute;
+  display: block;
+}
+
+.user-halo {
+  top: -9px;
+  left: -9px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(26, 115, 232, 0.28);
+  animation: halo 2s ease-out infinite;
+}
+
+.user-core {
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
   background: #1a73e8;
   border: 3px solid #ffffff;
-  border-radius: 50%;
-  box-shadow: 0 0 0 6px rgba(26, 115, 232, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
+
+/* Beam: a soft blue cone above the dot. app.js turns it to the direction you walk. */
+.user-beam {
+  display: none;
+  top: -34px;
+  left: -13px;
+  width: 48px;
+  height: 56px;
+  background: linear-gradient(to top, rgba(26, 115, 232, 0.55), rgba(26, 115, 232, 0));
+  -webkit-clip-path: polygon(50% 100%, 0 0, 100% 0);
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+  -webkit-transform-origin: 50% 100%;
+  transform-origin: 50% 100%;
+  margin-top: 0;
+}
+
+@keyframes halo {
+  0%   { -webkit-transform: scale(0.6); transform: scale(0.6); opacity: 1; }
+  100% { -webkit-transform: scale(1.5); transform: scale(1.5); opacity: 0; }
+}
+
+/* Round "my location" button (bottom right), like Google Maps.
+   Gray = not tracking. Blue = tracking. Blue and filled = the camera follows you. */
+.locate-fab {
+  position: absolute;
+  z-index: 3;
+  right: 16px;
+  bottom: 40px;
+  bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  display: -webkit-flex;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5f6368;
+  background: #ffffff;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+}
+
+.locate-fab .icon { width: 26px; height: 26px; }
+.locate-fab.is-on { color: #1a73e8; }
+.locate-fab.is-following { color: #ffffff; background: #1a73e8; }
+.locate-fab:active { -webkit-transform: scale(0.94); transform: scale(0.94); }
 
 .maplibregl-popup-content {
   padding: 8px 12px;
   font: 500 14px/1.4 var(--font-body);
-  color: var(--signal-ink);
-  border-radius: 10px;
+  color: var(--ink);
+  border-radius: 12px;
 }
 
-.maplibregl-ctrl-top-right { top: 16px; right: 8px; }
+/* Zoom buttons: below the 3D / flat button */
+.maplibregl-ctrl-top-right { top: 76px; right: 8px; }
+
+
+/* ---------- 8. AR guide (camera view, like a car navigation) ---------- */
+/* ar.js turns the blue arrow. The tilt, glow and colors are all here. */
+
+/* The "Start AR guide" button: bottom middle, only once a route exists */
+.ar-start {
+  display: none;
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: 40px;
+  bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+  -webkit-transform: translateX(-50%);
+  transform: translateX(-50%);
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--coral), var(--coral-deep));
+  border: 0;
+  white-space: nowrap;
+}
+
+.ar-start .icon { color: #ffffff; }
+body.has-route .ar-start { display: -webkit-inline-flex; display: inline-flex; }
+
+.ar {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+  color: #ffffff;
+  background: #0d1b2a;                     /* shows when the camera is off */
+  font-family: var(--font-body);
+}
+
+.ar[hidden],
+.ar-arrived[hidden] { display: none; }
+
+.ar-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  -webkit-object-fit: cover;
+}
+
+.ar.no-camera .ar-video { display: none; }
+
+/* Dark fade at the top and bottom so the white text stays readable on any scene */
+.ar-shade {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background:
+    linear-gradient(to bottom, rgba(5, 12, 24, 0.7), rgba(5, 12, 24, 0) 30%),
+    linear-gradient(to top, rgba(5, 12, 24, 0.75), rgba(5, 12, 24, 0) 32%);
+  pointer-events: none;
+}
+
+/* Top banner: icon, "Turn right", "In 12 m . Garden North" */
+.ar-banner {
+  position: absolute;
+  top: 12px;
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  left: 12px;
+  right: 12px;
+  display: -webkit-flex;
+  display: flex;
+  align-items: center;
+  padding: 12px 12px 12px 14px;
+  background: rgba(14, 24, 40, 0.62);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 22px;
+}
+
+.ar-banner-icon {
+  flex: none;
+  width: 50px;
+  height: 50px;
+  margin-right: 14px;
+  display: -webkit-flex;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2563eb;
+  border-radius: 15px;
+}
+
+.ar-banner-icon svg { width: 30px; height: 36px; }
+
+.ar-banner-text { flex: 1; min-width: 0; }
+
+.ar-action {
+  font: 700 21px/1.15 var(--font-body);
+  letter-spacing: -0.01em;
+}
+
+.ar-sub {
+  margin-top: 3px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.82);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ar-close {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  margin-left: 8px;
+  padding: 0;
+  display: -webkit-flex;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.16);
+  border: 0;
+  border-radius: 50%;
+}
+
+/* The arrow on the floor. .ar-floor adds depth, .ar-tilt lays the arrow down flat. */
+.ar-floor {
+  position: absolute;
+  left: 50%;
+  bottom: 22%;
+  width: 220px;
+  height: 250px;
+  margin-left: -110px;
+  -webkit-perspective: 520px;
+  perspective: 520px;
+  pointer-events: none;
+}
+
+.ar-tilt {
+  width: 100%;
+  height: 100%;
+  -webkit-transform: rotateX(58deg);
+  transform: rotateX(58deg);
+  animation: ar-float 1.6s ease-in-out infinite;
+}
+
+.ar-arrow {
+  display: block;
+  width: 100%;
+  height: 100%;
+  -webkit-transition: -webkit-transform 0.15s linear;
+  transition: transform 0.15s linear;
+  filter: drop-shadow(0 0 14px rgba(70, 130, 255, 0.95)) drop-shadow(0 10px 8px rgba(0, 0, 0, 0.45));
+}
+
+@keyframes ar-float {
+  0%, 100% { -webkit-transform: rotateX(58deg) translateY(0);     transform: rotateX(58deg) translateY(0); }
+  50%      { -webkit-transform: rotateX(58deg) translateY(-14px); transform: rotateX(58deg) translateY(-14px); }
+}
+
+.ar-hint {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 118px;
+  bottom: calc(118px + env(safe-area-inset-bottom, 0px));
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #ffe9a8;
+}
+
+/* Bottom bar: Back, "Step 2 of 6", Next */
+.ar-bar {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 22px;
+  bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+  display: -webkit-flex;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ar-progress {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.ar-btn {
+  min-width: 96px;
+  height: 52px;
+  padding: 0 24px;
+  font: 700 16px var(--font-body);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.2);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 26px;
+}
+
+.ar-btn:disabled { opacity: 0.4; }
+.ar-btn-main { background: #2563eb; border-color: #2563eb; }
+
+/* On stairs the Next button pulses, because the GPS cannot tell floors apart */
+.ar.is-stairs #arNext { animation: ar-nudge 1.2s ease-in-out infinite; }
+
+@keyframes ar-nudge {
+  50% { -webkit-transform: scale(1.08); transform: scale(1.08); }
+}
+
+/* "You've arrived": the green door screen */
+.ar-arrived {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: linear-gradient(160deg, #2fbf6b, #17924a);
+}
+
+.ar-door {
+  width: 132px;
+  height: 132px;
+  display: -webkit-flex;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 34px;
+  box-shadow: 0 18px 40px rgba(0, 60, 25, 0.35);
+}
+
+.ar-door svg {
+  width: 74px;
+  height: 74px;
+  fill: none;
+  stroke: #17924a;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
+
+.ar-door circle { fill: #17924a; stroke: none; }
+
+.ar-arrived h2 { margin: 26px 0 6px; font: 700 30px var(--font-body); }
+.ar-arrived p { margin: 0 0 34px; font-size: 18px; opacity: 0.92; }
+
+/* Page behind the camera must not scroll or show through */
+body.ar-on { overflow: hidden; }
 
 
 /* ---------- 7. Phones ---------- */
 
 @media (max-width: 819px) {
-  /* The two cards stop sharing a column: top card at the top, directions at the bottom. */
-  #dock { display: contents; }
-
-  #hud,
-  #sheet {
-    position: absolute;
-    left: 10px;
-    right: 10px;
+  #topbar {
+    top: 12px;
+    top: calc(12px + env(safe-area-inset-top, 0px));
+    left: 12px;
+    right: 12px;
   }
 
-  #hud {
-    top: 10px;
-    top: calc(10px + env(safe-area-inset-top, 0px));
-    padding: 12px;
+  /* On a phone the open drawer covers the top buttons, so hide them to keep the arrow clean. */
+  body.panel-open #menuButton,
+  body.panel-open #viewToggle { opacity: 0; pointer-events: none; }
+
+  /* The panel becomes a drawer from the left that leaves a strip of map showing. */
+  #dock {
+    top: 8px;
+    top: calc(8px + env(safe-area-inset-top, 0px));
+    bottom: 8px;
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    left: 8px;
+    width: 88vw;
+    max-width: 380px;
+    border-radius: 26px;
   }
 
-  #sheet {
-    /* leaves room at the bottom for the map credit line */
-    bottom: 30px;
-    bottom: calc(30px + env(safe-area-inset-bottom, 0px));
-    max-height: 46%;
-  }
+  .dock-scroll { padding: 16px 12px 14px; }
+  .hero h2 { font-size: 24px; }
+  .hero h2 em { font-size: 27px; }
 
-  .brand { margin-bottom: 10px; }
-  h1 { font-size: 19px; }
-  #roomInput { font-size: 20px; }
-  #goButton { min-height: 48px; }
+  /* The drawer covers the round location button, so hide it while the drawer is open. */
+  body.panel-open .locate-fab,
+  body.panel-open .ar-start { opacity: 0; pointer-events: none; }
 
   /* Pinch and two-finger rotate replace the zoom buttons. */
   .maplibregl-ctrl-top-right { display: none; }
 }
 
+/* Old phones that can't blur: use solid panels so the text stays readable */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  #dock { background: var(--glass-solid); }
+  .glass-btn { background: #fff6f0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .dest-pin { animation: none; }
-  button { transition: none; }
+  .dest-pin,
+  .user-halo,
+  .ar-tilt,
+  .ar.is-stairs #arNext { animation: none; }
+  button,
+  #dock,
+  body.panel-open #dock { transition: none; }
 }
