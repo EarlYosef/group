@@ -58,7 +58,7 @@ let lastStartId = null;      // last node we routed from (avoids redrawing too o
 let watchId = null;          // id of the GPS watcher
 let activeFloor = null;      // selected floor, or null for "all floors"
 let is3D = true;
-let hasFocusedOnUser = false;
+let lastZone = null;          // where you were at the last GPS fix: "far", "approaching", "campus" or "gate" (see zone.js)
 let routePath = null;         // the route on screen (list of place ids), for the AR guide
 let following = false;        // true = the camera follows your blue dot
 let wantsFocus = false;       // true = the next GPS fix should move the camera to you
@@ -73,6 +73,14 @@ function setStatus(text) {
 
 function isPhone() {
   return window.innerWidth < PHONE_WIDTH;
+}
+
+// True on phones and tablets (a finger), false on laptops and desktops (a mouse).
+// The AR guide needs a camera you can walk around with, so only touch devices get its button.
+function isTouchDevice() {
+  if (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) return true;
+  if (window.matchMedia && window.matchMedia("(pointer: fine)").matches) return false;
+  return "ontouchstart" in window;           // very old browsers that do not know "pointer"
 }
 
 // Open or close the side panel.
@@ -282,19 +290,28 @@ function setUserPosition(lat, lng, meters, heading) {
   arOnPosition(lat, lng, meters);                 // the AR guide moves along with you
   updateZone(lat, lng);                           // the "where am I" card and the gate circle
 
-  if (wantsFocus) {
-    // You tapped the location button: fly to the blue dot and keep following it.
-    wantsFocus = false;
+  // The camera only goes to you when you are close to the campus (near the road at the Main Gate).
+  // Far away it stays on the campus, and the "where am I" card says how far you are.
+  const zoneNow = classifyLocation(lat, lng).zone;
+  const isNear = zoneNow !== "far";
+  const cameFromFar = lastZone === null || lastZone === "far";
+
+  if (isNear && (wantsFocus || cameFromFar)) {
+    // You just got near the campus (or tapped the location button): zoom in on you.
     setFollowing(true);
-    focusOn(lat, lng);
-  } else if (!hasFocusedOnUser && nearestNode(lat, lng).meters <= FAR_FROM_CAMPUS_METERS) {
-    // The first time we find you on campus, move the camera to you.
-    hasFocusedOnUser = true;
-    setFollowing(true);
-    focusOn(lat, lng);
-  } else if (following) {
-    followUser(lat, lng);
+    focusOn(lat, lng, zoneNow === "approaching" ? 17.8 : 18.5);
+  } else if (isNear && following) {
+    if (zoneNow !== lastZone) focusOn(lat, lng, 18.5);   // came closer (for example through the gate): zoom in more
+    else followUser(lat, lng);
+  } else if (!isNear) {
+    setFollowing(false);
+    if (wantsFocus) {
+      showCampus();
+      setStatus("You are about " + formatDistance(classifyLocation(lat, lng).centerMeters) + " from the campus, so the map stays on the campus. It will zoom in when you get near the Main Gate.");
+    }
   }
+  wantsFocus = false;
+  lastZone = zoneNow;
 
   // Only re-route if the nearest node changed (the user moved to a new spot).
   if (destinationId && startSelect.value === "gps" && nearestNode(lat, lng).id !== lastStartId) {
@@ -313,8 +330,14 @@ function setFollowing(on) {
 // First tap: ask for permission and start tracking. Later taps: jump back to the blue dot.
 function locateMe() {
   if (userPos && watchId !== null) {
+    const here = classifyLocation(userPos.lat, userPos.lng);
+    if (here.zone === "far") {
+      showCampus();
+      setStatus("You are about " + formatDistance(here.centerMeters) + " from the campus, so the map stays on the campus. It will zoom in when you get near the Main Gate.");
+      return;
+    }
     setFollowing(true);
-    focusOn(userPos.lat, userPos.lng);
+    focusOn(userPos.lat, userPos.lng, 18.5);
     return;
   }
   wantsFocus = true;
@@ -338,7 +361,7 @@ function startTracking() {
       if (testMode.checked) return;  // in test mode we ignore real GPS
       const c = pos.coords;
       setUserPosition(c.latitude, c.longitude, c.accuracy, c.heading);
-      if (!destinationId) {
+      if (!destinationId && lastZone !== "far") {     // (far away: the "from the campus" message stays)
         setStatus(`Location found (accurate to about ${Math.round(c.accuracy)} m). Type a room and press Go.`);
       }
     },
@@ -369,7 +392,6 @@ function autoStartIfAllowed() {
 
 function clearRoute() {
   routePath = null;
-  document.body.classList.remove("has-route");   // hides the "Start AR guide" button
   lastStartId = null;   // forget the old start, so the next location update draws the route again
   if (mapReady) {
     clearRoutes();
@@ -443,7 +465,6 @@ function showRoute(fitMap) {
 
   drawRoutes(routes);
   routePath = routes[0].path;
-  document.body.classList.add("has-route");       // shows the "Start AR guide" button
   resultsBox.innerHTML = "";   // remove "Your route will show here."
   routes.forEach((route) => renderSteps(route.path, route.key));
   showDestination(destinationId);
@@ -490,7 +511,15 @@ function bindEvents() {
 
   locateButton.addEventListener("click", locateMe);
   myLocation.addEventListener("click", locateMe);
-  $("arButton").addEventListener("click", () => { if (routePath) startAr(routePath); });
+  $("arButton").addEventListener("click", () => {
+    if (routePath) {
+      startAr(routePath);
+      return;
+    }
+    // No destination yet: open the search so the person can type a room first.
+    setPanel(true);
+    setStatus("Type a room first (for example D112), press Go, then tap AR guide.");
+  });
   startSelect.addEventListener("change", () => showRoute(false));
   algoSelect.addEventListener("change", () => showRoute(false));
   viewToggle.addEventListener("click", toggleView);
@@ -544,6 +573,7 @@ function handleMapClick(click) {
 /* ===== 8. START ===== */
 
 function start() {
+  if (isTouchDevice()) document.body.classList.add("is-touch");   // shows the AR guide button
   initAr();               // the AR guide (ar.js)
   initZone();             // the "where am I" card (zone.js)
   loadSavedPlan();        // numbers you fixed earlier on this phone (before the map starts)

@@ -17,6 +17,7 @@
 
 /* ===== 1. SETTINGS ===== */
 
+const AR_START_METERS = 15;          // farther than this from the first place of the route: the guide first leads you there
 const AR_NEXT_POINT_METERS = 6;      // closer than this to the next point = go on to the one after
 const AR_NOW_METERS = 4;             // closer than this the banner says "Now turn..." instead of "In 12 m"
 const AR_BAD_GPS_METERS = 30;        // a GPS reading less exact than this is ignored (indoors it is poor)
@@ -37,12 +38,13 @@ let arActive = false;
 let arStream = null;                 // the camera
 let arHeading = null;                // which way the phone faces (degrees from north), or null if unknown
 let arArrowAngle = 0;                // the arrow's angle on screen. It never wraps at 360, so it never spins backwards.
+let arToStart = false;               // true = you are not at the start of the route yet, so the arrow leads you to it first
 let arGps = null;                    // last usable GPS reading: { lat, lng, time }
 let arFramePending = false;          // true while a redraw is waiting for the next frame
 
 function initAr() {
   ["ar", "arVideo", "arAction", "arSub", "arBannerIcon", "arArrow", "arHint", "arProgress",
-   "arBack", "arNext", "arClose", "arArrived", "arArrivedPlace", "arDone", "arButton"
+   "arBack", "arNext", "arClose", "arArrived", "arArrivedPlace", "arDone", "arButton", "arLeft"
   ].forEach((id) => { arEl[id] = document.getElementById(id); });
 
   arEl.arClose.addEventListener("click", stopAr);
@@ -64,6 +66,10 @@ function startAr(path) {
   arActive = true;
   arHeading = null;
   arArrowAngle = 0;
+
+  // Walking in from the road? Then the first target is the start of the route (for example the Main Gate).
+  const first = NODES[arPath[0]];
+  arToStart = arGpsIsFresh() && distanceMeters(arGps.lat, arGps.lng, first.lat, first.lng) > AR_START_METERS;
 
   arEl.ar.hidden = false;
   arEl.arArrived.hidden = true;
@@ -185,10 +191,25 @@ function arRenderSoon() {
   });
 }
 
+// Do we have a recent, exact-enough GPS reading?
+function arGpsIsFresh() {
+  return arGps !== null && Date.now() - arGps.time < AR_GPS_FRESH_MS;
+}
+
 // Where you are: your GPS spot if it is recent and exact enough, else the place on the route you reached.
 function arHere() {
-  if (arGps && Date.now() - arGps.time < AR_GPS_FRESH_MS) return arGps;
-  return NODES[arPath[arIndex]];
+  return arGpsIsFresh() ? arGps : NODES[arPath[arIndex]];
+}
+
+// Meters still to walk: from here to the next target, then along the rest of the route.
+function arMetersLeft(here, target, leadingToStart) {
+  let total = distanceMeters(here.lat, here.lng, target.lat, target.lng);
+  const from = leadingToStart ? 0 : arIndex + 1;   // the route continues from the target
+  for (let i = from; i < arPath.length - 1; i++) {
+    const a = NODES[arPath[i]], b = NODES[arPath[i + 1]];
+    if (a.floor === b.floor) total += distanceMeters(a.lat, a.lng, b.lat, b.lng);
+  }
+  return total;
 }
 
 function arRender() {
@@ -204,12 +225,14 @@ function arRender() {
   const here = arHere();
   const from = NODES[arPath[arIndex]];
   const next = NODES[arPath[arIndex + 1]];
-  const meters = distanceMeters(here.lat, here.lng, next.lat, next.lng);
-  const changesFloor = next.floor !== from.floor;
+  const leadingToStart = arToStart && arGpsIsFresh();     // first walk to the start of the route
+  const target = leadingToStart ? NODES[arPath[0]] : next;
+  const meters = distanceMeters(here.lat, here.lng, target.lat, target.lng);
+  const changesFloor = !leadingToStart && next.floor !== from.floor;
 
   // How far to turn, from "straight ahead" (0). Right is plus, left is minus.
   let turn = 0;
-  if (arHeading !== null) turn = arAngleDiff(bearingDegrees(here, next), arHeading);
+  if (arHeading !== null) turn = arAngleDiff(bearingDegrees(here, target), arHeading);
 
   // Turn the arrow smoothly: add the small change, never jump around the circle.
   arArrowAngle += arAngleDiff(turn, arArrowAngle % 360);
@@ -220,17 +243,20 @@ function arRender() {
   // The words
   let action;
   if (changesFloor) action = "Take the stairs to floor " + next.floor;
-  else if (arHeading === null) action = "Head to " + next.name;
+  else if (arHeading === null) action = "Head to " + target.name;
   else action = arActionFor(turn);
 
   const distanceText = meters < AR_NOW_METERS ? "Now" : "In " + Math.round(meters) + " m";
   arEl.arAction.textContent = action;
   arEl.arSub.textContent = changesFloor
     ? "Tap Next when you are on floor " + next.floor
-    : distanceText + " · " + next.name;
+    : (arHeading === null ? distanceText : distanceText + " \u00b7 " + target.name);   // (the name is already in the title when there is no compass)
 
-  arEl.arProgress.textContent = "Step " + (arIndex + 1) + " of " + lastIndex;
-  arEl.arBack.disabled = arIndex === 0;
+  // Bottom: how far to the room you typed, and which step you are on
+  const destination = NODES[arPath[arPath.length - 1]];
+  arEl.arLeft.textContent = Math.round(arMetersLeft(here, target, leadingToStart)) + " m to " + destination.name;
+  arEl.arProgress.textContent = leadingToStart ? "Getting to the start" : "Step " + (arIndex + 1) + " of " + lastIndex;
+  arEl.arBack.disabled = arIndex === 0 && !leadingToStart;
   arEl.ar.classList.toggle("is-stairs", changesFloor);
 
   arEl.arHint.textContent = arHeading === null
@@ -262,6 +288,7 @@ function arShowArrived() {
 
 // Back / Next buttons (always work, even when the GPS is bad).
 function arMove(step) {
+  arToStart = false;                     // you decided where you are
   arIndex = Math.max(0, Math.min(arPath.length - 1, arIndex + step));
   arRender();
 }
@@ -272,10 +299,16 @@ function arOnPosition(lat, lng, accuracyMeters) {
   arGps = usable ? { lat: lat, lng: lng, time: Date.now() } : null;
   if (!arActive || !usable) return;
 
+  // Reached the start of the route (for example you walked in through the Main Gate)?
+  if (arToStart) {
+    const first = NODES[arPath[0]];
+    if (distanceMeters(lat, lng, first.lat, first.lng) <= AR_START_METERS) arToStart = false;
+  }
+
   // Reached the next point? Then aim at the one after.
   // (Stairs are never skipped by GPS: both floors are at the same spot. Tap Next there.)
   const lastIndex = arPath.length - 1;
-  while (arIndex < lastIndex) {
+  while (!arToStart && arIndex < lastIndex) {
     const from = NODES[arPath[arIndex]];
     const next = NODES[arPath[arIndex + 1]];
     if (next.floor !== from.floor) break;

@@ -44,10 +44,10 @@
     </span>
   </button>
 
-  <!-- "Start AR guide": appears once a route exists. Opens the camera view (ar.js). -->
+  <!-- "AR guide" button (phones and tablets only): opens the camera view (ar.js) -->
   <button id="arButton" class="ar-start glass-btn" type="button">
     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5h3l1.5-2.5h7L17 8.5h3a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5a1 1 0 0 1 1-1z"></path><circle cx="12" cy="13.2" r="3.4"></circle></svg>
-    Start AR guide
+    AR guide
   </button>
 
   <!-- The side panel (frosted glass). Opens from the menu button. -->
@@ -182,6 +182,7 @@
       </div>
     </div>
 
+    <div id="arLeft" class="ar-left"></div>
     <div id="arHint" class="ar-hint" role="status" aria-live="polite"></div>
 
     <div class="ar-bar">

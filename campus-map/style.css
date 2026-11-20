@@ -728,7 +728,7 @@ li:last-child::before {
 /* ---------- 8. AR guide (camera view, like a car navigation) ---------- */
 /* ar.js turns the blue arrow. The tilt, glow and colors are all here. */
 
-/* The "Start AR guide" button: bottom middle, only once a route exists */
+/* The "Start AR guide" button: bottom middle, phones and tablets only */
 .ar-start {
   display: none;
   position: absolute;
@@ -745,7 +745,8 @@ li:last-child::before {
 }
 
 .ar-start .icon { color: #ffffff; }
-body.has-route .ar-start { display: -webkit-inline-flex; display: inline-flex; }
+/* Only on phones and tablets (app.js adds is-touch). A laptop has no camera to walk with. */
+body.is-touch .ar-start { display: -webkit-inline-flex; display: inline-flex; }
 
 .ar {
   position: fixed;
@@ -888,12 +889,33 @@ body.has-route .ar-start { display: -webkit-inline-flex; display: inline-flex; }
   50%      { -webkit-transform: rotateX(58deg) translateY(-14px); transform: rotateX(58deg) translateY(-14px); }
 }
 
+/* "85 m to Room D112": how far is left to the room you typed */
+.ar-left {
+  position: absolute;
+  left: 50%;
+  bottom: 92px;
+  bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  max-width: calc(100% - 32px);
+  padding: 8px 18px;
+  font: 700 15px var(--font-body);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: rgba(14, 24, 40, 0.6);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 20px;
+  -webkit-transform: translateX(-50%);
+  transform: translateX(-50%);
+}
+
 .ar-hint {
   position: absolute;
   left: 20px;
   right: 20px;
-  bottom: 118px;
-  bottom: calc(118px + env(safe-area-inset-bottom, 0px));
+  bottom: 142px;
+  bottom: calc(142px + env(safe-area-inset-bottom, 0px));
   text-align: center;
   font-size: 13px;
   line-height: 1.4;

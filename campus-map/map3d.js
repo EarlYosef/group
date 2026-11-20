@@ -8,7 +8,8 @@
    drawRoutes(routes)     draw route lines       clearRoutes()      remove them
    showDestination(id)    pulsing yellow dot     showUser(lat,lng,meters,heading)  blue dot = you
    setFloor(floor)        highlight one floor    setTilt(is3D)      3D or flat view
-   flyToRoute(path,pad)   move the camera        focusOn(lat,lng)   center on a point
+   flyToRoute(path,pad)   move the camera        showCampus()           camera back to the whole campus
+   focusOn(lat,lng,zoom)   center on a point
    refreshCampus()        redraw after the PLAN numbers changed
    setStreetMap(show)     street map on or off
    onMapClick(fn)         clicks on the map      showPopup(...)     small info bubble
@@ -403,8 +404,13 @@ function flyToRoute(path, padding) {
   });
 }
 
-function focusOn(lat, lng) {
-  map.easeTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 18.5), duration: 1200 });
+function focusOn(lat, lng, zoom) {
+  map.easeTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), zoom || 18.5), duration: 1200 });
+}
+
+// Back to the whole campus (used when you are too far away to zoom in on yourself).
+function showCampus() {
+  map.easeTo({ center: [PLAN.lng, PLAN.lat], zoom: MAP_START.zoom, pitch: is3DView ? TILT_3D : 0, bearing: MAP_START.bearing, duration: 1000 });
 }
 
 // 3D = tilted camera with the building blocks. 2D = flat, just your plan picture.
