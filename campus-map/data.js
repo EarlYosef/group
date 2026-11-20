@@ -46,6 +46,14 @@ const MAP_START = {
 // If the user is farther than this (meters) from every point, warn them.
 const FAR_FROM_CAMPUS_METERS = 300;
 
+// The campus limit and the Main Gate zone (used by zone.js for the "where am I" card).
+// Distances are real meters. Measured from the middle of the plan picture.
+const CAMPUS_LIMIT_METERS = null;    // inside this many meters = "on campus". null = automatic (the plan picture's size + 15 m)
+const GATE_NODE_ID = "GATE";         // which place in NODES is the Main Gate
+const GATE_APPROACH_METERS = 150;    // closer than this to the gate = "approaching" (the pulsing circle starts)
+const GATE_ARRIVE_METERS = 25;       // closer than this = "at the Main Gate"
+
+
 // Directions start from this place until the phone finds where you are.
 // It must be one of the keys in NODES (section 3 below).
 const DEFAULT_START = "GATE";

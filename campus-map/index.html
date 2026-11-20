@@ -35,6 +35,15 @@
     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"></circle><circle cx="12" cy="12" r="7.5"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"></path></svg>
   </button>
 
+  <!-- "Where am I?" card (zone.js): distance and side of the Main Gate, walking toward or away -->
+  <button id="zoneCard" class="zone-card" type="button" hidden aria-live="polite">
+    <svg id="zoneArrow" class="zone-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L19 20 L12 16 L5 20 Z"></path></svg>
+    <span class="zone-text">
+      <span id="zoneTitle" class="zone-title"></span>
+      <span id="zoneSub" class="zone-sub"></span>
+    </span>
+  </button>
+
   <!-- "Start AR guide": appears once a route exists. Opens the camera view (ar.js). -->
   <button id="arButton" class="ar-start glass-btn" type="button">
     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5h3l1.5-2.5h7L17 8.5h3a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5a1 1 0 0 1 1-1z"></path><circle cx="12" cy="13.2" r="3.4"></circle></svg>
@@ -200,6 +209,7 @@
   <script src="graph.js"></script>
   <script src="map3d.js"></script>
   <script src="ar.js"></script>
+  <script src="zone.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

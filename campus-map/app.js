@@ -194,6 +194,7 @@ function savePlan() {
 function onPlanChanged() {
   applyPlan();
   savePlan();
+  refreshZone();          // the gate moved: redo the distance card
   if (mapReady) {
     refreshCampus();
     showRoute(false);   // draw the route again on the moved plan
@@ -279,6 +280,7 @@ function setUserPosition(lat, lng, meters, heading) {
   showUser(lat, lng, meters, heading);
   myLocation.classList.add("is-on");
   arOnPosition(lat, lng, meters);                 // the AR guide moves along with you
+  updateZone(lat, lng);                           // the "where am I" card and the gate circle
 
   if (wantsFocus) {
     // You tapped the location button: fly to the blue dot and keep following it.
@@ -449,7 +451,7 @@ function showRoute(fitMap) {
 
   let message = `Directions to ${NODES[destinationId].name} (from ${NODES[start.id].name}).`;
   if (start.meters > FAR_FROM_CAMPUS_METERS) {
-    message += ` Warning: you are about ${Math.round(start.meters)} m from the nearest campus point. If you are really on campus, open Testing tools and use 'Bring the plan to my location'.`;
+    message += ` You are about ${formatDistance(start.meters)} from the nearest campus point, so directions start there. If you are really on campus, open Testing tools and use 'Bring the plan to my location'.`;
   }
   setStatus(message);
 
@@ -543,6 +545,7 @@ function handleMapClick(click) {
 
 function start() {
   initAr();               // the AR guide (ar.js)
+  initZone();             // the "where am I" card (zone.js)
   loadSavedPlan();        // numbers you fixed earlier on this phone (before the map starts)
   setPanel(!isPhone());   // computer: panel open. phone: closed until you tap the button.
   fillStartSelect();

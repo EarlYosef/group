@@ -12,6 +12,7 @@
    refreshCampus()        redraw after the PLAN numbers changed
    setStreetMap(show)     street map on or off
    onMapClick(fn)         clicks on the map      showPopup(...)     small info bubble
+   showGateRipple(lat,lng,on)  pulsing circle at the Main Gate
    followUser(lat,lng)    keep the camera on you onMapDrag(fn)      run fn when the user drags the map
 
    SECTIONS
@@ -36,6 +37,7 @@ let userHeading = null;              // which way you are walking (degrees), or 
 let map = null;                      // the MapLibre map (set in createMap)
 let is3DView = true;
 let userMarker = null;
+let gateRippleMarker = null;         // the pulsing circle at the Main Gate
 let destinationMarker = null;
 let openPopup = null;
 let basemapLayerIds = [];            // the street map's own layers (filled when the map loads)
@@ -355,6 +357,22 @@ function circlePolygon(lat, lng, meters) {
                lat + (meters * Math.sin(angle)) / METERS_PER_DEGREE]);
   }
   return { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [ring] } };
+}
+
+// The pulsing circle at the Main Gate (drawn as 3 rings that grow and fade). visible=false hides it.
+function showGateRipple(lat, lng, visible) {
+  if (!visible) {
+    if (gateRippleMarker) { gateRippleMarker.remove(); gateRippleMarker = null; }
+    return;
+  }
+  if (!gateRippleMarker) {
+    const el = document.createElement("div");
+    el.className = "gate-ripple";
+    el.innerHTML = "<i></i><i></i><i></i>";
+    gateRippleMarker = new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map);
+  } else {
+    gateRippleMarker.setLngLat([lng, lat]);    // the plan may have moved
+  }
 }
 
 // Keep the camera on you while you walk (zoom and tilt stay as they are).
