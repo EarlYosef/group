@@ -1,26 +1,43 @@
-step 1
-=========================================================
-Open VS Code on the new laptop:
+# SAC Campus Navigator 3D
 
-Press Ctrl + Shift + P to open the Command Palette.
+Campus map for St. Anthony's College, San Jose, Antique. Type a room (for example `D112`) and get
+step-by-step directions on a 3D map. On a phone, the AR guide shows the way through the camera.
 
-Type Git: Clone and press Enter.
+Live site: https://group-9iy0.onrender.com (Render static site, publish directory `campus-map`).
 
-Paste your repository link ([https://github.com/EarlYosef/group.git](https://github.com/EarlYosef/group.git)) and press Enter.
+## Files
 
-Select a local folder (such as your Documents or Projects folder) to store the files.
-Verification: Click Open when VS Code shows the popup asking if you want to open the cloned repository.
+| File | What it does | Change it when... |
+| --- | --- | --- |
+| `index.html` | Page layout and all buttons | you add a button or text |
+| `style.css` | Colors, fonts, layout, dark mode | you change the look (colors are in section 1) |
+| `data.js` | Rooms, buildings, paths, plan position, settings | you add or fix a room or building |
+| `graph.js` | BFS and DFS route finding | you change the algorithms |
+| `plan.js` | Converts plan pixels to GPS and back | the plan is misaligned |
+| `plan-image.js` | The campus plan picture (as text) | you replace the plan image |
+| `map3d.js` | The 3D map, layers, markers, camera | you change how the map looks |
+| `ar.js` | AR camera guide, compass, mini map | you change the AR guide |
+| `zone.js` | "Where am I" card and Main Gate circle | you change the location messages |
+| `app.js` | Connects everything together | you add a feature that links the parts |
 
-==========================================================
-step 2
-==========================================================
+Scripts load in the order shown at the bottom of `index.html`. Keep that order.
 
-Open Termal 
+## Colors
 
-Type Termal: Cd Visual studio SChool
+SAC maroon and yellow. Edit `--maroon`, `--maroon-deep` and `--gold` at the top of `style.css`.
+Map paper colors are `MAP_BACKGROUND` and `MAP_BACKGROUND_DARK` in `data.js`.
 
-Phase: git add .
-git commit -m "Updated code from new laptop"
-git push origin main
+## Update the live site
 
-to syn the code
+```
+git add .
+git commit -m "describe what you changed"
+git push
+```
+
+Render redeploys by itself in about a minute.
+
+## Notes
+
+- Camera, compass and location only work over HTTPS (the Render link is fine).
+- GPS is weak indoors. The AR guide has a tap fallback after 20 seconds without a good signal.

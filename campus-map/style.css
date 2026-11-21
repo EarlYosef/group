@@ -17,9 +17,9 @@
 /* ---------- 1. Colors and fonts ---------- */
 
 :root {
-  --coral: #8a1c2b;                      /* main accent (maroon) */
+  --maroon: #8a1c2b;                      /* main accent (maroon) */
   --gold: #f2b705;                       /* second color (yellow): destination and highlights */
-  --coral-deep: #55101b;                 /* the dark end of the maroon gradient */
+  --maroon-deep: #55101b;                 /* the dark end of the maroon gradient */
   --ink: #2d1a15;                        /* main text */
   --muted: #7d625a;                      /* small gray-brown text */
   --black: #17110f;                      /* black pill buttons (Go) */
@@ -85,7 +85,7 @@ button {
 }
 
 :focus-visible {
-  outline: 3px solid var(--coral);
+  outline: 3px solid var(--maroon);
   outline-offset: 2px;
 }
 
@@ -123,7 +123,7 @@ button {
   box-shadow: var(--shadow);
 }
 
-.glass-btn .icon { margin-right: 10px; color: var(--coral); }
+.glass-btn .icon { margin-right: 10px; color: var(--maroon); }
 
 .glass-btn:hover { background: rgba(255, 255, 255, 0.9); }
 
@@ -135,7 +135,7 @@ button {
 
 .glass-btn.small[aria-pressed="true"] {
   color: #ffffff;
-  background: linear-gradient(135deg, var(--coral), var(--coral-deep));
+  background: linear-gradient(135deg, var(--maroon), var(--maroon-deep));
   border-color: transparent;
 }
 
@@ -211,7 +211,7 @@ body.panel-open #dock {
 }
 
 #panelToggle .icon { width: 16px; height: 16px; }
-#panelToggle:hover { color: var(--coral); }
+#panelToggle:hover { color: var(--maroon); }
 
 .brand {
   display: -webkit-flex;
@@ -240,7 +240,7 @@ h1 {
   color: var(--muted);
 }
 
-/* Hero card: the coral gradient card with the search */
+/* Hero card: the maroon gradient card with the search */
 .hero {
   position: relative;
   margin-bottom: 14px;
@@ -248,7 +248,7 @@ h1 {
   color: #ffffff;
   background:
     radial-gradient(120% 90% at 100% 0%, rgba(255, 190, 160, 0.55), rgba(255, 190, 160, 0) 60%),
-    linear-gradient(145deg, #ef6f59, var(--coral-deep));
+    linear-gradient(145deg, #ef6f59, var(--maroon-deep));
   border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: var(--radius);
   box-shadow: 0 12px 28px rgba(85, 16, 27, 0.35);
@@ -371,7 +371,7 @@ h1 {
 
 .floor-btn[aria-pressed="true"] {
   color: #ffffff;
-  background: linear-gradient(135deg, var(--coral), var(--coral-deep));
+  background: linear-gradient(135deg, var(--maroon), var(--maroon-deep));
   border-color: transparent;
   box-shadow: 0 6px 14px rgba(85, 16, 27, 0.4);
 }
@@ -424,8 +424,8 @@ select {
 .btn-outline:hover,
 .chip:hover {
   color: #ffffff;
-  background: var(--coral);
-  border-color: var(--coral);
+  background: var(--maroon);
+  border-color: var(--maroon);
 }
 
 /* Small pill buttons (arrows in the testing tools) */
@@ -466,7 +466,7 @@ select {
   color: var(--ink);
 }
 
-.plan-tools code { color: var(--coral-deep); }
+.plan-tools code { color: var(--maroon-deep); }
 
 .hint {
   margin: 4px 0 10px;
@@ -484,7 +484,7 @@ select {
 .slider input[type=range] {
   grid-column: 1 / -1;
   width: 100%;
-  accent-color: var(--coral);
+  accent-color: var(--maroon);
 }
 
 .slider output { color: var(--ink); }
@@ -521,7 +521,7 @@ input[type=checkbox] {
   width: 20px;
   height: 20px;
   margin: 0 8px 0 0;
-  accent-color: var(--coral);
+  accent-color: var(--maroon);
 }
 
 
@@ -530,7 +530,7 @@ input[type=checkbox] {
 
 h3,
 ol {
-  --accent: var(--route, var(--coral));    /* route color, or coral if none is set */
+  --accent: var(--route, var(--maroon));    /* route color, or maroon if none is set */
 }
 
 h3 {
@@ -610,9 +610,9 @@ li:last-child::before {
   top: 0;
   width: 16px;
   height: 16px;
-  background: var(--coral);
+  background: var(--maroon);
   border-color: #ffffff;
-  box-shadow: 0 0 0 2px var(--coral);
+  box-shadow: 0 0 0 2px var(--maroon);
 }
 
 
@@ -623,7 +623,7 @@ li:last-child::before {
   width: 22px;
   height: 22px;
   background: var(--gold);
-  border: 3px solid var(--coral);
+  border: 3px solid var(--maroon);
   border-radius: 50%;
   box-shadow: 0 0 0 0 rgba(242, 183, 5, 0.7);
   animation: pulse 1.8s ease-out infinite;
@@ -741,7 +741,7 @@ li:last-child::before {
   -webkit-transform: translateX(-50%);
   transform: translateX(-50%);
   color: #ffffff;
-  background: linear-gradient(135deg, var(--coral), var(--coral-deep));
+  background: linear-gradient(135deg, var(--maroon), var(--maroon-deep));
   border: 0;
   white-space: nowrap;
 }
@@ -1113,7 +1113,7 @@ body.ar-on { overflow: hidden; }
 .zone-card[hidden] { display: none; }
 .zone-card[data-zone="approaching"] { --zone: #e39a1c; }
 .zone-card[data-zone="gate"]        { --zone: #1f9d55; }
-.zone-card[data-zone="campus"]      { --zone: var(--coral); }
+.zone-card[data-zone="campus"]      { --zone: var(--maroon); }
 
 .zone-arrow {
   flex: none;
@@ -1228,7 +1228,7 @@ body.dark .chip { background: rgba(255, 255, 255, 0.08); }
 body.dark .floor-btn[aria-pressed="true"],
 body.dark .chip:hover { color: #ffffff; }
 
-/* The search stays a light pill: it sits on the coral card */
+/* The search stays a light pill: it sits on the maroon card */
 body.dark .search { background: #fff6f0; }
 body.dark #roomInput { color: #2d1a15; }
 body.dark #roomInput::placeholder { color: #7d625a; }
