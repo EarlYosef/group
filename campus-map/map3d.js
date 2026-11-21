@@ -28,9 +28,10 @@
 
 const TILT_3D = 60;                  // camera tilt in 3D view (degrees)
 const FLOOR_GAP_METERS = 0.3;        // thin gap between stacked floors
+const ROOF_THICKNESS_METERS = 0.6;   // the colored roof slab on top
 
-const COLOR_FLOOR        = "#d0a9ae";   // a floor that is not selected
-const COLOR_FLOOR_ACTIVE = "#8a1c2b";   // the selected floor
+const COLOR_FLOOR        = WALL_COLOR;  // a floor that is not selected (beige wall, see data.js)
+const COLOR_FLOOR_ACTIVE = "#f2b705";   // the selected floor (SAC yellow)
 const COLOR_CASING       = "#2d1a15";   // dark brown outline under route lines
 const COLOR_USER         = "#1a73e8";   // the blue "you are here" color
 
@@ -161,6 +162,19 @@ function buildFloorsGeoJSON() {
         geometry: { type: "Polygon", coordinates: rings }
       });
     }
+
+    // The roof: a thin colored slab on top of the top floor.
+    features.push({
+      type: "Feature",
+      properties: {
+        building: b.id,
+        floor: 0,
+        roof: ROOF_COLORS[b.roof] || ROOF_COLORS.red,
+        base: floors * FLOOR_HEIGHT_METERS - FLOOR_GAP_METERS,
+        top: floors * FLOOR_HEIGHT_METERS + ROOF_THICKNESS_METERS
+      },
+      geometry: { type: "Polygon", coordinates: rings }
+    });
   });
   return { type: "FeatureCollection", features };
 }
@@ -177,9 +191,12 @@ function buildNodesGeoJSON() {
   };
 }
 
-// Colors the selected floor yellow. floor = null means "no floor selected".
+// Colors the selected floor yellow (roofs keep their color). floor = null means "no floor selected".
 function floorColorExpression(floor) {
-  return ["case", ["==", ["get", "floor"], floor === null ? -1 : floor], COLOR_FLOOR_ACTIVE, COLOR_FLOOR];
+  return ["case",
+    ["has", "roof"], ["get", "roof"],                                        // roofs keep their own color
+    ["==", ["get", "floor"], floor === null ? -1 : floor], COLOR_FLOOR_ACTIVE,
+    COLOR_FLOOR];
 }
 
 function addCampusLayers() {
@@ -205,7 +222,7 @@ function addCampusLayers() {
       "fill-extrusion-color": floorColorExpression(null),
       "fill-extrusion-base": ["get", "base"],
       "fill-extrusion-height": ["get", "top"],
-      "fill-extrusion-opacity": 0.6
+      "fill-extrusion-opacity": 0.88
     }
   });
 

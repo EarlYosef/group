@@ -7,7 +7,7 @@
    When you change any file, change CACHE_NAME below (v1 -> v2) so phones refresh.
    ===================================================================== */
 
-const CACHE_NAME = "sac-map-v1";
+const CACHE_NAME = "sac-map-v2";
 
 // Our files (relative to this file)
 const OWN_FILES = [
