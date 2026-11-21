@@ -2,7 +2,7 @@
 
 /* =====================================================================
    Look: "glassy dashboard". Frosted glass panels floating over the map,
-   warm coral and cream colors, white pill buttons, black action buttons.
+   maroon and yellow (SAC colors) with cream, white pill buttons, black action buttons.
    Change the colors in section 1 and everything follows.
 
    1. Colors and fonts      5. Route steps (transit line)
@@ -17,14 +17,15 @@
 /* ---------- 1. Colors and fonts ---------- */
 
 :root {
-  --coral: #e8604c;                      /* main accent */
-  --coral-deep: #c9452f;                 /* the dark end of the coral gradient */
+  --coral: #8a1c2b;                      /* main accent (maroon) */
+  --gold: #f2b705;                       /* second color (yellow): destination and highlights */
+  --coral-deep: #55101b;                 /* the dark end of the maroon gradient */
   --ink: #2d1a15;                        /* main text */
   --muted: #7d625a;                      /* small gray-brown text */
   --black: #17110f;                      /* black pill buttons (Go) */
 
-  --glass: rgba(255, 246, 240, 0.68);    /* side panel */
-  --glass-solid: #fbf1ea;                /* used when the phone can't blur */
+  --glass: rgba(255, 249, 232, 0.70);    /* side panel */
+  --glass-solid: #fdf6e0;                /* used when the phone can't blur */
   --card: rgba(255, 255, 255, 0.62);     /* cards inside the panel */
   --field: rgba(255, 255, 255, 0.92);    /* inputs and dropdowns */
   --edge: rgba(255, 255, 255, 0.75);     /* light glass border */
@@ -32,7 +33,7 @@
 
   --radius: 22px;
   --radius-small: 14px;
-  --shadow: 0 18px 48px rgba(110, 50, 35, 0.22);
+  --shadow: 0 18px 48px rgba(60, 20, 25, 0.22);
 
   --panel-width: 384px;
   --font-body: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
@@ -206,7 +207,7 @@ body.panel-open #dock {
   background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 50%;
-  box-shadow: 0 4px 12px rgba(110, 50, 35, 0.25);
+  box-shadow: 0 4px 12px rgba(60, 20, 25, 0.25);
 }
 
 #panelToggle .icon { width: 16px; height: 16px; }
@@ -250,7 +251,7 @@ h1 {
     linear-gradient(145deg, #ef6f59, var(--coral-deep));
   border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: var(--radius);
-  box-shadow: 0 12px 28px rgba(201, 69, 47, 0.35);
+  box-shadow: 0 12px 28px rgba(85, 16, 27, 0.35);
 }
 
 .hero h2 {
@@ -326,7 +327,7 @@ h1 {
   background: var(--card);
   border: 1px solid var(--edge);
   border-radius: var(--radius);
-  box-shadow: 0 6px 18px rgba(110, 50, 35, 0.08);
+  box-shadow: 0 6px 18px rgba(60, 20, 25, 0.08);
 }
 
 .section-title {
@@ -372,7 +373,7 @@ h1 {
   color: #ffffff;
   background: linear-gradient(135deg, var(--coral), var(--coral-deep));
   border-color: transparent;
-  box-shadow: 0 6px 14px rgba(201, 69, 47, 0.4);
+  box-shadow: 0 6px 14px rgba(85, 16, 27, 0.4);
 }
 
 /* Dropdowns and the location button */
@@ -617,20 +618,20 @@ li:last-child::before {
 
 /* ---------- 6. Map markers + MapLibre tweaks ---------- */
 
-/* Destination: a coral dot that sends out a ring (the one animation on the map) */
+/* Destination: a yellow dot that sends out a ring (the one animation on the map) */
 .dest-pin {
   width: 22px;
   height: 22px;
-  background: var(--coral);
-  border: 3px solid #ffffff;
+  background: var(--gold);
+  border: 3px solid var(--coral);
   border-radius: 50%;
-  box-shadow: 0 0 0 0 rgba(232, 96, 76, 0.7);
+  box-shadow: 0 0 0 0 rgba(242, 183, 5, 0.7);
   animation: pulse 1.8s ease-out infinite;
 }
 
 @keyframes pulse {
-  70%  { box-shadow: 0 0 0 20px rgba(232, 96, 76, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(232, 96, 76, 0); }
+  70%  { box-shadow: 0 0 0 20px rgba(242, 183, 5, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(242, 183, 5, 0); }
 }
 
 /* You: the blue dot, like Google Maps. Three layers: halo (pulses), beam (walking direction), core (the dot). */
@@ -989,8 +990,8 @@ body.is-touch .ar-start { display: -webkit-inline-flex; display: inline-flex; }
   padding: 8px 14px 8px 10px;
   font: 700 15px var(--font-body);
   white-space: nowrap;
-  color: #ffffff;
-  background: #e8604c;
+  color: #3d0b14;
+  background: #f2b705;
   border: 2px solid #ffffff;
   border-radius: 22px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
@@ -1000,7 +1001,7 @@ body.is-touch .ar-start { display: -webkit-inline-flex; display: inline-flex; }
 }
 
 .ar-dest[hidden] { display: none; }
-.ar-dest .icon { flex: none; width: 20px; height: 20px; margin-right: 6px; fill: #ffffff; stroke: #e8604c; }
+.ar-dest .icon { flex: none; width: 20px; height: 20px; margin-right: 6px; fill: #55101b; stroke: #55101b; }
 .ar-dest span { overflow: hidden; text-overflow: ellipsis; }
 
 /* Outside the camera's view: a small arrow shows which way to turn */

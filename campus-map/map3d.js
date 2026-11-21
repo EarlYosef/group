@@ -29,8 +29,8 @@
 const TILT_3D = 60;                  // camera tilt in 3D view (degrees)
 const FLOOR_GAP_METERS = 0.3;        // thin gap between stacked floors
 
-const COLOR_FLOOR        = "#d9a99c";   // a floor that is not selected
-const COLOR_FLOOR_ACTIVE = "#e8604c";   // the selected floor
+const COLOR_FLOOR        = "#d0a9ae";   // a floor that is not selected
+const COLOR_FLOOR_ACTIVE = "#8a1c2b";   // the selected floor
 const COLOR_CASING       = "#2d1a15";   // dark brown outline under route lines
 const COLOR_USER         = "#1a73e8";   // the blue "you are here" color
 

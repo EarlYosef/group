@@ -240,7 +240,7 @@ function arBuildMiniMap() {
   arMini.casing = arSvg("polyline", Object.assign({ stroke: "#ffffff", "stroke-width": "8" }, lineStyle));
   arMini.route  = arSvg("polyline", Object.assign({ stroke: "#3b82f6", "stroke-width": "5" }, lineStyle));
   arMini.done   = arSvg("polyline", Object.assign({ stroke: "rgba(255,255,255,0.55)", "stroke-width": "5" }, lineStyle));
-  arMini.dest   = arSvg("circle", { fill: "#e8604c", stroke: "#ffffff", "stroke-width": "2.5", "vector-effect": "non-scaling-stroke" });
+  arMini.dest   = arSvg("circle", { fill: "#f2b705", stroke: "#ffffff", "stroke-width": "2.5", "vector-effect": "non-scaling-stroke" });
   [arMini.casing, arMini.route, arMini.done, arMini.dest].forEach((node) => arMini.world.appendChild(node));
   svg.appendChild(arMini.world);
 
