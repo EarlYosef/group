@@ -210,7 +210,7 @@ function updatePlanReadout() {
 
 // The plan numbers you fixed on this phone are remembered here (only on this phone).
 // To make them permanent for everyone, copy the numbers in the readout into PLAN in data.js.
-const PLAN_STORAGE_KEY = "sac-plan-v1";
+const PLAN_STORAGE_KEY = "sac-plan-v2";
 const PLAN_SAVED_FIELDS = ["lat", "lng", "metersPerPixel", "rotation", "opacity"];
 const PLAN_FROM_DATA_JS = {};                 // the numbers that data.js started with
 PLAN_SAVED_FIELDS.forEach((f) => { PLAN_FROM_DATA_JS[f] = PLAN[f]; });

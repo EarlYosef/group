@@ -3,7 +3,7 @@
 
    Everything here is measured on your 2D campus plan (the picture), in
    PIXELS: x counts to the right and y counts downward from the top-left
-   corner of the picture (it is 844 x 526 pixels).
+   corner of the picture (it is 1012 x 769 pixels).
 
    HOW TO ADD A ROOM
    1. Open the page, open "Testing tools" and tick "Coordinate helper".
@@ -80,11 +80,11 @@ const DEFAULT_START = "GATE";
 // should cover the real road), then copy the numbers it shows into here.
 const PLAN = {
   image: PLAN_IMAGE,        // the picture itself (plan-image.js). On a web host you can write "plan.png" instead.
-  width: 844,               // picture size in pixels
-  height: 526,
-  lat: 10.739923,           // where the CENTER of the picture sits on the real map
-  lng: 121.949430,        // (set so the Main Gate lands on its real spot: Plus Code PXQ2+X3C)
-  metersPerPixel: 0.3,      // size: one pixel of the picture = this many meters (about 250 m wide). A guess: fix it with the Testing tools
+  width: 1012,               // picture size in pixels
+  height: 769,
+  lat: 10.739873,           // where the CENTER of the picture sits on the real map
+  lng: 121.949245,        // (set so the Main Gate lands on its real spot: Plus Code PXQ2+X3C)
+  metersPerPixel: 0.25,      // size: one pixel of the picture = this many meters (about 250 m wide). A guess: fix it with the Testing tools
   rotation: -120,           // turn the picture clockwise by this many degrees (the road on the real map runs NNW to SSE)
   opacity: 1                // 1 = solid, lower = see the street map through it
 };
@@ -94,30 +94,40 @@ const PLAN = {
 
 // Every place. The key (like "D112") is what the user types.
 // x, y = position on the plan picture (see "HOW TO ADD A ROOM" above).
-// floor: 1 = ground floor, 2 = second floor, etc.
+// floor: 1 = ground floor, 2 = second floor, 3 = third floor.
 //
-// NOTE: these places are SAMPLES, only here so you can try the app.
-// Replace them with your final rooms.
+// NOTE: only the D Building (the one north of the triangle garden) has sample rooms,
+// on all 3 floors, so you can try the app. Replace them with your final rooms.
 const NODES = {
-  GATE:          { name: "Main Gate",    x: 297, y: 490, floor: 1 },
-  BOTTOM_WALK:   { name: "Bottom Walkway",        x: 297, y: 450, floor: 1 },
-  SOUTH_WALK:    { name: "South Walkway",         x: 346, y: 442, floor: 1 },
-  SOUTH_EAST:    { name: "South-East Walkway",    x: 378, y: 440, floor: 1 },
-  EAST_WALK:     { name: "East Walkway",          x: 378, y: 333, floor: 1 },
-  GARDEN_EAST:   { name: "Garden East Corner",    x: 357, y: 336, floor: 1 },
-  GARDEN_NORTH:  { name: "Garden North",          x: 318, y: 336, floor: 1 },
-  GARDEN:        { name: "Triangle Garden",       x: 318, y: 370, floor: 1 },
-  GARDEN_SOUTH:  { name: "Garden South",          x: 318, y: 405, floor: 1 },
+  // Outside: the road, the walkways and the triangle garden
+  GATE:          { name: "Main Gate",             x: 335, y: 738, floor: 1 },
+  BOTTOM_WALK:   { name: "Bottom Walkway",        x: 335, y: 670, floor: 1 },
+  SOUTH_WALK:    { name: "South Walkway",         x: 373, y: 670, floor: 1 },
+  SOUTH_EAST:    { name: "South-East Walkway",    x: 463, y: 670, floor: 1 },
+  EAST_WALK:     { name: "East Walkway",          x: 463, y: 490, floor: 1 },
+  GARDEN_EAST:   { name: "Garden East Corner",    x: 430, y: 497, floor: 1 },
+  GARDEN_NORTH:  { name: "Garden North",          x: 360, y: 497, floor: 1 },
+  GARDEN:        { name: "Triangle Garden",       x: 360, y: 552, floor: 1 },
+  GARDEN_SOUTH:  { name: "Garden South",          x: 373, y: 627, floor: 1 },
 
-  D_ENTRANCE:    { name: "D Building Entrance",   x: 318, y: 313, floor: 1 },
-  D_HALL_1F:     { name: "D Hallway (1F)",        x: 318, y: 289, floor: 1 },
-  D101:          { name: "Room D101",             x: 288, y: 289, floor: 1 },
-  D112:          { name: "Room D112",             x: 348, y: 289, floor: 1 },
-  D_STAIRS_1F:   { name: "D Stairs (1F)",         x: 335, y: 276, floor: 1 },
-  D_STAIRS_2F:   { name: "D Stairs (2F)",         x: 335, y: 276, floor: 2 },
-  D_HALL_2F:     { name: "D Hallway (2F)",        x: 318, y: 289, floor: 2 },
-  D201:          { name: "Room D201",             x: 288, y: 289, floor: 2 },
-  D210:          { name: "Room D210",             x: 348, y: 289, floor: 2 }
+  // D Building, floor 1
+  D_ENTRANCE:    { name: "D Building Entrance",   x: 372, y: 466, floor: 1 },
+  D_HALL_1F:     { name: "D Hallway (1F)",        x: 372, y: 430, floor: 1 },
+  D101:          { name: "Room D101",             x: 330, y: 430, floor: 1 },
+  D112:          { name: "Room D112",             x: 415, y: 430, floor: 1 },
+  D_STAIRS_1F:   { name: "D Stairs (1F)",         x: 430, y: 412, floor: 1 },
+
+  // D Building, floor 2
+  D_STAIRS_2F:   { name: "D Stairs (2F)",         x: 430, y: 412, floor: 2 },
+  D_HALL_2F:     { name: "D Hallway (2F)",        x: 372, y: 430, floor: 2 },
+  D201:          { name: "Room D201",             x: 330, y: 430, floor: 2 },
+  D210:          { name: "Room D210",             x: 415, y: 430, floor: 2 },
+
+  // D Building, floor 3
+  D_STAIRS_3F:   { name: "D Stairs (3F)",         x: 430, y: 412, floor: 3 },
+  D_HALL_3F:     { name: "D Hallway (3F)",        x: 372, y: 430, floor: 3 },
+  D301:          { name: "Room D301",             x: 330, y: 430, floor: 3 },
+  D310:          { name: "Room D310",             x: 415, y: 430, floor: 3 }
 };
 
 
@@ -126,9 +136,9 @@ const NODES = {
 // Each pair works in BOTH directions.
 const EDGES = [
   ["GATE", "BOTTOM_WALK"],
-  ["BOTTOM_WALK", "SOUTH_WALK"],      // the long way round (listed first, so DFS takes it)
-  ["SOUTH_WALK", "SOUTH_EAST"],
-  ["BOTTOM_WALK", "GARDEN_SOUTH"],    // the short way through the garden
+  ["BOTTOM_WALK", "SOUTH_WALK"],
+  ["SOUTH_WALK", "SOUTH_EAST"],       // the long way round (listed first, so DFS takes it)
+  ["SOUTH_WALK", "GARDEN_SOUTH"],     // the short way through the garden
   ["SOUTH_EAST", "EAST_WALK"],
   ["EAST_WALK", "GARDEN_EAST"],
   ["GARDEN_EAST", "GARDEN_NORTH"],
@@ -136,6 +146,7 @@ const EDGES = [
   ["GARDEN", "GARDEN_SOUTH"],
   ["GARDEN_NORTH", "D_ENTRANCE"],
 
+  // D Building
   ["D_ENTRANCE", "D_HALL_1F"],
   ["D_HALL_1F", "D101"],
   ["D_HALL_1F", "D112"],
@@ -143,133 +154,136 @@ const EDGES = [
   ["D_STAIRS_1F", "D_STAIRS_2F"],
   ["D_STAIRS_2F", "D_HALL_2F"],
   ["D_HALL_2F", "D201"],
-  ["D_HALL_2F", "D210"]
+  ["D_HALL_2F", "D210"],
+  ["D_STAIRS_2F", "D_STAIRS_3F"],
+  ["D_STAIRS_3F", "D_HALL_3F"],
+  ["D_HALL_3F", "D301"],
+  ["D_HALL_3F", "D310"]
 ];
 
 
 /* ===== 5. BUILDINGS (stacked floors in 3D) ===== */
 
-// Floors every building gets, unless it has its own  floors: 3  line.
-const DEFAULT_FLOORS = 2;
+// Floors every building gets, unless it has its own  floors: 2  line.
+const DEFAULT_FLOORS = 3;
 const FLOOR_HEIGHT_METERS = 3.5;
 
 // footprint = the building's corners on the plan picture, in pixels.
-// holes     = optional empty yards inside (like the courtyard of Building 9).
-// These outlines were traced automatically from your plan. The names are
-// placeholders (rename them) and the heights are a guess (DEFAULT_FLOORS).
+// holes     = optional empty yards inside (like the courtyard of Building 8).
+// These outlines were traced automatically from the new layout. The names are
+// placeholders (rename them). Each building has 3 floors (see the 3D side views).
 const BUILDINGS = [
   {
     id: "B01", name: "Building 1",
-    footprint: [[162, 63], [175, 63], [175, 84], [162, 84]]
+    footprint: [[231, 72], [176, 72], [176, 49], [231, 49]]
   },
   {
     id: "B02", name: "Building 2",
-    footprint: [[186, 35], [222, 35], [222, 48], [186, 48]]
+    footprint: [[516, 105], [415, 105], [415, 6], [516, 6]]
   },
   {
     id: "B03", name: "Building 3",
-    footprint: [[348, 10], [414, 10], [414, 70], [348, 70]]
+    footprint: [[683, 114], [553, 63], [572, 15], [702, 66]]
   },
   {
     id: "B04", name: "Building 4",
-    footprint: [[442, 42], [455, 12], [537, 45], [525, 75]]
+    footprint: [[162, 126], [140, 126], [140, 91], [162, 91]]
   },
   {
     id: "B05", name: "Building 5",
-    footprint: [[556, 75], [568, 52], [625, 82], [613, 105]]
+    footprint: [[809, 156], [724, 111], [744, 74], [828, 119]]
   },
   {
     id: "B06", name: "Building 6",
-    footprint: [[614, 102], [628, 78], [705, 122], [691, 147]]
+    footprint: [[927, 219], [810, 151], [833, 112], [950, 179]]
   },
   {
     id: "B07", name: "Building 7",
-    footprint: [[183, 156], [208, 156], [208, 171], [183, 171]]
+    footprint: [[212, 255], [171, 255], [171, 229], [212, 229]]
   },
   {
     id: "B08", name: "Building 8",
-    footprint: [[178, 176], [215, 176], [215, 196], [178, 196]]
+    footprint: [[300, 151], [300, 370], [447, 370], [447, 151]],
+    holes: [[[336, 186], [416, 187], [415, 367], [335, 366]]]
   },
   {
     id: "B09", name: "Building 9",
-    footprint: [[270, 103], [367, 103], [367, 249], [270, 249]],
-    holes: [[[292, 126], [347, 126], [347, 248], [292, 248]]]
+    footprint: [[144, 430], [104, 430], [104, 214], [144, 214]]
   },
   {
     id: "B10", name: "Building 10",
-    footprint: [[298, 166], [341, 166], [341, 242], [298, 242]]
+    footprint: [[222, 291], [164, 291], [164, 259], [222, 259]]
   },
   {
     id: "B11", name: "Building 11",
-    footprint: [[671, 156], [731, 156], [731, 236], [671, 236]]
+    footprint: [[272, 229], [228, 229], [227, 301], [146, 301], [146, 430], [272, 430]]
   },
   {
     id: "B12", name: "Building 12",
-    footprint: [[138, 146], [163, 146], [163, 290], [138, 290]]
+    footprint: [[408, 360], [342, 360], [342, 244], [408, 244]]
   },
   {
     id: "B13", name: "Building 13",
-    footprint: [[166, 205], [219, 205], [219, 290], [166, 290]]
+    footprint: [[987, 351], [896, 351], [896, 229], [987, 229]]
   },
   {
     id: "B14", name: "Building 14",
-    footprint: [[221, 156], [249, 156], [249, 290], [221, 290]]
+    footprint: [[444, 460], [299, 460], [299, 397], [444, 397]]
   },
   {
-    id: "D", name: "D Building (sample)",
-    footprint: [[269, 269], [365, 269], [365, 310], [269, 310]]
+    id: "B15", name: "Building 15",
+    footprint: [[759, 456], [461, 456], [461, 421], [759, 421]]
   },
   {
     id: "B16", name: "Building 16",
-    footprint: [[378, 285], [577, 285], [577, 307], [378, 307]]
+    footprint: [[857, 456], [768, 456], [768, 427], [857, 427]]
   },
   {
     id: "B17", name: "Building 17",
-    footprint: [[585, 289], [643, 289], [643, 307], [585, 307]]
+    footprint: [[60, 427], [19, 583], [44, 597], [87, 441]]
   },
   {
     id: "B18", name: "Building 18",
-    footprint: [[108, 291], [123, 295], [96, 398], [80, 394]]
+    footprint: [[65, 648], [42, 613], [247, 475], [271, 510]]
   },
   {
     id: "B19", name: "Building 19",
-    footprint: [[233, 322], [248, 344], [111, 436], [96, 414]]
+    footprint: [[495, 473], [465, 519], [642, 654], [672, 613]]
   },
   {
     id: "B20", name: "Building 20",
-    footprint: [[380, 349], [401, 322], [519, 414], [498, 442]]
+    footprint: [[821, 562], [771, 562], [771, 461], [821, 461]]
   },
   {
     id: "B21", name: "Building 21",
-    footprint: [[587, 313], [619, 313], [619, 378], [587, 378]]
+    footprint: [[523, 648], [460, 599], [487, 564], [550, 613]]
   },
   {
     id: "B22", name: "Building 22",
-    footprint: [[85, 437], [123, 437], [123, 451], [85, 451]]
+    footprint: [[84, 670], [26, 670], [26, 646], [84, 646]]
   },
   {
     id: "B23", name: "Building 23",
-    footprint: [[148, 417], [276, 417], [276, 446], [148, 446]]
+    footprint: [[312, 663], [119, 663], [119, 616], [312, 616]]
   },
   {
     id: "B24", name: "Building 24",
-    footprint: [[336, 421], [355, 421], [355, 438], [336, 438]]
+    footprint: [[429, 651], [398, 651], [398, 622], [429, 622]]
   },
   {
     id: "B25", name: "Building 25",
-    footprint: [[380, 404], [395, 385], [434, 415], [419, 434]]
+    footprint: [[198, 709], [83, 709], [83, 682], [198, 682]]
   },
   {
     id: "B26", name: "Building 26",
-    footprint: [[123, 461], [199, 461], [199, 478], [123, 478]]
+    footprint: [[312, 702], [209, 702], [209, 679], [312, 679]]
   },
   {
     id: "B27", name: "Building 27",
-    footprint: [[208, 459], [276, 459], [276, 472], [208, 472]]
+    footprint: [[456, 720], [374, 720], [374, 661], [456, 661]]
   },
   {
     id: "B28", name: "Building 28",
-    footprint: [[319, 447], [373, 447], [373, 485], [319, 485]]
+    footprint: [[141, 133], [155, 133], [155, 146], [141, 146]]
   }
-
 ];
