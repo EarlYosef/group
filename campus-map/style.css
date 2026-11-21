@@ -99,10 +99,21 @@ button {
   right: 16px;
   z-index: 3;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   pointer-events: none;            /* clicks pass through the gap to the map */
 }
+
+/* 3D / 2D button with the color / plan button right below it */
+.top-right {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.top-right .glass-btn + .glass-btn { margin-top: 10px; }
 
 #topbar > * { pointer-events: auto; }
 
@@ -342,15 +353,6 @@ h1 {
   margin: 0;
   font-size: 14px;
   color: var(--muted);
-}
-
-/* Map look buttons (Auto / Color / White): same pills as the floors */
-.look-picker {
-  display: -webkit-flex;
-  display: flex;
-  -webkit-flex-wrap: wrap;
-  flex-wrap: wrap;
-  margin: 0 -4px 6px;
 }
 
 /* Floors: round pill buttons. The chosen one is white and lifted, like the active menu item in the video. */
@@ -1274,7 +1276,7 @@ body.panel-open .zone-card { left: calc(50% + var(--panel-width) / 2); }
 
   /* On a phone the open drawer covers the top buttons, so hide them to keep the arrow clean. */
   body.panel-open #menuButton,
-  body.panel-open #viewToggle { opacity: 0; pointer-events: none; }
+  body.panel-open .top-right { opacity: 0; pointer-events: none; }
 
   /* The panel becomes a drawer from the left that leaves a strip of map showing. */
   #dock {

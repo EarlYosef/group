@@ -31,7 +31,11 @@
       <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4.5 4.5"></path></svg>
       <span id="menuLabel">Find a room</span>
     </button>
-    <button id="viewToggle" class="glass-btn small" type="button" aria-pressed="true" aria-label="Switch between 3D and flat view">3D</button>
+    <div class="top-right">
+      <button id="viewToggle" class="glass-btn small" type="button" aria-pressed="true" aria-label="Switch between 3D and flat view">3D</button>
+      <!-- One button: tap = the plan (white), tap again = the colors -->
+      <button id="lookToggle" class="glass-btn small" type="button" aria-pressed="true" aria-label="Switch between the color map and the plan">Color</button>
+    </div>
   </div>
 
   <!-- Round "my location" button, like Google Maps: tap to find yourself and follow your blue dot -->
@@ -94,14 +98,6 @@
       <section class="card">
         <p class="section-title">Floor</p>
         <div id="floorPicker" role="group" aria-label="Floors"></div>
-
-        <p class="section-title">Map look</p>
-        <div id="lookPicker" class="look-picker" role="group" aria-label="Map look">
-          <button type="button" class="floor-btn all" data-look="auto" aria-pressed="true">Auto</button>
-          <button type="button" class="floor-btn all" data-look="color" aria-pressed="false">Color</button>
-          <button type="button" class="floor-btn all" data-look="white" aria-pressed="false">White</button>
-        </div>
-        <p class="hint" id="lookHint">Auto: color in 3D, white (like Google Maps) in 2D.</p>
 
         <div class="options">
           <label class="field">Start from

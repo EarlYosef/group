@@ -9,7 +9,7 @@
    showDestination(id)    pulsing yellow dot     showUser(lat,lng,meters,heading)  blue dot = you
    setFloor(floor)        highlight one floor    setTilt(is3D)      3D or flat view
    flyToRoute(path,pad)   move the camera        showCampus()           camera back to the whole campus
-   setMapTheme(dark)      dark or light map     setMapLook(look)   "color" or "white" map
+   setMapTheme(dark)      dark or light map     setMapLook(look)   "color" or "plan" map
    focusOn(lat,lng,zoom)   center on a point
    refreshCampus()        redraw after the PLAN numbers changed
    setStreetMap(show)     street map on or off
@@ -46,7 +46,7 @@ let openPopup = null;
 let basemapLayerIds = [];            // the street map's own layers (filled when the map loads)
 let streetShown = SHOW_STREET_MAP;   // is the street map on right now?
 let darkTheme = false;               // dark mode on?
-let lookName = "color";              // "color" (the PDF design) or "white" (like Google Maps)
+let lookName = "color";              // "color" (the PDF design) or "plan" (the white 2D plan)
 let shownFloor = null;               // the floor that is lit up (null = none)
 let streetBackground = null;         // the street map's own background color (remembered, to switch it back on)
 const readyCallbacks = [];
@@ -92,7 +92,7 @@ function onMapReady(fn) {
 // The color behind the plan.
 function paperColor() {
   if (darkTheme) return MAP_BACKGROUND_DARK;
-  return lookName === "white" ? MAP_BACKGROUND_WHITE : MAP_BACKGROUND;
+  return lookName === "plan" ? MAP_BACKGROUND_PLAN : MAP_BACKGROUND;
 }
 
 // Dark mode for the map: dark paper, and the (white) plan picture dimmed so it does not glare.
@@ -103,12 +103,12 @@ function setMapTheme(dark) {
   ["plan-image", "plan-image-clean"].forEach((id) => map.setPaintProperty(id, "raster-brightness-max", dark ? 0.5 : 1));
 }
 
-// The look of the map: "color" (the design from your PDF) or "white" (clean, like Google Maps).
+// The look of the map: "color" (the design from your PDF) or "plan" (the white 2D plan).
 function setMapLook(look) {
-  lookName = look === "white" ? "white" : "color";
+  lookName = look === "plan" ? "plan" : "color";
   if (!map || !map.getLayer("plan-image-clean")) return;   // not ready: onMapReady will call us again
   map.setLayoutProperty("plan-image", "visibility", lookName === "color" ? "visible" : "none");
-  map.setLayoutProperty("plan-image-clean", "visibility", lookName === "white" ? "visible" : "none");
+  map.setLayoutProperty("plan-image-clean", "visibility", lookName === "plan" ? "visible" : "none");
   map.setPaintProperty("floors-3d", "fill-extrusion-color", floorColorExpression(shownFloor));
   setStreetMap(streetShown);                               // redraws the paper color
 }
@@ -206,11 +206,11 @@ function buildNodesGeoJSON() {
 
 // Colors the selected floor yellow (roofs keep their color). floor = null means "no floor selected".
 function floorColorExpression(floor) {
-  const white = lookName === "white";
+  const plan = lookName === "plan";
   return ["case",
-    ["has", "roof"], white ? ROOF_WHITE : ["get", "roof"],                   // roofs keep their own color
+    ["has", "roof"], plan ? ROOF_PLAN : ["get", "roof"],                   // roofs keep their own color
     ["==", ["get", "floor"], floor === null ? -1 : floor], COLOR_FLOOR_ACTIVE,
-    white ? WALL_WHITE : COLOR_FLOOR];
+    plan ? WALL_PLAN : COLOR_FLOOR];
 }
 
 function addCampusLayers() {
@@ -229,7 +229,7 @@ function addCampusLayers() {
     paint: { "raster-opacity": PLAN.opacity, "raster-fade-duration": 0 }
   }, firstLabelLayerId());
 
-  // The same ground in white (Google Maps look). Hidden until you pick it.
+  // The 2D plan picture itself (white). Hidden until you tap the Color / Plan button.
   map.addLayer({
     id: "plan-image-clean",
     type: "raster",

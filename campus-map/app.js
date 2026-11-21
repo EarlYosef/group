@@ -19,7 +19,7 @@ const menuButton   = $("menuButton");    // opens the panel
 const menuLabel    = $("menuLabel");
 const viewToggle   = $("viewToggle");
 const floorPicker  = $("floorPicker");
-const lookPicker   = $("lookPicker");
+const lookToggle   = $("lookToggle");
 const searchForm   = $("searchForm");
 const roomInput    = $("roomInput");
 const startSelect  = $("startSelect");
@@ -192,40 +192,31 @@ function toggleView() {
   viewToggle.textContent = is3D ? "3D" : "2D";
   viewToggle.setAttribute("aria-pressed", String(is3D));
   if (mapReady) setTilt(is3D);
-  applyLook();   // "Auto" switches between the color and the white map
 }
 
 
-/* ===== MAP LOOK (color or white) ===== */
+/* ===== MAP LOOK (the Color / Plan button) ===== */
 
 const LOOK_KEY = "sac-look";
-let lookChoice = "auto";   // "auto" = color in 3D, white in 2D | "color" | "white"
+let lookChoice = "color";   // "color" = the design from the PDF | "plan" = the white 2D plan
 
-// Which look is on screen right now?
-function currentLook() {
-  if (lookChoice === "auto") return is3D ? "color" : "white";
-  return lookChoice;
-}
-
+// Updates the button and the map.
 function applyLook() {
-  Array.from(lookPicker.children).forEach((button) => {
-    button.setAttribute("aria-pressed", String(button.dataset.look === lookChoice));
-  });
-  if (mapReady) setMapLook(currentLook());
+  const isColor = lookChoice === "color";
+  lookToggle.textContent = isColor ? "Color" : "Plan";
+  lookToggle.setAttribute("aria-pressed", String(isColor));   // the colored look is the "lit" button
+  if (mapReady) setMapLook(lookChoice);
 }
 
 function initLook() {
   try {
-    const saved = localStorage.getItem(LOOK_KEY);
-    if (saved === "auto" || saved === "color" || saved === "white") lookChoice = saved;
-  } catch (err) { /* storage blocked: use Auto */ }
+    if (localStorage.getItem(LOOK_KEY) === "plan") lookChoice = "plan";
+  } catch (err) { /* storage blocked: start with the colors */ }
 
-  Array.from(lookPicker.children).forEach((button) => {
-    button.addEventListener("click", () => {
-      lookChoice = button.dataset.look;
-      try { localStorage.setItem(LOOK_KEY, lookChoice); } catch (err) { /* it just will not be remembered */ }
-      applyLook();
-    });
+  lookToggle.addEventListener("click", () => {
+    lookChoice = lookChoice === "color" ? "plan" : "color";
+    try { localStorage.setItem(LOOK_KEY, lookChoice); } catch (err) { /* it just will not be remembered */ }
+    applyLook();
   });
   applyLook();
 }
@@ -693,7 +684,7 @@ function start() {
     mapReady = true;
     setStreetMap(streetMap.checked);   // in case the box was ticked while the map was loading
     setMapTheme(document.body.classList.contains("dark"));   // dark mode chosen before the map was ready
-    setMapLook(currentLook());                                // so was the map look
+    setMapLook(lookChoice);                                // so was the map look
     onMapClick(handleMapClick);
     onMapDrag(() => setFollowing(false));   // dragging the map = stop following
     autoStartIfAllowed();
