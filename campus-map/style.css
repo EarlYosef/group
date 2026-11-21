@@ -344,6 +344,15 @@ h1 {
   color: var(--muted);
 }
 
+/* Map look buttons (Auto / Color / White): same pills as the floors */
+.look-picker {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  margin: 0 -4px 6px;
+}
+
 /* Floors: round pill buttons. The chosen one is white and lifted, like the active menu item in the video. */
 #floorPicker {
   display: -webkit-flex;

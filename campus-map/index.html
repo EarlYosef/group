@@ -95,6 +95,14 @@
         <p class="section-title">Floor</p>
         <div id="floorPicker" role="group" aria-label="Floors"></div>
 
+        <p class="section-title">Map look</p>
+        <div id="lookPicker" class="look-picker" role="group" aria-label="Map look">
+          <button type="button" class="floor-btn all" data-look="auto" aria-pressed="true">Auto</button>
+          <button type="button" class="floor-btn all" data-look="color" aria-pressed="false">Color</button>
+          <button type="button" class="floor-btn all" data-look="white" aria-pressed="false">White</button>
+        </div>
+        <p class="hint" id="lookHint">Auto: color in 3D, white (like Google Maps) in 2D.</p>
+
         <div class="options">
           <label class="field">Start from
             <select id="startSelect"></select>
@@ -227,12 +235,13 @@
   </div>
 
   <!-- Order matters: map library, then our files from top to bottom.
-       plan-image.js  the campus plan picture      data.js   rooms, buildings, settings
+       plan-image.js  the campus ground pictures (color + white)      data.js   rooms, buildings, settings
        plan.js        plan pixels <-> GPS          graph.js  BFS and DFS route finding
        map3d.js       the 3D map                   ar.js     AR camera guide
        zone.js        "where am I" card            app.js    connects everything -->
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script src="plan-image.js"></script>
+  <script src="plan-image-clean.js"></script>
   <script src="data.js"></script>
   <script src="plan.js"></script>
   <script src="graph.js"></script>

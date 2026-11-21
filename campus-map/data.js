@@ -45,6 +45,7 @@ const SHOW_STREET_MAP = false;
 // Color behind the plan when the street map is hidden (the tan ground around the campus).
 const MAP_BACKGROUND = "#bfb48f";
 const MAP_BACKGROUND_DARK = "#1a1412";   // the same, for dark mode
+const MAP_BACKGROUND_WHITE = "#f1f3f4";  // the same, for the white (Google Maps) look
 
 // When the street map IS shown, still hide its buildings so only YOUR campus buildings show.
 const HIDE_BASEMAP_BUILDINGS = true;
@@ -171,6 +172,10 @@ const FLOOR_HEIGHT_METERS = 3.5;
 // Roof colors (the design from your PDF). Give a building  roof: "red"  / "orange" / "green" / "blue".
 const ROOF_COLORS = { red: "#b24a32", orange: "#c4663a", green: "#3b8a57", blue: "#5278a6" };
 const WALL_COLOR = "#dcd3b2";            // walls of every floor that is not selected
+
+// The white look (flat 2D, like Google Maps): light grey buildings, no colors.
+const ROOF_WHITE = "#d3d6dc";
+const WALL_WHITE = "#e6e8ec";
 
 // footprint = the building's corners on the plan picture, in pixels.
 // holes     = optional empty yards inside (like the courtyard of Building 8).
