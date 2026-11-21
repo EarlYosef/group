@@ -253,6 +253,10 @@ function syncPlanSliders() {
 
 function bindPlanTools() {
   streetMap.checked = SHOW_STREET_MAP;
+  if (OFFLINE_FIRST) {   // offline mode has no street map to show
+    streetMap.disabled = true;
+    streetMap.parentNode.title = "Set OFFLINE_FIRST = false in data.js to use the street map";
+  }
   streetMap.addEventListener("change", () => { if (mapReady) setStreetMap(streetMap.checked); });
 
   syncPlanSliders();
@@ -606,6 +610,21 @@ function handleMapClick(click) {
 
 /* ===== 8. START ===== */
 
+// Offline mode: sw.js (the service worker) saves the app files on the phone.
+// After the first visit with internet, the link opens even with no signal.
+function initOffline() {
+  const note = $("offlineNote");
+  if (!("serviceWorker" in navigator) || window.isSecureContext === false) return;   // needs HTTPS
+
+  navigator.serviceWorker.register("sw.js").then(() => navigator.serviceWorker.ready).then(() => {
+    note.hidden = false;
+    note.textContent = "Offline ready: this app is saved on your phone.";
+  }).catch((error) => console.warn("Offline mode not started:", error));
+
+  window.addEventListener("offline", () => { note.hidden = false; note.textContent = "You are offline. The map and directions still work."; });
+  window.addEventListener("online",  () => { note.textContent = "Offline ready: this app is saved on your phone."; });
+}
+
 function start() {
   if (isTouchDevice()) document.body.classList.add("is-touch");   // shows the AR guide button
   initTheme();            // light or dark (before the map starts)
@@ -613,6 +632,7 @@ function start() {
     if (routePath) flyToRoute(routePath, cameraPadding());
   });
   initZone();             // the "where am I" card (zone.js)
+  initOffline();          // saves the app on the phone so it opens without internet
   loadSavedPlan();        // numbers you fixed earlier on this phone (before the map starts)
   setPanel(!isPhone());   // computer: panel open. phone: closed until you tap the button.
   fillStartSelect();

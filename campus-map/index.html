@@ -16,6 +16,8 @@
 
   <title>SAC Campus Navigator 3D</title>
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -113,6 +115,8 @@
         <p class="section-title">Directions</p>
         <div id="results"><p class="empty">Your route will show here.</p></div>
       </section>
+
+      <p id="offlineNote" class="hint" hidden></p>
 
       <details class="devtools">
         <summary>Testing tools</summary>

@@ -55,7 +55,7 @@ const readyCallbacks = [];
 function createMap(containerId) {
   map = new maplibregl.Map({
     container: containerId,
-    style: BASEMAP_STYLE,
+    style: OFFLINE_FIRST ? OFFLINE_STYLE : BASEMAP_STYLE,   // plain paper (works offline) or street map
     center: [PLAN.lng, PLAN.lat],             // [lng, lat]: longitude FIRST
     zoom: MAP_START.zoom,
     pitch: MAP_START.pitch,

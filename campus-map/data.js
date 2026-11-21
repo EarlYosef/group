@@ -25,6 +25,18 @@
 // Free map style. No account or key needed.
 const BASEMAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
 
+// OFFLINE MODE. true = the map is just your plan on a plain paper color, so it needs no
+// internet for the map itself (the app can then open with no signal after the first visit).
+// false = load the street map too (needs internet). Use false only while lining up the plan.
+const OFFLINE_FIRST = true;
+
+// The plain map used in offline mode: one background color, nothing to download.
+const OFFLINE_STYLE = {
+  version: 8,
+  sources: {},
+  layers: [{ id: "paper", type: "background", paint: { "background-color": "#f6f5f1" } }]
+};
+
 // Show the street map (roads, names, shops) behind your plan?
 // false = only your plan picture. You can still switch the street map on
 // inside the page (Testing tools > Line up the plan > Show street map).
