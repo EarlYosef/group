@@ -9,6 +9,7 @@
    showDestination(id)    pulsing yellow dot     showUser(lat,lng,meters,heading)  blue dot = you
    setFloor(floor)        highlight one floor    setTilt(is3D)      3D or flat view
    flyToRoute(path,pad)   move the camera        showCampus()           camera back to the whole campus
+   setMapTheme(dark)      dark or light map
    focusOn(lat,lng,zoom)   center on a point
    refreshCampus()        redraw after the PLAN numbers changed
    setStreetMap(show)     street map on or off
@@ -42,6 +43,8 @@ let gateRippleMarker = null;         // the pulsing circle at the Main Gate
 let destinationMarker = null;
 let openPopup = null;
 let basemapLayerIds = [];            // the street map's own layers (filled when the map loads)
+let streetShown = SHOW_STREET_MAP;   // is the street map on right now?
+let darkTheme = false;               // dark mode on?
 let streetBackground = null;         // the street map's own background color (remembered, to switch it back on)
 const readyCallbacks = [];
 
@@ -81,12 +84,26 @@ function onMapReady(fn) {
 }
 
 
-/* ===== 3. STREET MAP ON / OFF ===== */
+/* ===== 3. STREET MAP ON / OFF, LIGHT / DARK ===== */
+
+// The color behind the plan.
+function paperColor() {
+  return darkTheme ? MAP_BACKGROUND_DARK : MAP_BACKGROUND;
+}
+
+// Dark mode for the map: dark paper, and the (white) plan picture dimmed so it does not glare.
+function setMapTheme(dark) {
+  darkTheme = dark;
+  if (!map || !map.getLayer("plan-image")) return;      // the map is not ready yet: onMapReady will call us again
+  setStreetMap(streetShown);                            // redraws the paper color
+  map.setPaintProperty("plan-image", "raster-brightness-max", dark ? 0.5 : 1);
+}
 
 // Shows or hides the street map (roads, names, shops). Your plan and campus stay.
 // With the street map off, the page shows only your plan on its own paper color.
 function setStreetMap(show) {
-  map.getContainer().style.background = MAP_BACKGROUND;   // extra safety: same color behind the map
+  streetShown = show;
+  map.getContainer().style.background = paperColor();   // extra safety: same color behind the map
 
   map.getStyle().layers.forEach((layer) => {
     if (basemapLayerIds.indexOf(layer.id) === -1) return;   // only the street map's own layers
@@ -94,7 +111,7 @@ function setStreetMap(show) {
     // The background layer stays on either way: only its color changes.
     if (layer.type === "background") {
       if (streetBackground === null) streetBackground = (layer.paint && layer.paint["background-color"]) || "#f8f4f0";
-      map.setPaintProperty(layer.id, "background-color", show ? streetBackground : MAP_BACKGROUND);
+      map.setPaintProperty(layer.id, "background-color", show ? streetBackground : paperColor());
       return;
     }
 

@@ -24,6 +24,7 @@ const roomInput    = $("roomInput");
 const startSelect  = $("startSelect");
 const algoSelect   = $("algoSelect");
 const locateButton = $("locateButton");
+const themeToggle  = $("themeToggle");   // dark mode switch in the side panel
 const myLocation   = $("myLocation");    // round Google-style location button
 const testMode     = $("testMode");
 const coordMode    = $("coordMode");
@@ -74,6 +75,39 @@ function setStatus(text) {
 function isPhone() {
   return window.innerWidth < PHONE_WIDTH;
 }
+
+/* ===== DARK MODE ===== */
+
+const THEME_KEY = "sac-theme";          // remembered on this phone: "dark" or "light"
+
+// Dark mode: the choice you made before, else what the phone itself uses.
+function initTheme() {
+  let dark = !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  try {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved) dark = saved === "dark";
+  } catch (err) { /* storage blocked: just use the phone's setting */ }
+
+  applyTheme(dark);
+
+  themeToggle.addEventListener("click", () => {
+    const nextDark = !document.body.classList.contains("dark");
+    applyTheme(nextDark);
+    try { localStorage.setItem(THEME_KEY, nextDark ? "dark" : "light"); } catch (err) { /* it just will not be remembered */ }
+  });
+}
+
+function applyTheme(dark) {
+  document.body.classList.toggle("dark", dark);
+  themeToggle.setAttribute("aria-pressed", String(dark));
+  themeToggle.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+
+  const bar = document.querySelector('meta[name="theme-color"]');   // the phone's top bar color
+  if (bar) bar.setAttribute("content", dark ? "#17110f" : "#f6f5f1");
+
+  if (mapReady) setMapTheme(dark);
+}
+
 
 // True on phones and tablets (a finger), false on laptops and desktops (a mouse).
 // The AR guide needs a camera you can walk around with, so only touch devices get its button.
@@ -574,7 +608,10 @@ function handleMapClick(click) {
 
 function start() {
   if (isTouchDevice()) document.body.classList.add("is-touch");   // shows the AR guide button
-  initAr();               // the AR guide (ar.js)
+  initTheme();            // light or dark (before the map starts)
+  initAr(() => {          // the AR guide (ar.js). When it closes: show the route to the room on the big map.
+    if (routePath) flyToRoute(routePath, cameraPadding());
+  });
   initZone();             // the "where am I" card (zone.js)
   loadSavedPlan();        // numbers you fixed earlier on this phone (before the map starts)
   setPanel(!isPhone());   // computer: panel open. phone: closed until you tap the button.
@@ -597,6 +634,7 @@ function start() {
   onMapReady(() => {
     mapReady = true;
     setStreetMap(streetMap.checked);   // in case the box was ticked while the map was loading
+    setMapTheme(document.body.classList.contains("dark"));   // dark mode chosen before the map was ready
     onMapClick(handleMapClick);
     onMapDrag(() => setFollowing(false));   // dragging the map = stop following
     autoStartIfAllowed();

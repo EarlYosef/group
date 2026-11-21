@@ -10,6 +10,7 @@
    3. Top buttons           7. Phones
    4. Side panel            8. AR guide (camera view)
    9. Where-am-I card and Main Gate circle
+   10. Dark mode (the switch is in the side panel)
    ===================================================================== */
 
 
@@ -889,57 +890,134 @@ body.is-touch .ar-start { display: -webkit-inline-flex; display: inline-flex; }
   50%      { -webkit-transform: rotateX(58deg) translateY(-14px); transform: rotateX(58deg) translateY(-14px); }
 }
 
+/* Bottom row: the round mini map on the left, "85 m to Room D112" on the right */
+.ar-bottom {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 18px;
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  display: -webkit-flex;
+  display: flex;
+  align-items: flex-end;
+}
+
+/* The mini map: a round window. It is a button: tapping it leaves the AR guide.
+   34% of the screen width, never smaller than 104 px or bigger than 150 px (fits small and big phones). */
+.ar-mini {
+  position: relative;
+  flex: none;
+  width: 34vw;
+  height: 34vw;
+  min-width: 104px;
+  min-height: 104px;
+  max-width: 150px;
+  max-height: 150px;
+  padding: 0;
+  overflow: hidden;
+  background: rgba(14, 24, 40, 0.78);
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+
+.ar-mini-svg { display: block; width: 100%; height: 100%; }
+
+/* Small corner icon that says "tap to open the big map" */
+.ar-mini-badge {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  margin-left: -12px;
+  display: -webkit-flex;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+}
+
+.ar-mini-badge .icon { width: 14px; height: 14px; }
+
+.ar-info {
+  flex: 1;
+  min-width: 0;
+  margin-left: 12px;
+  text-align: right;
+}
+
 /* "85 m to Room D112": how far is left to the room you typed */
 .ar-left {
-  position: absolute;
-  left: 50%;
-  bottom: 92px;
-  bottom: calc(92px + env(safe-area-inset-bottom, 0px));
-  max-width: calc(100% - 32px);
-  padding: 8px 18px;
-  font: 700 15px var(--font-body);
+  display: inline-block;
+  max-width: 100%;
+  padding: 9px 16px;
+  font: 700 16px var(--font-body);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  background: rgba(14, 24, 40, 0.6);
+  vertical-align: bottom;
+  background: rgba(14, 24, 40, 0.62);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 20px;
+}
+
+/* GPS is weak: the box can be tapped to move to the next point, so it looks tappable */
+.ar-left.is-weak { color: #ffe9a8; border-color: #ffe9a8; }
+
+.ar-progress {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* The room tag floating in the camera. ar.js slides it left and right (style="left: ..%"). */
+.ar-dest {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  max-width: 78%;
+  display: -webkit-flex;
+  display: flex;
+  align-items: center;
+  padding: 8px 14px 8px 10px;
+  font: 700 15px var(--font-body);
+  white-space: nowrap;
+  color: #ffffff;
+  background: #e8604c;
+  border: 2px solid #ffffff;
+  border-radius: 22px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
   -webkit-transform: translateX(-50%);
   transform: translateX(-50%);
+  pointer-events: none;
 }
+
+.ar-dest[hidden] { display: none; }
+.ar-dest .icon { flex: none; width: 20px; height: 20px; margin-right: 6px; fill: #ffffff; stroke: #e8604c; }
+.ar-dest span { overflow: hidden; text-overflow: ellipsis; }
+
+/* Outside the camera's view: a small arrow shows which way to turn */
+.ar-dest[data-side="left"]::before  { content: "\2039"; margin-right: 6px; font-size: 22px; line-height: 1; }
+.ar-dest[data-side="right"]::after  { content: "\203A"; margin-left: 6px; font-size: 22px; line-height: 1; }
 
 .ar-hint {
   position: absolute;
   left: 20px;
   right: 20px;
-  bottom: 142px;
-  bottom: calc(142px + env(safe-area-inset-bottom, 0px));
+  bottom: 186px;
+  bottom: calc(186px + env(safe-area-inset-bottom, 0px));
   text-align: center;
   font-size: 13px;
   line-height: 1.4;
   color: #ffe9a8;
-}
-
-/* Bottom bar: Back, "Step 2 of 6", Next */
-.ar-bar {
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  bottom: 22px;
-  bottom: calc(22px + env(safe-area-inset-bottom, 0px));
-  display: -webkit-flex;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.ar-progress {
-  font-size: 14px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
 }
 
 .ar-btn {
@@ -957,13 +1035,6 @@ body.is-touch .ar-start { display: -webkit-inline-flex; display: inline-flex; }
 
 .ar-btn:disabled { opacity: 0.4; }
 .ar-btn-main { background: #2563eb; border-color: #2563eb; }
-
-/* On stairs the Next button pulses, because the GPS cannot tell floors apart */
-.ar.is-stairs #arNext { animation: ar-nudge 1.2s ease-in-out infinite; }
-
-@keyframes ar-nudge {
-  50% { -webkit-transform: scale(1.08); transform: scale(1.08); }
-}
 
 /* "You've arrived": the green door screen */
 .ar-arrived {
@@ -1102,6 +1173,82 @@ body.ar-on { overflow: hidden; }
   100% { opacity: 0;   -webkit-transform: scale(1);    transform: scale(1); }
 }
 
+/* ---------- 10. Dark mode ---------- */
+/* app.js adds the class "dark" to <body>. Most colors come from the variables, so changing them is enough.
+   The few places that used fixed light colors are listed below the variables. */
+
+.theme-btn {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  margin-left: auto;
+  padding: 0;
+  display: -webkit-flex;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+  background: var(--field);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+
+.theme-btn .icon { width: 20px; height: 20px; }
+.theme-btn .icon-sun { display: none; }
+body.dark .theme-btn .icon-moon { display: none; }
+body.dark .theme-btn .icon-sun { display: block; }
+
+body.dark {
+  --ink: #f6ebe5;                        /* main text (light on dark) */
+  --muted: #bda89f;
+  --glass: rgba(34, 26, 23, 0.74);
+  --glass-solid: #231a17;
+  --card: rgba(255, 255, 255, 0.07);
+  --field: rgba(255, 255, 255, 0.1);
+  --edge: rgba(255, 255, 255, 0.14);
+  --line: rgba(255, 255, 255, 0.18);
+  --shadow: 0 10px 34px rgba(0, 0, 0, 0.55);
+  background: #1a1412;
+  color-scheme: dark;                    /* dark scroll bars and dropdown lists */
+}
+
+/* Places that had fixed light colors */
+body.dark #panelToggle,
+body.dark .locate-fab { color: var(--ink); background: #2b211e; }
+body.dark .locate-fab.is-on { color: #6ea8ff; }
+body.dark .locate-fab.is-following { color: #ffffff; background: #1a73e8; }
+
+body.dark .glass-btn:hover,
+body.dark .floor-btn:hover,
+body.dark .chip:hover { background: rgba(255, 255, 255, 0.18); }
+body.dark .floor-btn,
+body.dark .btn-outline,
+body.dark .chip { background: rgba(255, 255, 255, 0.08); }
+body.dark .floor-btn[aria-pressed="true"],
+body.dark .chip:hover { color: #ffffff; }
+
+/* The search stays a light pill: it sits on the coral card */
+body.dark .search { background: #fff6f0; }
+body.dark #roomInput { color: #2d1a15; }
+body.dark #roomInput::placeholder { color: #7d625a; }
+
+/* Dropdown arrow: light, so it shows on the dark box */
+body.dark select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23f6ebe5' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+/* Direction steps: the dots sit on the dark panel */
+body.dark li::before { background: #2b211e; }
+body.dark li:last-child::before { border-color: #2b211e; }
+
+body.dark .maplibregl-popup-content { color: var(--ink); background: #2b211e; }
+body.dark .maplibregl-popup-tip { border-top-color: #2b211e; border-bottom-color: #2b211e; }
+body.dark .maplibregl-ctrl-group { background: #2b211e; }
+body.dark .maplibregl-ctrl-group button { background-color: #2b211e; }
+body.dark .maplibregl-ctrl-group button .maplibregl-ctrl-icon { -webkit-filter: invert(1); filter: invert(1); }
+body.dark .maplibregl-ctrl-attrib { background: rgba(26, 20, 18, 0.7); color: #bda89f; }
+body.dark .maplibregl-ctrl-attrib a { color: #bda89f; }
+
 /* The card is centred on the free map area, not under the side panel */
 body.panel-open .zone-card { left: calc(50% + var(--panel-width) / 2); }
 
@@ -1165,8 +1312,8 @@ body.panel-open .zone-card { left: calc(50% + var(--panel-width) / 2); }
   .user-halo,
   .ar-tilt,
   .gate-ripple i,
-  .zone-card.pop,
-  .ar.is-stairs #arNext { animation: none; }
+  .zone-card.pop { animation: none; }
+
   button,
   #dock,
   body.panel-open #dock { transition: none; }

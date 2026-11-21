@@ -68,6 +68,11 @@
           <h1>SAC Campus Navigator</h1>
           <p class="place">St. Anthony's College, San Jose, Antique</p>
         </div>
+        <!-- Dark mode switch (remembered on this phone) -->
+        <button id="themeToggle" class="theme-btn" type="button" aria-pressed="false" aria-label="Dark mode">
+          <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg>
+          <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"></path></svg>
+        </button>
       </div>
 
       <!-- Hero card: the search -->
@@ -182,13 +187,26 @@
       </div>
     </div>
 
-    <div id="arLeft" class="ar-left"></div>
+    <!-- The room you are going to, floating in the camera view (ar.js slides it sideways as you turn) -->
+    <div id="arDest" class="ar-dest" hidden>
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
+      <span id="arDestText"></span>
+    </div>
+
     <div id="arHint" class="ar-hint" role="status" aria-live="polite"></div>
 
-    <div class="ar-bar">
-      <button id="arBack" class="ar-btn" type="button">Back</button>
-      <span id="arProgress" class="ar-progress"></span>
-      <button id="arNext" class="ar-btn ar-btn-main" type="button">Next</button>
+    <!-- Bottom row: round mini map (tap it to leave the AR guide) and how far is left -->
+    <div class="ar-bottom">
+      <button id="arMini" class="ar-mini" type="button" aria-label="Leave the AR guide and show the big map">
+        <svg id="arMiniSvg" class="ar-mini-svg" viewBox="0 0 100 100" aria-hidden="true"></svg>
+        <span class="ar-mini-badge" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"></path></svg>
+        </span>
+      </button>
+      <div class="ar-info">
+        <div id="arLeft" class="ar-left"></div>
+        <div id="arProgress" class="ar-progress"></div>
+      </div>
     </div>
 
     <!-- Green "You've arrived" screen -->
@@ -197,7 +215,7 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v18H7z"></path><circle cx="14" cy="12.5" r="1"></circle></svg>
       </div>
       <h2>You've arrived</h2>
-      <p id="arArrivedPlace"></p>
+      <p>You're at <strong id="arArrivedPlace"></strong></p>
       <button id="arDone" class="ar-btn ar-btn-main" type="button">Done</button>
     </div>
   </div>

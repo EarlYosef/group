@@ -32,6 +32,7 @@ const SHOW_STREET_MAP = false;
 
 // Color behind the plan when the street map is hidden (the plan's own paper color).
 const MAP_BACKGROUND = "#f6f5f1";
+const MAP_BACKGROUND_DARK = "#1a1412";   // the same, for dark mode
 
 // When the street map IS shown, still hide its buildings so only YOUR campus buildings show.
 const HIDE_BASEMAP_BUILDINGS = true;
