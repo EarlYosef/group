@@ -18,6 +18,7 @@ const panelToggle  = $("panelToggle");   // round arrow on the panel's edge
 const menuButton   = $("menuButton");    // opens the panel
 const menuLabel    = $("menuLabel");
 const viewToggle   = $("viewToggle");
+const viewLabel    = $("viewLabel");
 const floorPicker  = $("floorPicker");
 const lookToggle   = $("lookToggle");
 const lookLabel    = $("lookLabel");
@@ -190,7 +191,7 @@ function selectFloor(floor) {
 
 function toggleView() {
   is3D = !is3D;
-  viewToggle.textContent = is3D ? "3D" : "2D";
+  viewLabel.textContent = is3D ? "3D" : "2D";
   viewToggle.setAttribute("aria-pressed", String(is3D));
   if (mapReady) setTilt(is3D);
 }

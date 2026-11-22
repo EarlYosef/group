@@ -104,24 +104,53 @@ button {
   pointer-events: none;            /* clicks pass through the gap to the map */
 }
 
-/* 3D / 2D button with the color / plan button right below it */
+/* Top-right buttons in one row: the layers button, then the 3D / 2D button on its right */
 .top-right {
+  --tile: 60px;                    /* size of both square buttons (smaller on phones, see the end of this file) */
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: row;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.top-right > * + * { margin-left: 10px; }
+
+/* 3D / 2D button: same size as the layers button. Maroon while 3D is on, white in 2D. */
+.view-btn {
+  position: relative;
+  width: var(--tile);
+  height: var(--tile);
+  padding: 0;
   display: -webkit-flex;
   display: flex;
   -webkit-flex-direction: column;
   flex-direction: column;
-  align-items: stretch;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--maroon), var(--maroon-deep));
+  border: 3px solid #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(60, 20, 25, 0.35);
+  cursor: pointer;
+  font: 700 12px var(--font-body);
 }
 
-.top-right .glass-btn + .look-btn { margin-top: 10px; }
+.view-btn:active { -webkit-transform: scale(0.96); transform: scale(0.96); }
+body.dark .view-btn[aria-pressed="false"] { color: #f6ebe5; background: #2b211e; border-color: #4a3a36; }
+.view-btn .icon { width: 26px; height: 26px; margin: 0 0 2px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.view-label { line-height: 1.1; letter-spacing: 0.02em; }
+.view-btn .view-2d { display: none; }
+.view-btn[aria-pressed="false"] { color: var(--maroon); background: #ffffff; }
+.view-btn[aria-pressed="false"] .view-3d { display: none; }
+.view-btn[aria-pressed="false"] .view-2d { display: block; }
 
 /* Layers button (like Google Maps): a small picture of the look you get when you tap, with its name */
 .look-btn {
   position: relative;
-  -webkit-align-self: flex-end;
-  align-self: flex-end;
-  width: 64px;
-  height: 64px;
+  width: var(--tile);
+  height: var(--tile);
   padding: 0;
   overflow: hidden;
   background: #ffffff;
@@ -794,7 +823,7 @@ li:last-child::before {
 }
 
 /* Zoom buttons: below the 3D / flat button */
-.maplibregl-ctrl-top-right { top: 76px; right: 8px; }
+.maplibregl-ctrl-top-right { top: 90px; right: 8px; }
 
 
 /* ---------- 8. AR guide (camera view, like a car navigation) ---------- */
@@ -1376,6 +1405,22 @@ body.panel-open .zone-card { left: calc(50% + var(--panel-width) / 2); }
   #dock { background: var(--glass-solid); }
   .glass-btn,
   .zone-card { background: #fff6f0; }
+}
+
+/* Phones: smaller square buttons so the search pill and both buttons fit side by side */
+@media (max-width: 600px) {
+  .top-right { --tile: 54px; }
+  .top-right > * + * { margin-left: 8px; }
+  .view-btn .icon { width: 23px; height: 23px; }
+  .view-btn, .look-label { font-size: 11px; }
+  #menuLabel { max-width: 34vw; }
+}
+
+@media (max-width: 360px) {
+  .top-right { --tile: 48px; }
+  .top-right > * + * { margin-left: 6px; }
+  .view-btn .icon { width: 20px; height: 20px; }
+  #menuLabel { max-width: 26vw; }
 }
 
 @media (prefers-reduced-motion: reduce) {

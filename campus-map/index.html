@@ -32,13 +32,19 @@
       <span id="menuLabel">Find a room</span>
     </button>
     <div class="top-right">
-      <button id="viewToggle" class="glass-btn small" type="button" aria-pressed="true" aria-label="Switch between 3D and flat view">3D</button>
-      <!-- One button like the Google Maps "layers" button: a small picture of the other look. Tap = switch. -->
+      <!-- Layers button (like Google Maps): a small picture of the other look. Tap = switch. -->
       <button id="lookToggle" class="look-btn" type="button" data-next="plan" aria-label="Switch to the plan map">
         <span class="look-thumb" aria-hidden="true"></span>
         <span id="lookLabel" class="look-label">Plan</span>
       </button>
+      <!-- 3D / 2D button, right of it. Maroon while 3D is on. -->
+      <button id="viewToggle" class="view-btn" type="button" aria-pressed="true" aria-label="Switch between 3D and flat view">
+        <svg class="icon view-3d" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l8 4.3v9.8l-8 4.3-8-4.3V7.1z"></path><path d="M4.2 7.2L12 11.5l7.8-4.3M12 11.5v9.6"></path></svg>
+        <svg class="icon view-2d" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2.5"></rect><path d="M4 12h16M12 4v16"></path></svg>
+        <span id="viewLabel" class="view-label">3D</span>
+      </button>
     </div>
+  </div>
   </div>
 
   <!-- Round "my location" button, like Google Maps: tap to find yourself and follow your blue dot -->
