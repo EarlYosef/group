@@ -193,7 +193,6 @@
     <!-- The arrow lies on the "floor": style.css tilts this box back -->
     <div class="ar-floor">
       <div class="ar-tilt">
-      <span class="ar-ring" aria-hidden="true"></span>
       <svg id="arArrow" class="ar-arrow" viewBox="0 0 100 120" aria-hidden="true">
         <defs>
           <linearGradient id="arArrowFill" x1="0" y1="0" x2="0" y2="1">
@@ -205,9 +204,6 @@
       </svg>
       </div>
     </div>
-
-    <!-- Distance to the next point, big, right under the arrow -->
-    <div id="arDistance" class="ar-distance" aria-live="off"></div>
 
     <!-- The room you are going to, floating in the camera view (ar.js slides it sideways as you turn) -->
     <div id="arDest" class="ar-dest" hidden>
@@ -226,8 +222,7 @@
         </span>
       </button>
       <div class="ar-info">
-        <div id="arLeft" class="ar-left"><strong id="arLeftNum"></strong><span id="arLeftName"></span></div>
-        <div class="ar-bar" aria-hidden="true"><i id="arBarFill"></i></div>
+        <div id="arLeft" class="ar-left"></div>
         <div id="arProgress" class="ar-progress"></div>
       </div>
     </div>
