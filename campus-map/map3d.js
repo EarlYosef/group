@@ -241,7 +241,7 @@ function isCoarsePointer() {
 function addCampusLayers() {
   map.addSource("plan",   { type: "image", url: PLAN.image, coordinates: planCorners() });
   map.addSource("plan-clean", { type: "image", url: PLAN_IMAGE_CLEAN, coordinates: planCorners() });
-  map.addSource("plan-flat",  { type: "image", url: (typeof PLAN_IMAGE_FLAT === "string" ? PLAN_IMAGE_FLAT : PLAN_IMAGE), coordinates: planCorners() });
+  map.addSource("plan-flat",  { type: "image", url: PLAN_IMAGE_FLAT, coordinates: planCorners() });
   map.addSource("floors", { type: "geojson", data: buildFloorsGeoJSON() });
   map.addSource("routes", { type: "geojson", data: emptyCollection() });
   map.addSource("nodes",  { type: "geojson", data: buildNodesGeoJSON() });
