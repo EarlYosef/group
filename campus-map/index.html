@@ -69,18 +69,17 @@
 
   <!-- The side panel (frosted glass). Opens from the menu button. -->
   <aside id="dock" aria-label="Campus directions">
-    <button id="panelToggle" type="button" aria-label="Hide the side panel" aria-expanded="true">
-      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6l-6 6 6 6"></path></svg>
-    </button>
-
     <div class="dock-scroll">
 
       <!-- Name and logo -->
       <div class="brand">
-        <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
-          <rect width="32" height="32" rx="9" fill="#8a1c2b"></rect>
-          <path d="M16 6 L24 25 L16 20.5 L8 25 Z" fill="#fff7f2"></path>
-        </svg>
+        <!-- The red arrow logo is also the "back to the map" button: tap it to slide the panel away -->
+        <button id="panelToggle" class="logo-btn" type="button" title="Back to the map" aria-label="Back to the map" aria-expanded="true">
+          <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="9" fill="#8a1c2b"></rect>
+            <path d="M16 6 L24 25 L16 20.5 L8 25 Z" fill="#fff7f2"></path>
+          </svg>
+        </button>
         <div>
           <h1>SAC Campus Navigator</h1>
           <p class="place">St. Anthony's College, San Jose, Antique</p>

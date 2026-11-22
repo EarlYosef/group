@@ -374,11 +374,8 @@ function setUserPosition(lat, lng, meters, heading) {
     else followUser(lat, lng);
   } else if (!onCampus) {
     setFollowing(false);
-    if (zoneNow === "approaching" && lastZone !== "approaching") {
-      showGate(18);                                      // close to the road: look straight at the Main Gate
-    } else if (wantsFocus) {
-      showCampus();
-    }
+    // Not on the campus yet (near the road or far away): the camera always looks at the Main Gate.
+    if (wantsFocus || zoneNow !== lastZone) showGate(zoneNow === "approaching" ? 18 : GATE_ZOOM);
     if (wantsFocus) setStatus(outsideMessage(classifyLocation(lat, lng)));
   }
   wantsFocus = false;
@@ -392,8 +389,8 @@ function setUserPosition(lat, lng, meters, heading) {
 
 // What to tell someone who is not on the campus yet.
 function outsideMessage(here) {
-  if (here.zone === "approaching") return "You are near the Main Gate. The map looks at the gate and will zoom in on you once you are on the campus.";
-  return "You are about " + formatDistance(here.centerMeters) + " from the campus, so the map stays on the campus. It will zoom in when you get to the Main Gate.";
+  if (here.zone === "approaching") return "You are near the Main Gate. The map looks at the gate and will follow you once you walk in.";
+  return "You are about " + formatDistance(here.centerMeters) + " from the campus, so the map looks at the Main Gate. It will follow you once you walk in.";
 }
 
 // Follow mode: the camera stays on the blue dot. Dragging the map turns it off.
@@ -409,7 +406,7 @@ function locateMe() {
   if (userPos && watchId !== null) {
     const here = classifyLocation(userPos.lat, userPos.lng);
     if (here.zone === "far" || here.zone === "approaching") {
-      if (here.zone === "approaching") showGate(18); else showCampus();
+      showGate(here.zone === "approaching" ? 18 : GATE_ZOOM);
       setStatus(outsideMessage(here));
       return;
     }
@@ -698,6 +695,7 @@ function start() {
     setMapLook(lookChoice);                                // so was the map look
     onMapClick(handleMapClick);
     onMapDrag(() => setFollowing(false));   // dragging the map = stop following
+    showGate();                        // open with a smooth swoop onto the Main Gate
     autoStartIfAllowed();
     setStatus("Type a room and press Go.");
   });

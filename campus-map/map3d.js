@@ -8,7 +8,7 @@
    drawRoutes(routes)     draw route lines       clearRoutes()      remove them
    showDestination(id)    pulsing yellow dot     showUser(lat,lng,meters,heading)  blue dot = you
    setFloor(floor)        highlight one floor    setTilt(is3D)      3D or flat view
-   flyToRoute(path,pad)   move the camera        showCampus()           camera back to the whole campus
+   flyToRoute(path,pad)   move the camera
    setMapTheme(dark)      dark or light map     setMapLook(look)   "color" or "plan" map
    focusOn(lat,lng,zoom)   center on a point     showGate(zoom)     look at the Main Gate
    refreshCampus()        redraw after the PLAN numbers changed
@@ -31,6 +31,8 @@ const FLOOR_GAP_METERS = 0.3;        // thin gap between stacked floors
 const ROOF_THICKNESS_METERS = 0.6;   // the colored roof slab on top
 const FLAT_EDGE_METERS = 60;         // 2D: how far past the campus edge you can slide
 const FLAT_MIN_ZOOM = 16.3;          // 2D: how far you can zoom out
+const MIN_ZOOM_3D = 16.6;            // 3D: how far you can zoom out (a fair distance, the whole campus still fits)
+const GATE_ZOOM = 17.8;              // how close the camera starts on the Main Gate
 
 const COLOR_FLOOR        = WALL_COLOR;  // a floor that is not selected (beige wall, see data.js)
 const COLOR_FLOOR_ACTIVE = "#f2b705";   // the selected floor (SAC yellow)
@@ -63,6 +65,7 @@ function createMap(containerId) {
     style: OFFLINE_FIRST ? OFFLINE_STYLE : BASEMAP_STYLE,   // plain paper (works offline) or street map
     center: [PLAN.lng, PLAN.lat],             // [lng, lat]: longitude FIRST
     zoom: MAP_START.zoom,
+    minZoom: MIN_ZOOM_3D,
     pitch: MAP_START.pitch,
     bearing: MAP_START.bearing,
     maxPitch: 78,
@@ -487,20 +490,19 @@ function focusOn(lat, lng, zoom) {
   map.easeTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), zoom || 18.5), duration: 1200 });
 }
 
-// Back to the whole campus (used when you are too far away to zoom in on yourself).
-function showCampus() {
-  map.easeTo({
-    center: [PLAN.lng, PLAN.lat], zoom: MAP_START.zoom,
-    pitch: is3DView ? TILT_3D : 0,
-    bearing: is3DView ? MAP_START.bearing : planUpBearing(),
-    duration: 1000
-  });
-}
-
-// Look straight at the Main Gate entrance (the camera does not turn).
+// Look at the Main Gate, in the middle of the screen, with a smooth swoop.
+// This is the camera's home: it is used when the app opens, and whenever you are not on the campus
+// yet (even from far away). The camera never turns by itself: only the tilt and zoom animate.
 function showGate(zoom) {
   const gate = NODES[GATE_NODE_ID];
-  map.easeTo({ center: [gate.lng, gate.lat], zoom: zoom || 18, duration: 1000 });
+  map.easeTo({
+    center: [gate.lng, gate.lat],
+    zoom: zoom || GATE_ZOOM,
+    pitch: is3DView ? TILT_3D : 0,
+    bearing: is3DView ? MAP_START.bearing : planUpBearing(),
+    duration: 2000,
+    easing: (t) => 1 - Math.pow(1 - t, 3)      // starts fast, lands softly
+  });
 }
 
 // 3D = tilted camera with the building blocks, free to turn.
@@ -532,7 +534,7 @@ function lockFlatView(on) {
     map.touchPitch.enable();
     map.keyboard.enableRotation();
     map.setMaxBounds(null);
-    map.setMinZoom(null);
+    map.setMinZoom(MIN_ZOOM_3D);
   }
 }
 

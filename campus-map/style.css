@@ -263,15 +263,17 @@ body.panel-open #menuButton { opacity: 0; pointer-events: none; }
   /* closed: slid off the screen to the left */
   -webkit-transform: translateX(calc(-100% - 40px));
   transform: translateX(calc(-100% - 40px));
+  opacity: 0;
   visibility: hidden;
-  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear 0.35s;
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease, visibility 0s linear 0.45s;
 }
 
 body.panel-open #dock {
   -webkit-transform: none;
   transform: none;
+  opacity: 1;
   visibility: visible;
-  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s;
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease, visibility 0s;
 }
 
 /* The scrolling part. (The round arrow sits outside it, so it is not clipped.) */
@@ -279,32 +281,47 @@ body.panel-open #dock {
   height: 100%;
   padding: 18px 16px 16px;
   overflow-y: auto;
+  scrollbar-width: thin;                              /* Firefox: slim, like on the phone */
+  scrollbar-color: rgba(85, 16, 27, 0.28) transparent;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
 
-/* Round arrow on the panel's edge: hides the panel */
-#panelToggle {
-  position: absolute;
-  z-index: 2;
-  top: 26px;
-  right: -15px;
-  width: 30px;
-  height: 30px;
+/* Slim scroll bar (desktop), like the app on a phone: no arrows, no gray track, just a soft thin handle */
+.dock-scroll::-webkit-scrollbar { width: 8px; }
+.dock-scroll::-webkit-scrollbar-track { background: transparent; margin: 18px 0; }
+.dock-scroll::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+.dock-scroll::-webkit-scrollbar-thumb {
+  background: rgba(85, 16, 27, 0.22);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 8px;
+}
+.dock-scroll:hover::-webkit-scrollbar-thumb { background: rgba(85, 16, 27, 0.42); background-clip: padding-box; }
+body.dark .dock-scroll { scrollbar-color: rgba(246, 235, 229, 0.3) transparent; }
+body.dark .dock-scroll::-webkit-scrollbar-thumb { background: rgba(246, 235, 229, 0.25); background-clip: padding-box; }
+body.dark .dock-scroll:hover::-webkit-scrollbar-thumb { background: rgba(246, 235, 229, 0.45); background-clip: padding-box; }
+
+/* The logo is a button: tap it and the panel slides away, back to the map */
+.logo-btn {
+  flex: none;
+  position: relative;
+  width: 42px;
+  height: 42px;
+  margin: 0 12px 0 0;
   padding: 0;
-  display: -webkit-flex;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--ink);
-  background: #ffffff;
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  box-shadow: 0 4px 12px rgba(60, 20, 25, 0.25);
+  background: none;
+  border: 0;
+  border-radius: 11px;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(85, 16, 27, 0.28);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s;
 }
 
-#panelToggle .icon { width: 16px; height: 16px; }
-#panelToggle:hover { color: var(--maroon); }
+.logo-btn .logo { display: block; width: 100%; height: 100%; margin: 0; }
+.logo-btn:hover { transform: scale(1.08) rotate(-6deg); box-shadow: 0 6px 16px rgba(85, 16, 27, 0.4); }
+.logo-btn:active { transform: scale(0.9); }
+.logo-btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 
 .brand {
   display: -webkit-flex;
@@ -1313,7 +1330,6 @@ body.dark {
 }
 
 /* Places that had fixed light colors */
-body.dark #panelToggle,
 body.dark .locate-fab { color: var(--ink); background: #2b211e; }
 body.dark .locate-fab.is-on { color: #6ea8ff; }
 body.dark .locate-fab.is-following { color: #ffffff; background: #1a73e8; }
@@ -1407,6 +1423,37 @@ body.panel-open .zone-card { left: calc(50% + var(--panel-width) / 2); }
   .zone-card { background: #fff6f0; }
 }
 
+/* ===== Button animations (a little life, never loud) ===== */
+
+/* They pop in one after another when the page opens */
+@-webkit-keyframes btn-pop { 0% { opacity: 0; -webkit-transform: translateY(-10px) scale(0.6); } 70% { opacity: 1; -webkit-transform: translateY(0) scale(1.08); } 100% { opacity: 1; -webkit-transform: none; } }
+@keyframes btn-pop { 0% { opacity: 0; transform: translateY(-10px) scale(0.6); } 70% { opacity: 1; transform: translateY(0) scale(1.08); } 100% { opacity: 1; transform: none; } }
+#menuButton { -webkit-animation: btn-pop 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; animation: btn-pop 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+.look-btn { -webkit-animation: btn-pop 0.55s 0.12s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; animation: btn-pop 0.55s 0.12s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+.view-btn { -webkit-animation: btn-pop 0.55s 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; animation: btn-pop 0.55s 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+
+/* Hover (mouse): lift a little. Press: sink a little. */
+.look-btn, .view-btn { transition: box-shadow 0.25s, background 0.3s, color 0.3s, transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@media (hover: hover) {
+  .look-btn:hover, .view-btn:hover { -webkit-transform: translateY(-3px); transform: translateY(-3px); box-shadow: 0 8px 18px rgba(60, 20, 25, 0.4); }
+}
+
+/* The icon of the 3D / 2D button spins in each time you switch */
+@-webkit-keyframes icon-spin-in { from { opacity: 0; -webkit-transform: rotateY(-180deg) scale(0.6); } to { opacity: 1; -webkit-transform: none; } }
+@keyframes icon-spin-in { from { opacity: 0; transform: rotateY(-180deg) scale(0.6); } to { opacity: 1; transform: none; } }
+.view-btn .view-3d, .view-btn .view-2d { -webkit-animation: icon-spin-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; animation: icon-spin-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+
+/* The picture on the layers button flips to the other look (two names, so it plays again each time) */
+@-webkit-keyframes thumb-a { from { opacity: 0.2; -webkit-transform: scale(1.35) rotate(-8deg); } to { opacity: 1; -webkit-transform: none; } }
+@keyframes thumb-a { from { opacity: 0.2; transform: scale(1.35) rotate(-8deg); } to { opacity: 1; transform: none; } }
+@-webkit-keyframes thumb-b { from { opacity: 0.2; -webkit-transform: scale(1.35) rotate(8deg); } to { opacity: 1; -webkit-transform: none; } }
+@keyframes thumb-b { from { opacity: 0.2; transform: scale(1.35) rotate(8deg); } to { opacity: 1; transform: none; } }
+.look-btn[data-next="plan"] .look-thumb { -webkit-animation: thumb-a 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; animation: thumb-a 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+.look-btn[data-next="color"] .look-thumb { -webkit-animation: thumb-b 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; animation: thumb-b 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+
+/* The logo arrow nudges left when you hover it: "this takes you back" */
+.logo-btn:hover .logo path { -webkit-transform: translateX(-1px); transform: translateX(-1px); }
+
 /* Phones: smaller square buttons so the search pill and both buttons fit side by side */
 @media (max-width: 600px) {
   .top-right { --tile: 54px; }
@@ -1421,6 +1468,13 @@ body.panel-open .zone-card { left: calc(50% + var(--panel-width) / 2); }
   .top-right > * + * { margin-left: 6px; }
   .view-btn .icon { width: 20px; height: 20px; }
   #menuLabel { max-width: 26vw; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #menuButton, .look-btn, .view-btn,
+  .view-btn .view-3d, .view-btn .view-2d,
+  .look-btn .look-thumb { -webkit-animation: none !important; animation: none !important; }
+  .look-btn:hover, .view-btn:hover, .logo-btn:hover { -webkit-transform: none; transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
