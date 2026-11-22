@@ -61,7 +61,7 @@ let userPos = null;          // { lat, lng } of the user (real GPS or test click
 let lastStartId = null;      // last node we routed from (avoids redrawing too often)
 let watchId = null;          // id of the GPS watcher
 let activeFloor = null;      // selected floor, or null for "all floors"
-let is3D = true;
+let is3D = false;   // the app opens in 2D
 let lastZone = null;          // where you were at the last GPS fix: "far", "approaching", "campus" or "gate" (see zone.js)
 let routePath = null;         // the route on screen (list of place ids), for the AR guide
 let following = false;        // true = the camera follows your blue dot

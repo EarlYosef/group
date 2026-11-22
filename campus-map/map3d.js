@@ -42,7 +42,7 @@ const COLOR_USER         = "#1a73e8";   // the blue "you are here" color
 let userHeading = null;              // which way you are walking (degrees), or null
 
 let map = null;                      // the MapLibre map (set in createMap)
-let is3DView = true;
+let is3DView = false;               // the app OPENS in 2D (flat, straight, light on the phone)
 let userMarker = null;
 let gateRippleMarker = null;         // the pulsing circle at the Main Gate
 let destinationMarker = null;
@@ -65,10 +65,12 @@ function createMap(containerId) {
     style: OFFLINE_FIRST ? OFFLINE_STYLE : BASEMAP_STYLE,   // plain paper (works offline) or street map
     center: [PLAN.lng, PLAN.lat],             // [lng, lat]: longitude FIRST
     zoom: MAP_START.zoom,
-    minZoom: MIN_ZOOM_3D,
-    pitch: MAP_START.pitch,
-    bearing: MAP_START.bearing,
+    minZoom: FLAT_MIN_ZOOM,
+    pitch: 0,                                 // flat at the start (2D)
+    bearing: planUpBearing(),                 // plan straight, like the PDF
     maxPitch: 78,
+    pixelRatio: Math.min(window.devicePixelRatio || 1, 2),   // phones draw 3x pixels: 2x looks the same and is much lighter
+    fadeDuration: 0,                          // no slow fade-ins: less work per frame
     attributionControl: { compact: true }
   });
 
@@ -81,6 +83,8 @@ function createMap(containerId) {
     basemapLayerIds = map.getStyle().layers.map((layer) => layer.id);   // remember them before we add ours
     setStreetMap(SHOW_STREET_MAP);
     addCampusLayers();
+    lockFlatView(!is3DView);                  // 2D rules from the first frame
+    applyGroundVisibility();
     readyCallbacks.forEach((fn) => fn());
   });
 
@@ -105,15 +109,26 @@ function setMapTheme(dark) {
   darkTheme = dark;
   if (!map || !map.getLayer("plan-image")) return;      // the map is not ready yet: onMapReady will call us again
   setStreetMap(streetShown);                            // redraws the paper color
-  ["plan-image", "plan-image-clean"].forEach((id) => map.setPaintProperty(id, "raster-brightness-max", dark ? 0.5 : 1));
+  ["plan-image", "plan-image-flat", "plan-image-clean"].forEach((id) => map.setPaintProperty(id, "raster-brightness-max", dark ? 0.5 : 1));
+}
+
+// Which picture lies on the ground, and are the 3D blocks shown?
+//   Color look: 3D = ground + 3D blocks   |   2D = one flat picture with the roofs already drawn (very light)
+//   Plan look:  the white plan picture (3D adds the blocks on top)
+function applyGroundVisibility() {
+  if (!map || !map.getLayer("plan-image-flat")) return;
+  const show = lookName === "plan" ? "plan-image-clean" : (is3DView ? "plan-image" : "plan-image-flat");
+  ["plan-image", "plan-image-flat", "plan-image-clean"].forEach((id) => {
+    map.setLayoutProperty(id, "visibility", id === show ? "visible" : "none");
+  });
+  map.setLayoutProperty("floors-3d", "visibility", is3DView ? "visible" : "none");
 }
 
 // The look of the map: "color" (the design from your PDF) or "plan" (the white 2D plan).
 function setMapLook(look) {
   lookName = look === "plan" ? "plan" : "color";
-  if (!map || !map.getLayer("plan-image-clean")) return;   // not ready: onMapReady will call us again
-  map.setLayoutProperty("plan-image", "visibility", lookName === "color" ? "visible" : "none");
-  map.setLayoutProperty("plan-image-clean", "visibility", lookName === "plan" ? "visible" : "none");
+  if (!map || !map.getLayer("plan-image-flat")) return;    // not ready: onMapReady will call us again
+  applyGroundVisibility();
   map.setPaintProperty("floors-3d", "fill-extrusion-color", floorColorExpression(shownFloor));
   setStreetMap(streetShown);                               // redraws the paper color
 }
@@ -218,9 +233,15 @@ function floorColorExpression(floor) {
     plan ? WALL_PLAN : COLOR_FLOOR];
 }
 
+// A phone or tablet (finger, not mouse)?
+function isCoarsePointer() {
+  return !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+}
+
 function addCampusLayers() {
   map.addSource("plan",   { type: "image", url: PLAN.image, coordinates: planCorners() });
   map.addSource("plan-clean", { type: "image", url: PLAN_IMAGE_CLEAN, coordinates: planCorners() });
+  map.addSource("plan-flat",  { type: "image", url: PLAN_IMAGE_FLAT, coordinates: planCorners() });
   map.addSource("floors", { type: "geojson", data: buildFloorsGeoJSON() });
   map.addSource("routes", { type: "geojson", data: emptyCollection() });
   map.addSource("nodes",  { type: "geojson", data: buildNodesGeoJSON() });
@@ -231,6 +252,15 @@ function addCampusLayers() {
     id: "plan-image",
     type: "raster",
     source: "plan",
+    paint: { "raster-opacity": PLAN.opacity, "raster-fade-duration": 0 }
+  }, firstLabelLayerId());
+
+  // The flat color picture for 2D (ground + roofs seen from above). Only one picture is shown at a time.
+  map.addLayer({
+    id: "plan-image-flat",
+    type: "raster",
+    source: "plan-flat",
+    layout: { visibility: "none" },
     paint: { "raster-opacity": PLAN.opacity, "raster-fade-duration": 0 }
   }, firstLabelLayerId());
 
@@ -247,11 +277,12 @@ function addCampusLayers() {
     id: "floors-3d",
     type: "fill-extrusion",
     source: "floors",
+    layout: { visibility: is3DView ? "visible" : "none" },
     paint: {
       "fill-extrusion-color": floorColorExpression(null),
       "fill-extrusion-base": ["get", "base"],
       "fill-extrusion-height": ["get", "top"],
-      "fill-extrusion-opacity": 0.88
+      "fill-extrusion-opacity": isCoarsePointer() ? 1 : 0.88   // solid blocks are faster to draw on a phone
     }
   });
 
@@ -306,11 +337,13 @@ function addCampusLayers() {
 function refreshCampus() {
   map.getSource("plan").setCoordinates(planCorners());
   map.getSource("plan-clean").setCoordinates(planCorners());
+  map.getSource("plan-flat").setCoordinates(planCorners());
   if (!is3DView) map.setMaxBounds(campusBounds());      // 2D: the edge moves with the plan
   map.getSource("floors").setData(buildFloorsGeoJSON());
   map.getSource("nodes").setData(buildNodesGeoJSON());
   map.setPaintProperty("plan-image", "raster-opacity", PLAN.opacity);
   map.setPaintProperty("plan-image-clean", "raster-opacity", PLAN.opacity);
+  map.setPaintProperty("plan-image-flat", "raster-opacity", PLAN.opacity);
 }
 
 // Splits a path into lines, one per floor. Each line is a list of [lng, lat].
@@ -510,7 +543,7 @@ function showGate(zoom) {
 //      and it stops at the edge of the campus.
 function setTilt(is3D) {
   is3DView = is3D;
-  map.setLayoutProperty("floors-3d", "visibility", is3D ? "visible" : "none");
+  applyGroundVisibility();
   lockFlatView(!is3D);
   if (is3D) {
     map.easeTo({ pitch: TILT_3D, bearing: MAP_START.bearing, duration: 700 });

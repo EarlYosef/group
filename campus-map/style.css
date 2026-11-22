@@ -219,6 +219,23 @@ body.dark .view-btn[aria-pressed="false"] { color: #f6ebe5; background: #2b211e;
 .glass-btn .icon { margin-right: 10px; color: var(--maroon); }
 
 .glass-btn:hover { background: rgba(255, 255, 255, 0.9); }
+.glass-btn { transition: background 0.25s, box-shadow 0.25s, transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+/* The icon of the Find a room pill sits in a maroon bubble */
+#menuButton { padding-left: 8px; }
+#menuButton .icon {
+  width: 32px;
+  height: 32px;
+  padding: 7px;
+  box-sizing: border-box;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--maroon), var(--maroon-deep));
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(85, 16, 27, 0.35);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+#menuButton:hover .icon { -webkit-transform: rotate(-12deg) scale(1.1); transform: rotate(-12deg) scale(1.1); }
+#menuButton:active { -webkit-transform: scale(0.96); transform: scale(0.96); }
 
 .glass-btn.small {
   min-width: 56px;
@@ -421,8 +438,32 @@ h1 {
   border-radius: 23px;
 }
 
-#goButton:hover { background: #3a2a25; }
-#goButton:active { -webkit-transform: scale(0.97); transform: scale(0.97); }
+/* Go: SAC yellow with a shine that sweeps across when you hover or press */
+#goButton {
+  position: relative;
+  overflow: hidden;
+  color: #3d0b14;
+  background: linear-gradient(180deg, #ffd84d, #f2b705);
+  box-shadow: 0 4px 12px rgba(120, 70, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s, filter 0.25s;
+}
+
+#goButton::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 40%;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0));
+  -webkit-transform: skewX(-20deg) translateX(0);
+  transform: skewX(-20deg) translateX(0);
+}
+
+#goButton:hover { background: linear-gradient(180deg, #ffe066, #f7be0f); box-shadow: 0 7px 16px rgba(120, 70, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.8); }
+#goButton:hover::after,
+#goButton:active::after { -webkit-transition: transform 0.7s ease; transition: transform 0.7s ease; -webkit-transform: skewX(-20deg) translateX(520%); transform: skewX(-20deg) translateX(520%); }
+#goButton:active { -webkit-transform: scale(0.95); transform: scale(0.95); box-shadow: 0 2px 6px rgba(120, 70, 0, 0.4); }
 
 #status {
   font-size: 13.5px;
@@ -477,8 +518,11 @@ h1 {
 
 .floor-btn.all { padding: 0 18px; }
 
-.floor-btn:hover { background: rgba(255, 255, 255, 0.85); }
+.floor-btn { transition: background 0.25s, color 0.25s, box-shadow 0.25s, transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.floor-btn:hover { background: rgba(255, 255, 255, 0.85); -webkit-transform: translateY(-2px); transform: translateY(-2px); box-shadow: 0 5px 12px rgba(85, 16, 27, 0.18); }
+.floor-btn:active { -webkit-transform: scale(0.92); transform: scale(0.92); }
 
+.floor-btn[aria-pressed="true"]:hover { -webkit-transform: translateY(-2px); transform: translateY(-2px); box-shadow: 0 9px 18px rgba(85, 16, 27, 0.5); background: linear-gradient(135deg, var(--maroon), var(--maroon-deep)); }
 .floor-btn[aria-pressed="true"] {
   color: #ffffff;
   background: linear-gradient(135deg, var(--maroon), var(--maroon-deep));
@@ -536,6 +580,10 @@ select {
   border: 1px solid var(--line);
   border-radius: 23px;
 }
+
+.btn-outline { transition: background 0.25s, color 0.25s, border-color 0.25s, box-shadow 0.25s, transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.btn-outline:hover { -webkit-transform: translateY(-2px); transform: translateY(-2px); box-shadow: 0 7px 16px rgba(85, 16, 27, 0.3); }
+.btn-outline:active { -webkit-transform: scale(0.97); transform: scale(0.97); }
 
 .btn-outline:hover,
 .chip:hover {
@@ -736,18 +784,32 @@ li:last-child::before {
 
 /* Destination: a yellow dot that sends out a ring (the one animation on the map) */
 .dest-pin {
+  position: relative;
   width: 22px;
   height: 22px;
   background: var(--gold);
   border: 3px solid var(--maroon);
   border-radius: 50%;
-  box-shadow: 0 0 0 0 rgba(242, 183, 5, 0.7);
+}
+
+/* The pulsing ring: only "transform" and "opacity" move, which a phone can draw smoothly */
+.dest-pin::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border-radius: 50%;
+  background: rgba(242, 183, 5, 0.55);
+  -webkit-animation: pulse 1.8s ease-out infinite;
   animation: pulse 1.8s ease-out infinite;
 }
 
+@-webkit-keyframes pulse { 0% { opacity: 0.8; -webkit-transform: scale(1); } 100% { opacity: 0; -webkit-transform: scale(2.6); } }
 @keyframes pulse {
-  70%  { box-shadow: 0 0 0 20px rgba(242, 183, 5, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(242, 183, 5, 0); }
+  0%   { opacity: 0.8; transform: scale(1); }
+  100% { opacity: 0;   transform: scale(2.6); }
 }
 
 /* You: the blue dot, like Google Maps. Three layers: halo (pulses), beam (walking direction), core (the dot). */
@@ -830,7 +892,10 @@ li:last-child::before {
 .locate-fab .icon { width: 26px; height: 26px; }
 .locate-fab.is-on { color: #1a73e8; }
 .locate-fab.is-following { color: #ffffff; background: #1a73e8; }
-.locate-fab:active { -webkit-transform: scale(0.94); transform: scale(0.94); }
+.locate-fab { transition: background 0.25s, color 0.25s, box-shadow 0.25s, transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.locate-fab:active { -webkit-transform: scale(0.9); transform: scale(0.9); }
+.locate-fab.is-following { box-shadow: 0 0 0 5px rgba(26, 115, 232, 0.28), var(--shadow); }
+@media (hover: hover) { .locate-fab:hover { -webkit-transform: translateY(-3px); transform: translateY(-3px); } }
 
 .maplibregl-popup-content {
   padding: 8px 12px;
@@ -862,7 +927,20 @@ li:last-child::before {
   white-space: nowrap;
 }
 
-.ar-start .icon { color: #ffffff; }
+.ar-start { box-shadow: 0 8px 22px rgba(85, 16, 27, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25); }
+.ar-start .icon {
+  width: 30px;
+  height: 30px;
+  padding: 5px;
+  box-sizing: content-box;
+  margin: 0 10px 0 -6px;
+  color: var(--maroon-deep);
+  background: var(--gold);
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+.ar-start:active { -webkit-transform: translateX(-50%) scale(0.95); transform: translateX(-50%) scale(0.95); }
+@media (hover: hover) { .ar-start:hover { -webkit-transform: translateX(-50%) translateY(-3px); transform: translateX(-50%) translateY(-3px); } }
 /* Only on phones and tablets (app.js adds is-touch). A laptop has no camera to walk with. */
 body.is-touch .ar-start { display: -webkit-inline-flex; display: inline-flex; }
 
@@ -1310,7 +1388,10 @@ body.ar-on { overflow: hidden; }
   border-radius: 50%;
 }
 
-.theme-btn .icon { width: 20px; height: 20px; }
+.theme-btn { transition: background 0.25s, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.theme-btn:hover { -webkit-transform: rotate(25deg); transform: rotate(25deg); }
+.theme-btn:active { -webkit-transform: scale(0.88); transform: scale(0.88); }
+.theme-btn .icon { width: 20px; height: 20px; -webkit-animation: icon-spin-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; animation: icon-spin-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
 .theme-btn .icon-sun { display: none; }
 body.dark .theme-btn .icon-moon { display: none; }
 body.dark .theme-btn .icon-sun { display: block; }
@@ -1423,6 +1504,28 @@ body.panel-open .zone-card { left: calc(50% + var(--panel-width) / 2); }
   .zone-card { background: #fff6f0; }
 }
 
+/* ===== Phones: no live blur (the main cause of lag) =====
+   Blurring the map behind a panel has to be redone every frame while the map moves.
+   On a phone the panels are nearly solid instead: they look the same and cost almost nothing. */
+body.is-touch #dock,
+body.is-touch .glass-btn,
+body.is-touch .zone-card,
+body.is-touch .locate-fab {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+body.is-touch #dock { background: rgba(253, 246, 224, 0.97); }
+body.is-touch .glass-btn,
+body.is-touch .zone-card { background: rgba(255, 250, 236, 0.96); }
+body.is-touch.dark #dock { background: rgba(35, 26, 23, 0.98); }
+body.is-touch.dark .glass-btn,
+body.is-touch.dark .zone-card { background: rgba(43, 33, 30, 0.97); }
+
+/* The AR button stays maroon with white words (the near-solid rule above must not turn it cream) */
+body.is-touch .ar-start,
+body.is-touch.dark .ar-start { background: linear-gradient(135deg, var(--maroon), var(--maroon-deep)); }
+
 /* ===== Button animations (a little life, never loud) ===== */
 
 /* They pop in one after another when the page opens */
@@ -1471,10 +1574,10 @@ body.panel-open .zone-card { left: calc(50% + var(--panel-width) / 2); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #menuButton, .look-btn, .view-btn,
-  .view-btn .view-3d, .view-btn .view-2d,
+  #menuButton, .look-btn, .view-btn, .dest-pin::after,
+  .view-btn .view-3d, .view-btn .view-2d, .theme-btn .icon,
   .look-btn .look-thumb { -webkit-animation: none !important; animation: none !important; }
-  .look-btn:hover, .view-btn:hover, .logo-btn:hover { -webkit-transform: none; transform: none; }
+  .look-btn:hover, .view-btn:hover, .logo-btn:hover, .floor-btn:hover, .btn-outline:hover, .theme-btn:hover { -webkit-transform: none; transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
