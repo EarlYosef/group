@@ -21,6 +21,8 @@
 
 const AR_START_METERS = 15;          // farther than this from the first place of the route: the guide first leads you there
 const AR_NEXT_POINT_METERS = 6;      // closer than this to the next point = go on to the one after
+const AR_REACH_MAX_METERS = 14;      // a weak GPS (say +-12 m) widens "reached" up to this, so it still moves on by itself
+const AR_PASSED_METERS = 25;         // within this of a point and already heading to the next one = you passed it: move on
 const AR_ARRIVE_METERS = 10;         // closer than this to the room = you have arrived
 const AR_NOW_METERS = 4;             // closer than this the banner says "Now turn..." instead of "In 12 m"
 const AR_BAD_GPS_METERS = 30;        // a GPS reading less exact than this is ignored (indoors it is poor)
@@ -479,7 +481,7 @@ function arSetIndex(i) {
 // app.js tells us each new GPS position.
 function arOnPosition(lat, lng, accuracyMeters) {
   const usable = accuracyMeters === undefined || accuracyMeters <= AR_BAD_GPS_METERS;
-  arGps = usable ? { lat: lat, lng: lng, time: Date.now() } : null;
+  arGps = usable ? { lat: lat, lng: lng, time: Date.now(), accuracy: accuracyMeters || 0 } : null;
   if (usable) arLastGoodGps = Date.now();
   if (!arActive) return;
 
@@ -516,12 +518,27 @@ function arAdvance() {
       // GPS cannot tell floors apart (both floors are at the same spot), so wait a few seconds for the climb.
       reached = Date.now() - arStairsSince >= AR_STAIRS_MS && meters <= AR_NEXT_POINT_METERS;
     } else {
-      reached = meters <= (aim.index === lastIndex ? AR_ARRIVE_METERS : AR_NEXT_POINT_METERS);
+      // The worse the GPS, the wider the circle around the point (but never more than the maximum)
+      const slack = Math.min(AR_REACH_MAX_METERS, arGps.accuracy || 0);
+      const base = aim.index === lastIndex ? AR_ARRIVE_METERS : AR_NEXT_POINT_METERS;
+      reached = meters <= Math.max(base, slack) || arPassed(aim, target, meters);
     }
     if (!reached) break;
 
     arSetIndex(aim.index);
   }
+}
+
+// You walked past a point without touching its circle (GPS drifts, corners get cut).
+// If you are fairly close and now nearer to the point after it than that point is, count it as reached.
+function arPassed(aim, target, meters) {
+  const afterId = arPath[aim.index + 1];
+  if (afterId === undefined || meters > AR_PASSED_METERS) return false;
+  const after = NODES[afterId];
+  if (after.floor !== target.floor) return false;
+  const targetToAfter = distanceMeters(target.lat, target.lng, after.lat, after.lng);
+  const hereToAfter = distanceMeters(arGps.lat, arGps.lng, after.lat, after.lng);
+  return hereToAfter < targetToAfter - 4;
 }
 
 // Only for weak GPS (for example deep inside a building): tapping the distance box moves on one point.
