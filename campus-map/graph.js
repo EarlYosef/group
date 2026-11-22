@@ -45,7 +45,10 @@ function bfs(start, goal) {
 
   while (queue.length > 0) {
     const current = queue.shift();      // take from the FRONT (queue)
-    if (current === goal) return buildPath(cameFrom, goal);
+    if (current === goal) {
+      lastSearchVisited = Object.keys(cameFrom).length;
+      return buildPath(cameFrom, goal);
+    }
 
     for (const next of graph[current]) {
       if (!(next in cameFrom)) {
@@ -54,6 +57,7 @@ function bfs(start, goal) {
       }
     }
   }
+  lastSearchVisited = Object.keys(cameFrom).length;
   return null;                          // no route exists
 }
 
@@ -77,13 +81,41 @@ function dfs(current, goal, visited = new Set(), path = []) {
 }
 
 
+/* ===== 2b. DISTANCES (for the "Pathfinding data" box) ===== */
+
+// How many places the last search looked at (shown in the "Pathfinding data" box).
+let lastSearchVisited = 0;
+
+const STAIRS_COST_METERS = 6;   // going up or down a floor counts like walking this far
+
+// Cost of walking from place a to place b: real meters, plus a small price for changing floor.
+function edgeCost(a, b) {
+  const meters = distanceMeters(NODES[a].lat, NODES[a].lng, NODES[b].lat, NODES[b].lng);
+  return meters + (NODES[a].floor !== NODES[b].floor ? STAIRS_COST_METERS : 0);
+}
+
+// Walking distance of a whole path in meters (floor changes cost extra here too, so it equals the path cost).
+function pathCost(path) {
+  let total = 0;
+  for (let i = 1; i < path.length; i++) total += edgeCost(path[i - 1], path[i]);
+  return total;
+}
+
+
 /* ===== 3. ALGORITHM LIST ===== */
 
 // Everything the page needs to know about each algorithm, in one place.
 // To add another one, write the function above and add a line here.
+function findWithDfs(start, goal) {
+  const visited = new Set();
+  const path = dfs(start, goal, visited);
+  lastSearchVisited = visited.size;
+  return path;
+}
+
 const ALGORITHMS = {
-  bfs: { label: "BFS", color: "#08a597", dashed: false, find: bfs },   // teal, solid line
-  dfs: { label: "DFS", color: "#5b4bdb", dashed: true,  find: dfs }    // indigo, dashed line
+  bfs:      { label: "BFS",      color: "#08a597", dashed: false, find: bfs },          // teal, solid line
+  dfs:      { label: "DFS",      color: "#5b4bdb", dashed: true,  find: findWithDfs }   // indigo, dashed line
 };
 
 

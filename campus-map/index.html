@@ -94,16 +94,21 @@
       <!-- Hero card: the search -->
       <section class="hero">
         <h2>Where to, <em>today?</em></h2>
+        <div class="search-wrap">
         <form id="searchForm" class="search">
+          <svg class="search-pin" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
           <input id="roomInput" type="text" placeholder="Type a room, e.g. D112" aria-label="Room to find"
                  autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="go">
-          <button id="goButton" type="submit">Go</button>
+          <button id="goButton" type="submit">Go <svg class="go-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"></path></svg></button>
         </form>
+        <!-- Places that match what you type (app.js fills this) -->
+        <ul id="suggest" class="suggest" hidden role="listbox" aria-label="Matching places"></ul>
+        </div>
         <div id="status" role="status" aria-live="polite">Loading the 3D map...</div>
       </section>
 
       <!-- Floors and options -->
-      <section class="card">
+      <section class="card options-card">
         <p class="section-title">Floor</p>
         <div id="floorPicker" role="group" aria-label="Floors"></div>
 
@@ -111,13 +116,20 @@
           <label class="field">Start from
             <select id="startSelect"></select>
           </label>
-          <label class="field">Algorithm
-            <select id="algoSelect">
+          <div class="field algo-field">
+            <span class="field-title">Algorithm</span>
+            <div class="algo-list" role="radiogroup" aria-label="Algorithm">
+              <button type="button" role="radio" class="algo-row" data-algo-choice="bfs" aria-checked="true"><span class="algo-dot" style="--dot:#08a597"></span>BFS <em>(Fewest steps)</em></button>
+              <button type="button" role="radio" class="algo-row" data-algo-choice="dfs" aria-checked="false"><span class="algo-dot" style="--dot:#7a6cf0"></span>DFS <em>(Any path)</em></button>
+              <button type="button" role="radio" class="algo-row" data-algo-choice="both" aria-checked="false"><span class="algo-dot algo-dot-all"></span>Compare both</button>
+            </div>
+            <!-- The real dropdown stays here (hidden): the list above sets it -->
+            <select id="algoSelect" class="visually-hidden" tabindex="-1" aria-hidden="true">
               <option value="bfs">BFS (fewest steps)</option>
               <option value="dfs">DFS</option>
-              <option value="both">Compare both</option>
+              <option value="both">Compare BFS and DFS</option>
             </select>
-          </label>
+          </div>
           <button id="locateButton" class="btn-outline" type="button">Use my location</button>
         </div>
       </section>
@@ -193,6 +205,7 @@
     <!-- The arrow lies on the "floor": style.css tilts this box back -->
     <div class="ar-floor">
       <div class="ar-tilt">
+      <span class="ar-ring" aria-hidden="true"></span>
       <svg id="arArrow" class="ar-arrow" viewBox="0 0 100 120" aria-hidden="true">
         <defs>
           <linearGradient id="arArrowFill" x1="0" y1="0" x2="0" y2="1">
@@ -204,6 +217,9 @@
       </svg>
       </div>
     </div>
+
+    <!-- Distance to the next point, big, right under the arrow -->
+    <div id="arDistance" class="ar-distance" aria-live="off"></div>
 
     <!-- The room you are going to, floating in the camera view (ar.js slides it sideways as you turn) -->
     <div id="arDest" class="ar-dest" hidden>
@@ -222,7 +238,8 @@
         </span>
       </button>
       <div class="ar-info">
-        <div id="arLeft" class="ar-left"></div>
+        <div id="arLeft" class="ar-left"><strong id="arLeftNum"></strong><span id="arLeftName"></span></div>
+        <div class="ar-bar" aria-hidden="true"><i id="arBarFill"></i></div>
         <div id="arProgress" class="ar-progress"></div>
       </div>
     </div>

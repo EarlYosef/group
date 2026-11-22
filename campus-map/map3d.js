@@ -38,6 +38,7 @@ const COLOR_FLOOR        = WALL_COLOR;  // a floor that is not selected (beige w
 const COLOR_FLOOR_ACTIVE = "#f2b705";   // the selected floor (SAC yellow)
 const COLOR_CASING       = "#2d1a15";   // dark brown outline under route lines
 const COLOR_USER         = "#1a73e8";   // the blue "you are here" color
+const COLOR_GOLD         = "#f2b705";   // the rings of the place dots
 
 let userHeading = null;              // which way you are walking (degrees), or null
 
@@ -238,10 +239,46 @@ function isCoarsePointer() {
   return !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
 }
 
+// Each algorithm's route color as a map expression: ["match", ["get", "algo"], "bfs", "#08a597", ..., fallback]
+function routeColorExpression() {
+  const expression = ["match", ["get", "algo"]];
+  Object.keys(ALGORITHMS).forEach((key) => { expression.push(key, ALGORITHMS[key].color); });
+  expression.push("#ffffff");
+  return expression;
+}
+
+// Draws one small white chevron ">" (with space after it) and gives it to the map as "route-arrow".
+// Returns false if the browser cannot draw it (the route then simply has no arrows).
+function addRouteArrowImage() {
+  try {
+    if (map.hasImage("route-arrow")) return true;
+    const canvas = document.createElement("canvas");
+    canvas.width = 72;      // 36 x 14 css pixels at pixelRatio 2: the arrow and the gap after it
+    canvas.height = 28;
+    const ctx = canvas.getContext("2d");
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "#ffffff";
+    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+    ctx.shadowBlur = 4;
+    ctx.beginPath();
+    ctx.moveTo(14, 5);
+    ctx.lineTo(28, 14);
+    ctx.lineTo(14, 23);
+    ctx.stroke();
+    map.addImage("route-arrow", ctx.getImageData(0, 0, canvas.width, canvas.height), { pixelRatio: 2 });
+    return true;
+  } catch (err) {
+    console.warn("Route arrows not drawn:", err && err.message);
+    return false;
+  }
+}
+
 function addCampusLayers() {
   map.addSource("plan",   { type: "image", url: PLAN.image, coordinates: planCorners() });
   map.addSource("plan-clean", { type: "image", url: PLAN_IMAGE_CLEAN, coordinates: planCorners() });
-  map.addSource("plan-flat",  { type: "image", url: PLAN_IMAGE_FLAT, coordinates: planCorners() });
+  map.addSource("plan-flat",  { type: "image", url: (typeof PLAN_IMAGE_FLAT === "string" ? PLAN_IMAGE_FLAT : PLAN_IMAGE), coordinates: planCorners() });
   map.addSource("floors", { type: "geojson", data: buildFloorsGeoJSON() });
   map.addSource("routes", { type: "geojson", data: emptyCollection() });
   map.addSource("nodes",  { type: "geojson", data: buildNodesGeoJSON() });
@@ -286,6 +323,15 @@ function addCampusLayers() {
     }
   });
 
+  // A soft glow under the route, in the route's own color (BFS teal, DFS indigo)
+  map.addLayer({
+    id: "routes-glow",
+    type: "line",
+    source: "routes",
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: { "line-color": routeColorExpression(), "line-width": 20, "line-blur": 12, "line-opacity": 0.6 }
+  });
+
   // Dark outline under the route so it stays visible on any map color.
   map.addLayer({
     id: "routes-casing",
@@ -311,15 +357,26 @@ function addCampusLayers() {
     });
   });
 
+  // Little white arrows running along the route (a picture repeated along the line: works offline)
+  if (addRouteArrowImage()) {
+    map.addLayer({
+      id: "routes-arrows",
+      type: "line",
+      source: "routes",
+      layout: { "line-cap": "butt", "line-join": "round" },
+      paint: { "line-pattern": "route-arrow", "line-width": 14, "line-opacity": 0.95 }
+    });
+  }
+
   map.addLayer({
     id: "nodes-dots",
     type: "circle",
     source: "nodes",
     paint: {
       "circle-radius": 4.5,
-      "circle-color": "#ffffff",
-      "circle-stroke-color": COLOR_CASING,
-      "circle-stroke-width": 2
+      "circle-color": "#2d1a15",
+      "circle-stroke-color": COLOR_GOLD,
+      "circle-stroke-width": 2.5
     }
   });
 
@@ -393,6 +450,8 @@ function setFloor(floor) {
     map.setFilter("route-" + key, onFloor ? ["all", ofAlgo, onFloor] : ofAlgo);
   });
   map.setFilter("routes-casing", onFloor);
+  map.setFilter("routes-glow", onFloor);
+  if (map.getLayer("routes-arrows")) map.setFilter("routes-arrows", onFloor);
 }
 
 

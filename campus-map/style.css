@@ -1885,3 +1885,467 @@ body.is-touch.dark #dock { background-color: rgba(30, 22, 20, 0.97); }
 #dock .dock-scroll { scrollbar-color: rgba(246, 235, 229, 0.3) transparent; }
 #dock .dock-scroll::-webkit-scrollbar-thumb { background: rgba(246, 235, 229, 0.25); background-clip: padding-box; }
 #dock .dock-scroll:hover::-webkit-scrollbar-thumb { background: rgba(246, 235, 229, 0.45); background-clip: padding-box; }
+
+
+/* =====================================================================
+   DARK GLOW HIGHLIGHTS (night mode, and the always-dark side panel)
+   Hover, selected and focus used to be flat gray. Now they glow in SAC gold and maroon.
+   To go back, delete this whole block.
+   ===================================================================== */
+
+:root { --glow-gold: rgba(242, 183, 5, 0.55); --glow-maroon: rgba(214, 62, 84, 0.6); }
+
+/* Hover: a thin gold rim and a soft gold glow, the button lifts a little */
+body.dark .glass-btn:not(.ar-start):hover,
+body.dark .locate-fab:hover,
+body.dark .theme-btn:hover,
+#dock .floor-btn:hover,
+body.dark .floor-btn:hover,
+#dock .chip:hover,
+body.dark .chip:hover {
+  border-color: rgba(242, 183, 5, 0.75);
+  background-color: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.3), 0 0 0 1px rgba(242, 183, 5, 0.35), 0 0 18px var(--glow-gold), 0 8px 18px rgba(0, 0, 0, 0.45);
+}
+
+/* The selected floor: maroon glass with a bright maroon-red glow and a gold ring */
+#dock .floor-btn[aria-pressed="true"],
+body.dark .floor-btn[aria-pressed="true"],
+#dock .floor-btn[aria-pressed="true"]:hover,
+body.dark .floor-btn[aria-pressed="true"]:hover {
+  color: #ffffff;
+  border-color: rgba(242, 183, 5, 0.85);
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 50%), linear-gradient(135deg, #b3243a, #6b1020);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.4), 0 0 0 1px rgba(242, 183, 5, 0.5), 0 0 22px var(--glow-maroon), 0 8px 18px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 0 8px rgba(255, 220, 160, 0.6);
+}
+
+/* Outline buttons ("Use my location") light up maroon with a glow */
+#dock .btn-outline:hover,
+body.dark .btn-outline:hover {
+  color: #ffffff;
+  border-color: rgba(242, 183, 5, 0.7);
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)), linear-gradient(135deg, #b3243a, #6b1020);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.35), 0 0 20px var(--glow-maroon), 0 8px 18px rgba(0, 0, 0, 0.45);
+}
+
+/* 2D / 3D and layers buttons */
+body.dark .view-btn[aria-pressed="true"] { border-color: rgba(242, 183, 5, 0.85); box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.4), 0 0 0 1px rgba(242, 183, 5, 0.4), 0 0 22px var(--glow-maroon), 0 8px 20px rgba(0, 0, 0, 0.5); }
+body.dark .view-btn[aria-pressed="false"] { color: #ffd84d; }
+body.dark .look-btn:hover,
+body.dark .view-btn:hover { border-color: rgba(242, 183, 5, 0.9); box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.3), 0 0 20px var(--glow-gold), 0 8px 20px rgba(0, 0, 0, 0.5); }
+
+/* Location button: blue glow when on, brighter when it follows you */
+body.dark .locate-fab.is-on { color: #8bbcff; box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.25), 0 0 16px rgba(110, 168, 255, 0.45), 0 8px 18px rgba(0, 0, 0, 0.5); }
+body.dark .locate-fab.is-following { box-shadow: 0 0 0 4px rgba(110, 168, 255, 0.3), 0 0 26px rgba(26, 115, 232, 0.8), 0 8px 18px rgba(0, 0, 0, 0.5); }
+
+/* Go: a warm glow in the dark */
+body.dark #goButton,
+#dock #goButton { box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.85), inset 0 -3px 6px rgba(160, 90, 0, 0.25), 0 0 20px var(--glow-gold), 0 6px 16px rgba(0, 0, 0, 0.4); }
+body.dark #goButton:hover,
+#dock #goButton:hover { box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.9), 0 0 30px rgba(242, 183, 5, 0.85), 0 8px 18px rgba(0, 0, 0, 0.45); }
+
+/* Focus (keyboard, tapping a field): a gold ring instead of the invisible maroon one */
+body.dark :focus-visible,
+#dock :focus-visible { outline: 3px solid #ffd84d; outline-offset: 2px; }
+#dock select:focus,
+body.dark select:focus { border-color: rgba(242, 183, 5, 0.85); box-shadow: 0 0 0 3px rgba(242, 183, 5, 0.3), 0 0 16px var(--glow-gold); outline: 0; }
+
+/* Direction steps: the line and dots glow a little */
+#dock ol li::before,
+body.dark ol li::before { box-shadow: 0 0 8px var(--accent); }
+#dock ol li:last-child::before,
+body.dark ol li:last-child::before { box-shadow: 0 0 0 2px var(--maroon), 0 0 14px var(--glow-maroon); }
+
+/* The brighter pop when a floor is picked (cheap: only the size changes) */
+@-webkit-keyframes floor-pick { 0% { -webkit-transform: scale(0.85); } 60% { -webkit-transform: scale(1.12); } 100% { -webkit-transform: scale(1); } }
+@keyframes floor-pick { 0% { transform: scale(0.85); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+.floor-btn[aria-pressed="true"] { -webkit-animation: floor-pick 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); animation: floor-pick 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@media (prefers-reduced-motion: reduce) { .floor-btn[aria-pressed="true"] { -webkit-animation: none; animation: none; } }
+
+
+/* =====================================================================
+   AURORA GLASS  (the final look: dark smoky glass with maroon, rose, violet and gold light)
+   It sits on top of everything above and uses the same dark glass in light and night mode.
+   Only gradients, borders and glows (no animated blur), so phones stay smooth.
+   To go back, delete this whole block.
+   ===================================================================== */
+
+:root {
+  --aurora-rose: #e0446a;
+  --aurora-violet: #6a4fd8;
+  --aurora-ink: rgba(24, 15, 28, 0.80);        /* the smoky dark glass */
+  --aurora-ink-solid: rgba(24, 15, 28, 0.96);  /* the same on phones (no blur) */
+}
+
+/* ---- The side panel: dark glass with colored light in the corners ---- */
+#dock {
+  background-color: var(--aurora-ink);
+  background-image:
+    radial-gradient(110% 55% at 0% 0%, rgba(224, 68, 106, 0.34), rgba(224, 68, 106, 0) 60%),
+    radial-gradient(90% 50% at 100% 100%, rgba(106, 79, 216, 0.30), rgba(106, 79, 216, 0) 60%),
+    radial-gradient(70% 40% at 100% 0%, rgba(242, 183, 5, 0.16), rgba(242, 183, 5, 0) 60%),
+    linear-gradient(165deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0) 40%);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+body.is-touch #dock,
+body.is-touch.dark #dock { background-color: var(--aurora-ink-solid); }
+
+/* The search card: rose to maroon to deep violet, with a gold glow in the corner */
+.hero {
+  background:
+    radial-gradient(90% 80% at 100% 0%, rgba(242, 183, 5, 0.38), rgba(242, 183, 5, 0) 60%),
+    radial-gradient(80% 90% at 0% 100%, rgba(106, 79, 216, 0.45), rgba(106, 79, 216, 0) 65%),
+    linear-gradient(140deg, #e0446a 0%, #8a1c2b 52%, #3d0f33 100%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.35), 0 14px 34px rgba(224, 68, 106, 0.28);
+}
+
+/* Small section titles pick up a gold tint */
+#dock .section-title { color: #e9c46a; }
+#dock h1 { color: #ffffff; }
+
+/* ---- The buttons on the map: the same dark glass, day and night ---- */
+.glass-btn:not(.ar-start),
+.zone-card,
+.locate-fab {
+  --ink: #f6ebe5;
+  --muted: #bda89f;
+  color: #f6ebe5;
+  background-color: rgba(24, 15, 28, 0.66);
+  background-image:
+    radial-gradient(120% 140% at 0% 0%, rgba(224, 68, 106, 0.28), rgba(224, 68, 106, 0) 60%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.22), 0 8px 24px rgba(10, 4, 16, 0.45);
+}
+body.is-touch .glass-btn:not(.ar-start),
+body.is-touch.dark .glass-btn:not(.ar-start),
+body.is-touch .zone-card,
+body.is-touch.dark .zone-card { background-color: rgba(24, 15, 28, 0.93); }
+.glass-btn:not(.ar-start):hover { background-color: rgba(44, 28, 50, 0.78); }
+.zone-card .zone-sub { color: #cdb9b1; }
+
+.locate-fab { color: #f6ebe5; }
+.locate-fab.is-on { color: #8bbcff; }
+.locate-fab.is-following { color: #ffffff; background-image: none; background-color: #1a73e8; }
+
+/* Find a room: its icon bubble is rose to maroon */
+#menuButton .icon { background: linear-gradient(135deg, #e0446a, #8a1c2b); box-shadow: 0 0 14px rgba(224, 68, 106, 0.6); }
+
+/* The two square buttons */
+.view-btn[aria-pressed="false"] { color: #ffd84d; background: linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.03)), rgb(34, 22, 40); border-color: rgba(255, 255, 255, 0.35); }
+.view-btn[aria-pressed="true"] { background: linear-gradient(160deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 45%), linear-gradient(135deg, #e0446a, #8a1c2b 60%, #4a1040); border-color: rgba(242, 183, 5, 0.85); box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.4), 0 0 22px rgba(224, 68, 106, 0.55), 0 8px 20px rgba(10, 4, 16, 0.5); }
+.look-btn { border-color: rgba(255, 255, 255, 0.55); }
+
+/* The selected floor and Use my location glow in rose and maroon */
+#dock .floor-btn[aria-pressed="true"],
+#dock .floor-btn[aria-pressed="true"]:hover {
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 50%), linear-gradient(135deg, #e0446a, #8a1c2b);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.4), 0 0 0 1px rgba(242, 183, 5, 0.5), 0 0 22px rgba(224, 68, 106, 0.6), 0 8px 18px rgba(0, 0, 0, 0.5);
+}
+#dock .btn-outline:hover { background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)), linear-gradient(135deg, #e0446a, #8a1c2b); }
+
+/* Direction steps pick up the glow of their route color */
+#dock li { color: #f6ebe5; }
+
+/* ---- AR guide: aurora tint on the banner and the distance ---- */
+.ar-banner {
+  background-color: rgba(24, 15, 28, 0.72);
+  background-image: radial-gradient(100% 140% at 0% 0%, rgba(224, 68, 106, 0.30), rgba(224, 68, 106, 0) 60%), linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 50%);
+}
+body.is-touch .ar-banner { background-color: rgba(24, 15, 28, 0.88); }
+.ar-banner-icon { background: linear-gradient(145deg, #6a8bff, #4a2fd0); box-shadow: 0 0 18px rgba(106, 79, 216, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
+.ar-distance { background: linear-gradient(135deg, rgba(106, 79, 216, 0.95), rgba(224, 68, 106, 0.92)); border-color: rgba(255, 255, 255, 0.9); box-shadow: 0 0 26px rgba(224, 68, 106, 0.55), 0 8px 22px rgba(0, 0, 0, 0.4); }
+.ar-left { background-color: rgba(24, 15, 28, 0.72); }
+body.is-touch .ar-left { background-color: rgba(24, 15, 28, 0.88); }
+.ar-bar i { background: linear-gradient(90deg, #e0446a, #f2b705, #3ddc84); }
+.ar-ring { border-color: rgba(224, 68, 106, 0.85); }
+
+
+/* =====================================================================
+   COMMAND PANEL  (the look from your picture: dark glass search with a red GO, suggestions,
+   a tall red floor pill, calm dark map). The buttons on the right side are not touched.
+   To go back, delete this whole block.
+   ===================================================================== */
+
+/* "Where to, today?" is just a title on the glass now (no big colored card) */
+.hero {
+  padding: 4px 2px 0;
+  margin-bottom: 14px;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+.hero h2 { margin: 6px 0 14px; font-size: 27px; color: #f1d7dc; }
+.hero h2 em { background: linear-gradient(90deg, #ff7a8c, #f2b705); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
+#dock #status { color: #bda89f; font-size: 13px; }
+
+/* The search: a dark glass pill with a glowing white outline, a red pin and a red GO */
+.search-wrap { position: relative; margin-bottom: 12px; }
+#dock .search {
+  margin: 0;
+  padding: 5px;
+  background: rgba(10, 6, 14, 0.62);
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08), 0 0 22px rgba(255, 255, 255, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+#dock .search:focus-within { border-color: #ffffff; box-shadow: 0 0 0 3px rgba(255, 91, 110, 0.35), 0 0 26px rgba(255, 91, 110, 0.45); }
+.search-pin { flex: none; width: 22px; height: 22px; margin: 0 2px 0 12px; fill: none; stroke: #ff5b6e; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+#dock #roomInput:focus-visible { outline: 0; }
+#dock #roomInput { padding: 0 10px; color: #ffffff; font-size: 18px; }
+#dock #roomInput::placeholder { color: #9d8a92; }
+#dock #goButton {
+  display: -webkit-inline-flex;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 20px;
+  color: #ffffff;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #ff5b6e, #c0102c);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.45), 0 0 18px rgba(255, 60, 90, 0.55), 0 5px 14px rgba(0, 0, 0, 0.4);
+}
+#dock #goButton:hover { background: linear-gradient(180deg, #ff7083, #d4142f); box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.5), 0 0 28px rgba(255, 60, 90, 0.8), 0 6px 16px rgba(0, 0, 0, 0.45); }
+.go-arrow { width: 18px; height: 18px; margin-left: 6px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+#goButton:hover .go-arrow { -webkit-transform: translateX(4px); transform: translateX(4px); }
+
+/* Places that match what you type, floating under the search */
+.suggest {
+  position: absolute;
+  z-index: 6;
+  top: calc(100% + 8px);
+  left: 6px;
+  right: 6px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: #120b16;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 18px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.suggest[hidden] { display: none; }
+.suggest li {
+  display: -webkit-flex;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  padding: 11px 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #f6ebe5;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.suggest li::before,
+.suggest li::after { display: none; }
+.suggest li small { font-size: 11.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #e9c46a; }
+.suggest li:hover,
+.suggest li:active { background: linear-gradient(135deg, rgba(255, 91, 110, 0.35), rgba(192, 16, 44, 0.3)); }
+
+/* Floors: a tall red glass pill on the left, the dropdowns on its right */
+.options-card { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 14px; align-items: start; }
+.options-card .section-title { grid-column: 1 / -1; }
+.options-card #floorPicker { grid-column: 1; grid-row: 2; }
+.options-card .options { grid-column: 2; grid-row: 2; }
+
+#dock #floorPicker {
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  -webkit-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+  align-items: center;
+  margin: 0;
+  padding: 6px;
+  background: linear-gradient(180deg, #ff5b6e 0%, #b3132b 55%, #5c0d1d 100%);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 34px;
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.5), 0 0 24px rgba(255, 60, 90, 0.35), 0 8px 18px rgba(0, 0, 0, 0.4);
+}
+#dock #floorPicker .floor-btn {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  margin: 3px 0;
+  padding: 0;
+  color: #ffffff;
+  font-size: 15px;
+  background: transparent;
+  background-image: none;
+  border: 1px solid transparent;
+  box-shadow: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  -webkit-animation: none;
+  animation: none;
+}
+#dock #floorPicker .floor-btn:hover { background: rgba(255, 255, 255, 0.18); border-color: rgba(255, 255, 255, 0.35); box-shadow: none; }
+#dock #floorPicker .floor-btn[aria-pressed="true"],
+#dock #floorPicker .floor-btn[aria-pressed="true"]:hover {
+  color: #7a0f20;
+  text-shadow: none;
+  background: linear-gradient(160deg, #ffffff, #ffd9de);
+  border-color: #ffffff;
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.7), 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+#dock .options-card .field select { font-size: 15px; padding-left: 10px; }
+#dock .options-card .btn-outline { padding: 9px 6px; font-size: 14px; }
+
+/* The map: the route glows, the place dots are gold rings (set in map3d.js) */
+
+
+/* =====================================================================
+   PANEL LIKE THE PICTURE: lighter smoky glass, algorithm list, pathfinding data box.
+   To go back, delete this whole block.
+   ===================================================================== */
+
+.visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
+
+/* Panel: smoky gray glass you can see the map through (computers). Phones: nearly solid, no blur. */
+#dock {
+  background-color: rgba(66, 56, 62, 0.58);
+  background-image: linear-gradient(165deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 45%);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+body.is-touch #dock,
+body.is-touch.dark #dock { background-color: rgba(52, 44, 50, 0.96); }
+#dock .card { background-color: rgba(255, 255, 255, 0.07); }
+
+/* Algorithm list: one glass box, one row per algorithm, the chosen row glows red */
+.field-title { margin-bottom: 5px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.algo-list {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 18px;
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.14);
+}
+.algo-row {
+  display: -webkit-flex;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 0;
+  padding: 9px 10px;
+  text-align: left;
+  font: 600 14px/1.2 var(--font-body);
+  color: #f6ebe5;
+  background: transparent;
+  border: 0;
+  border-radius: 13px;
+}
+.algo-row em { margin-left: 4px; font-style: normal; font-weight: 500; font-size: 12.5px; color: #bda89f; }
+.algo-row:hover { background: rgba(255, 255, 255, 0.09); }
+.algo-row[aria-checked="true"] {
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(255, 91, 110, 0.42), rgba(192, 16, 44, 0.36));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3), 0 0 16px rgba(255, 60, 90, 0.35);
+}
+.algo-row[aria-checked="true"] em { color: #ffd9de; }
+.algo-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-right: 9px;
+  border-radius: 50%;
+  background: var(--dot, #ffffff);
+  box-shadow: 0 0 8px var(--dot, #ffffff);
+}
+.algo-dot-all { background: conic-gradient(#ff9a3c, #08a597, #ff5b9a, #7a6cf0, #ff9a3c); box-shadow: 0 0 8px rgba(255, 255, 255, 0.4); }
+
+/* "Pathfinding data" box under each route's title */
+.pf-data {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  background: rgba(10, 6, 14, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+.pf-title { margin: 0 0 6px; font: 700 13px var(--font-body); color: #ffffff; }
+.pf-data > div { display: -webkit-flex; display: flex; justify-content: space-between; padding: 2px 0; }
+.pf-data dt { font-size: 12.5px; color: #cdb9b1; }
+.pf-data dd { margin: 0; font-size: 12.5px; font-weight: 700; color: #ffffff; font-variant-numeric: tabular-nums; }
+
+
+/* =====================================================================
+   NEUTRAL DARK GLASS PANEL (exactly like the picture: dark gray glass, no pink or purple tint)
+   Red is only used for GO, the floor pill and small accents. To go back, delete this whole block.
+   ===================================================================== */
+
+:root { --muted: #a9a6ac; }
+#dock {
+  --muted: #a9a6ac;
+  background-color: rgba(26, 26, 30, 0.82);
+  background-image: linear-gradient(170deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.02) 45%, rgba(255, 255, 255, 0) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.2), 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+body.is-touch #dock,
+body.is-touch.dark #dock { background-color: rgba(30, 30, 34, 0.96); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  #dock { background-color: #232327; }
+}
+
+#dock .card {
+  background-color: rgba(255, 255, 255, 0.06);
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0));
+  border-color: rgba(255, 255, 255, 0.14);
+}
+#dock .section-title { color: #9d9aa1; }
+#dock h1 { color: #ffffff; }
+#dock .place { color: #a9a6ac; }
+
+/* Title: soft gray, with a soft red italic word like the picture */
+.hero h2 { color: #d8d4d8; }
+.hero h2 em { background: linear-gradient(90deg, #d9777f, #b9404a); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
+#dock #status { color: #a9a6ac; }
+
+/* Search: dark glass pill, white outline */
+#dock .search { background: rgba(14, 14, 18, 0.7); border-color: rgba(255, 255, 255, 0.8); box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06), 0 0 18px rgba(255, 255, 255, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.12); }
+#dock #roomInput::placeholder { color: #8e8b93; }
+
+/* Dropdowns, buttons and the algorithm list: gray glass, white outline when chosen */
+#dock select,
+#dock .floor-btn,
+#dock .btn-outline,
+#dock .chip,
+#dock .theme-btn { background-color: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.16); }
+#dock select { background-color: rgba(255, 255, 255, 0.08); }
+#dock .btn-outline:hover { background-image: linear-gradient(135deg, #e0364c, #8f0f20); }
+.algo-list { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.16); }
+.algo-row em { color: #a9a6ac; }
+.algo-row:hover { background: rgba(255, 255, 255, 0.08); }
+.algo-row[aria-checked="true"] {
+  background: rgba(255, 255, 255, 0.13);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45), 0 0 12px rgba(255, 255, 255, 0.12);
+}
+.algo-row[aria-checked="true"] em { color: #d8d4d8; }
+.algo-dot-all { background: conic-gradient(#08a597, #5b4bdb, #08a597); box-shadow: 0 0 8px rgba(255, 255, 255, 0.35); }
+
+/* Suggestions and the pathfinding data box: dark gray */
+.suggest { background: #17171b; }
+.suggest li small { color: #b8b4bb; }
+.suggest li:hover,
+.suggest li:active { background: rgba(255, 255, 255, 0.1); }
+.pf-data { background: rgba(12, 12, 16, 0.8); }
+.pf-data dt { color: #b8b4bb; }
+
+/* The buttons on the map: neutral dark glass too (no rose tint) */
+.glass-btn:not(.ar-start),
+.zone-card,
+.locate-fab {
+  background-color: rgba(30, 30, 34, 0.68);
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.03));
+}
+body.is-touch .glass-btn:not(.ar-start),
+body.is-touch.dark .glass-btn:not(.ar-start),
+body.is-touch .zone-card,
+body.is-touch.dark .zone-card { background-color: rgba(30, 30, 34, 0.94); }
+.glass-btn:not(.ar-start):hover { background-color: rgba(48, 48, 54, 0.82); }

@@ -33,6 +33,7 @@ const testMode     = $("testMode");
 const coordMode    = $("coordMode");
 const statusBox    = $("status");
 const resultsBox   = $("results");
+const suggestBox   = $("suggest");       // the list of places that match what you type
 
 // "Line up the plan" tools
 const planRotation = $("planRotation");
@@ -476,7 +477,7 @@ function clearRoute() {
 }
 
 // Shows one route as a list of steps in the panel. key = "bfs" or "dfs".
-function renderSteps(path, key) {
+function renderSteps(path, key, stats) {
   const algo = ALGORITHMS[key];
   const heading = document.createElement("h3");
   const list = document.createElement("ol");
@@ -488,6 +489,8 @@ function renderSteps(path, key) {
   });
 
   heading.textContent = `${algo.label}: ${path.length - 1} steps`;
+  resultsBox.appendChild(heading);
+  if (stats) resultsBox.appendChild(buildStatsBox(path, stats));
 
   path.forEach((id, i) => {
     const item = document.createElement("li");
@@ -498,8 +501,38 @@ function renderSteps(path, key) {
     list.appendChild(item);
   });
 
-  resultsBox.appendChild(heading);
   resultsBox.appendChild(list);
+}
+
+// The small "Pathfinding data" box: how much work the algorithm did and how long the walk is.
+function buildStatsBox(path, stats) {
+  let meters = 0;
+  for (let i = 1; i < path.length; i++) {
+    meters += distanceMeters(NODES[path[i - 1]].lat, NODES[path[i - 1]].lng, NODES[path[i]].lat, NODES[path[i]].lng);
+  }
+  const rows = [
+    ["Nodes visited", String(stats.visited)],
+    ["Est. distance", Math.round(meters) + " m"],
+    ["Path cost", Math.round(pathCost(path))],
+    ["Execution time", Math.max(stats.ms, 0.01).toFixed(2) + " ms"]
+  ];
+  const box = document.createElement("dl");
+  box.className = "pf-data";
+  const title = document.createElement("p");
+  title.className = "pf-title";
+  title.textContent = "Pathfinding data";
+  box.appendChild(title);
+  rows.forEach(([name, value]) => {
+    const row = document.createElement("div");
+    const dt = document.createElement("dt");
+    const dd = document.createElement("dd");
+    dt.textContent = name;
+    dd.textContent = value;
+    row.appendChild(dt);
+    row.appendChild(dd);
+    box.appendChild(row);
+  });
+  return box;
 }
 
 // Where does the route start? Returns { id, meters } or null if we don't know yet.
@@ -529,8 +562,13 @@ function showRoute(fitMap) {
   lastStartId = start.id;
 
   // Run the chosen algorithm(s). "both" runs BFS and DFS.
+  // "both" = BFS and DFS side by side
   const keys = algoSelect.value === "both" ? ["bfs", "dfs"] : [algoSelect.value];
-  const routes = keys.map((key) => ({ key, path: ALGORITHMS[key].find(start.id, destinationId) }));
+  const routes = keys.map((key) => {
+    const startedAt = performance.now();
+    const path = ALGORITHMS[key].find(start.id, destinationId);
+    return { key, path, ms: performance.now() - startedAt, visited: lastSearchVisited };   // lastSearchVisited is set by graph.js
+  });
 
   if (routes.some((route) => route.path === null)) {
     setStatus("No route found. Check that your EDGES connect these places.");
@@ -540,7 +578,7 @@ function showRoute(fitMap) {
   drawRoutes(routes);
   routePath = routes[0].path;
   resultsBox.innerHTML = "";   // remove "Your route will show here."
-  routes.forEach((route) => renderSteps(route.path, route.key));
+  routes.forEach((route) => renderSteps(route.path, route.key, route));
   showDestination(destinationId);
   setMenuLabel(`${NODES[destinationId].name} \u00b7 ${routes[0].path.length - 1} steps`);
 
@@ -553,8 +591,47 @@ function showRoute(fitMap) {
   if (fitMap) flyToRoute(routes[0].path, cameraPadding());
 }
 
+// Places that match what you type, shown under the search (like "D" -> D Stairs, Room D112...).
+function showSuggestions() {
+  const wanted = normalize(roomInput.value);
+  suggestBox.innerHTML = "";
+  if (wanted === "") { suggestBox.hidden = true; return; }
+
+  // Places that START with what you typed come first (D -> D101, D112, D Stairs...), then places that only contain it.
+  const startsWith = (id) => id.indexOf(wanted) === 0 || normalize(NODES[id].name).indexOf(wanted) === 0;
+  const matches = Object.keys(NODES)
+    .filter((id) => id.indexOf(wanted) !== -1 || normalize(NODES[id].name).indexOf(wanted) !== -1)
+    .sort((a, b) => (startsWith(a) ? 0 : 1) - (startsWith(b) ? 0 : 1))
+    .slice(0, 6);
+
+  matches.forEach((id) => {
+    const item = document.createElement("li");
+    item.setAttribute("role", "option");
+    item.textContent = NODES[id].name;
+    const floor = document.createElement("small");
+    floor.textContent = "Floor " + NODES[id].floor;
+    item.appendChild(floor);
+    // pointerdown (not click) so it works before the input loses focus on a phone
+    item.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      roomInput.value = NODES[id].name;
+      onGo();
+    });
+    suggestBox.appendChild(item);
+  });
+  suggestBox.hidden = matches.length === 0;
+}
+
+// Highlights the row of the algorithm that is selected.
+function syncAlgoList() {
+  document.querySelectorAll("[data-algo-choice]").forEach((row) => {
+    row.setAttribute("aria-checked", String(row.dataset.algoChoice === algoSelect.value));
+  });
+}
+
 // Runs when the user presses Go (or the keyboard's Go/Enter key).
 function onGo() {
+  suggestBox.hidden = true;
   const found = findNodeFromText(roomInput.value);
   if (!found) {
     destinationId = null;
@@ -583,6 +660,11 @@ function bindEvents() {
     onGo();
   });
 
+  roomInput.addEventListener("input", showSuggestions);
+  roomInput.addEventListener("focus", showSuggestions);
+  roomInput.addEventListener("blur", () => { setTimeout(() => { suggestBox.hidden = true; }, 150); });
+  roomInput.addEventListener("keydown", (e) => { if (e.key === "Escape") suggestBox.hidden = true; });
+
   locateButton.addEventListener("click", locateMe);
   myLocation.addEventListener("click", locateMe);
   $("arButton").addEventListener("click", () => {
@@ -595,7 +677,15 @@ function bindEvents() {
     setStatus("Type a room first (for example D112), press Go, then tap AR guide.");
   });
   startSelect.addEventListener("change", () => showRoute(false));
-  algoSelect.addEventListener("change", () => showRoute(false));
+  algoSelect.addEventListener("change", () => { syncAlgoList(); showRoute(false); });
+  // The glass list of algorithms: choosing a row sets the (hidden) dropdown, which does the work
+  document.querySelectorAll("[data-algo-choice]").forEach((row) => {
+    row.addEventListener("click", () => {
+      algoSelect.value = row.dataset.algoChoice;
+      algoSelect.dispatchEvent(new Event("change"));
+    });
+  });
+  syncAlgoList();
   viewToggle.addEventListener("click", toggleView);
 
   // The round arrow hides the panel; the menu button brings it back.
