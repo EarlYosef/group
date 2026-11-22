@@ -7,7 +7,7 @@
    When you change any file, change CACHE_NAME below (v1 -> v2) so phones refresh.
    ===================================================================== */
 
-const CACHE_NAME = "sac-map-v6";
+const CACHE_NAME = "sac-map-v7";
 
 // Our files (relative to this file)
 const OWN_FILES = [
@@ -25,7 +25,8 @@ const OUTSIDE_FILES = [
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
-    await cache.addAll(OWN_FILES);
+    // One by one: if a single file is missing on the server, the others are still saved
+    await Promise.all(OWN_FILES.map((file) => cache.add(file).catch(() => {})));
     // One by one, so a single failure does not stop the install
     await Promise.all(OUTSIDE_FILES.map((url) => cache.add(url).catch(() => {})));
     self.skipWaiting();
@@ -53,7 +54,11 @@ self.addEventListener("fetch", (event) => {
 async function networkFirst(request) {
   const cache = await caches.open(CACHE_NAME);
   try {
-    const fresh = await fetch(request);
+    // Weak signal ("1 bar", no load): do not wait forever, use the saved copy after 4 seconds
+    const fresh = await Promise.race([
+      fetch(request),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("slow")), 4000))
+    ]);
     if (fresh.ok) cache.put(request, fresh.clone());
     return fresh;
   } catch (error) {

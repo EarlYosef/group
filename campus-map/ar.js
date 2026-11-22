@@ -57,11 +57,13 @@ let arGps = null;                    // last usable GPS reading: { lat, lng, tim
 let arLastGoodGps = 0;               // when we last had a usable reading (for the "GPS is weak" hint)
 let arTimer = null;                  // the once-a-second check
 let arFramePending = false;          // true while a redraw is waiting for the next frame
+let arTotalMeters = 0;               // longest "meters left" seen: the progress bar is measured against it
 let arCloseCallback = null;          // app.js function to run when the guide closes
 
 function initAr(onClose) {
   ["ar", "arVideo", "arAction", "arSub", "arBannerIcon", "arArrow", "arHint", "arProgress", "arLeft",
-   "arClose", "arArrived", "arArrivedPlace", "arDone", "arButton", "arMini", "arMiniSvg", "arDest", "arDestText"
+   "arClose", "arArrived", "arArrivedPlace", "arDone", "arButton", "arMini", "arMiniSvg", "arDest", "arDestText",
+   "arDistance", "arLeftNum", "arLeftName", "arBarFill"
   ].forEach((id) => { arEl[id] = document.getElementById(id); });
 
   arCloseCallback = onClose || null;
@@ -86,6 +88,7 @@ function startAr(path) {
   arActive = true;
   arHeading = null;
   arArrowAngle = 0;
+  arTotalMeters = 0;
   arLastGoodGps = arGpsIsFresh() ? Date.now() : 0;
 
   arSetIndex(0);
@@ -396,7 +399,14 @@ function arRender() {
 
   // At the bottom: how far to the room you typed, and which step you are on
   const metersLeft = arMetersLeft(here, aim);
-  arEl.arLeft.textContent = Math.round(metersLeft) + " m to " + destination.name;
+  arEl.arLeftNum.textContent = Math.round(metersLeft) + " m";
+  arEl.arLeftName.textContent = " to " + destination.name;
+  arTotalMeters = Math.max(arTotalMeters, metersLeft);
+  const done = arTotalMeters > 0 ? 1 - metersLeft / arTotalMeters : 0;
+  arEl.arBarFill.style.width = Math.round(Math.max(0, Math.min(1, done)) * 100) + "%";
+
+  // Big distance to the next point, floating under the arrow on the "floor"
+  arEl.arDistance.textContent = meters < AR_NOW_METERS ? "Now" : Math.round(meters) + " m";
   arEl.arProgress.textContent = aim.kind === "start" ? "Getting to the start" : "Step " + (arIndex + 1) + " of " + lastIndex;
 
   arRenderDestinationTag(here, destination, metersLeft);
