@@ -33,8 +33,11 @@
     </button>
     <div class="top-right">
       <button id="viewToggle" class="glass-btn small" type="button" aria-pressed="true" aria-label="Switch between 3D and flat view">3D</button>
-      <!-- One button: tap = the plan (white), tap again = the colors -->
-      <button id="lookToggle" class="glass-btn small" type="button" aria-pressed="true" aria-label="Switch between the color map and the plan">Color</button>
+      <!-- One button like the Google Maps "layers" button: a small picture of the other look. Tap = switch. -->
+      <button id="lookToggle" class="look-btn" type="button" data-next="plan" aria-label="Switch to the plan map">
+        <span class="look-thumb" aria-hidden="true"></span>
+        <span id="lookLabel" class="look-label">Plan</span>
+      </button>
     </div>
   </div>
 

@@ -113,7 +113,60 @@ button {
   align-items: stretch;
 }
 
-.top-right .glass-btn + .glass-btn { margin-top: 10px; }
+.top-right .glass-btn + .look-btn { margin-top: 10px; }
+
+/* Layers button (like Google Maps): a small picture of the look you get when you tap, with its name */
+.look-btn {
+  position: relative;
+  -webkit-align-self: flex-end;
+  align-self: flex-end;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  overflow: hidden;
+  background: #ffffff;
+  border: 3px solid #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(60, 20, 25, 0.35);
+  cursor: pointer;
+}
+
+.look-btn:active { -webkit-transform: scale(0.96); transform: scale(0.96); }
+
+.look-thumb { position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: 12px; }
+
+/* The picture for the white plan: cream paper, blue-grey buildings, a dashed path */
+.look-btn[data-next="plan"] .look-thumb {
+  background:
+    linear-gradient(#d6dbe3, #d6dbe3) 8% 14% / 34% 28% no-repeat,
+    linear-gradient(#d6dbe3, #d6dbe3) 58% 10% / 34% 36% no-repeat,
+    linear-gradient(#d6dbe3, #d6dbe3) 14% 62% / 52% 22% no-repeat,
+    linear-gradient(#d6dbe3, #d6dbe3) 80% 70% / 16% 30% no-repeat,
+    #f6f5f1;
+}
+
+/* The picture for the colorful design: green lawn, red / green / orange roofs, a red track */
+.look-btn[data-next="color"] .look-thumb {
+  background:
+    linear-gradient(#b24a32, #b24a32) 8% 14% / 34% 28% no-repeat,
+    linear-gradient(#3b8a57, #3b8a57) 58% 10% / 34% 36% no-repeat,
+    linear-gradient(#c4663a, #c4663a) 14% 62% / 52% 22% no-repeat,
+    linear-gradient(#5278a6, #5278a6) 80% 70% / 16% 30% no-repeat,
+    #70b654;
+}
+
+.look-label {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 2px 0 3px;
+  font: 700 11px var(--font-body);
+  line-height: 1.2;
+  color: #ffffff;
+  text-align: center;
+  background: rgba(30, 12, 14, 0.62);
+}
 
 #topbar > * { pointer-events: auto; }
 
@@ -407,6 +460,12 @@ h1 {
 }
 
 .field select { margin-top: 5px; }
+
+/* The open list of choices (on Windows it has its own white background): always dark words on white */
+select option { color: #2b1215; background: #ffffff; }
+body.dark select option { color: #f6ebe5; background: #2b211e; }
+select { color-scheme: light; }
+body.dark select { color-scheme: dark; }
 
 select {
   -webkit-appearance: none;

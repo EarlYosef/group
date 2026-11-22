@@ -20,6 +20,7 @@ const menuLabel    = $("menuLabel");
 const viewToggle   = $("viewToggle");
 const floorPicker  = $("floorPicker");
 const lookToggle   = $("lookToggle");
+const lookLabel    = $("lookLabel");
 const searchForm   = $("searchForm");
 const roomInput    = $("roomInput");
 const startSelect  = $("startSelect");
@@ -200,11 +201,12 @@ function toggleView() {
 const LOOK_KEY = "sac-look";
 let lookChoice = "color";   // "color" = the design from the PDF | "plan" = the white 2D plan
 
-// Updates the button and the map.
+// Updates the button and the map. The button shows the look you will get when you tap it (like Google Maps).
 function applyLook() {
-  const isColor = lookChoice === "color";
-  lookToggle.textContent = isColor ? "Color" : "Plan";
-  lookToggle.setAttribute("aria-pressed", String(isColor));   // the colored look is the "lit" button
+  const next = lookChoice === "color" ? "plan" : "color";
+  lookLabel.textContent = next === "plan" ? "Plan" : "Color";
+  lookToggle.setAttribute("data-next", next);
+  lookToggle.setAttribute("aria-label", next === "plan" ? "Switch to the plan map" : "Switch to the color map");
   if (mapReady) setMapLook(lookChoice);
 }
 
@@ -356,25 +358,27 @@ function setUserPosition(lat, lng, meters, heading) {
   arOnPosition(lat, lng, meters);                 // the AR guide moves along with you
   updateZone(lat, lng);                           // the "where am I" card and the gate circle
 
-  // The camera only goes to you when you are close to the campus (near the road at the Main Gate).
-  // Far away it stays on the campus, and the "where am I" card says how far you are.
+  // The camera only goes to you when you are ON the campus. Outside, it stays at the campus
+  // (or looks straight at the Main Gate when you are close to it) and never turns or slides toward you.
   const zoneNow = classifyLocation(lat, lng).zone;
-  const isNear = zoneNow !== "far";
-  const cameFromFar = lastZone === null || lastZone === "far";
+  const onCampus = zoneNow === "campus" || zoneNow === "gate";
+  const cameFromOutside = lastZone === null || lastZone === "far" || lastZone === "approaching";
 
-  if (isNear && (wantsFocus || cameFromFar)) {
-    // You just got near the campus (or tapped the location button): zoom in on you.
+  if (onCampus && (wantsFocus || cameFromOutside)) {
+    // You just got onto the campus (or tapped the location button): zoom in on you.
     setFollowing(true);
-    focusOn(lat, lng, zoneNow === "approaching" ? 17.8 : 18.5);
-  } else if (isNear && following) {
+    focusOn(lat, lng, 18.5);
+  } else if (onCampus && following) {
     if (zoneNow !== lastZone) focusOn(lat, lng, 18.5);   // came closer (for example through the gate): zoom in more
     else followUser(lat, lng);
-  } else if (!isNear) {
+  } else if (!onCampus) {
     setFollowing(false);
-    if (wantsFocus) {
+    if (zoneNow === "approaching" && lastZone !== "approaching") {
+      showGate(18);                                      // close to the road: look straight at the Main Gate
+    } else if (wantsFocus) {
       showCampus();
-      setStatus("You are about " + formatDistance(classifyLocation(lat, lng).centerMeters) + " from the campus, so the map stays on the campus. It will zoom in when you get near the Main Gate.");
     }
+    if (wantsFocus) setStatus(outsideMessage(classifyLocation(lat, lng)));
   }
   wantsFocus = false;
   lastZone = zoneNow;
@@ -383,6 +387,12 @@ function setUserPosition(lat, lng, meters, heading) {
   if (destinationId && startSelect.value === "gps" && nearestNode(lat, lng).id !== lastStartId) {
     showRoute(false);
   }
+}
+
+// What to tell someone who is not on the campus yet.
+function outsideMessage(here) {
+  if (here.zone === "approaching") return "You are near the Main Gate. The map looks at the gate and will zoom in on you once you are on the campus.";
+  return "You are about " + formatDistance(here.centerMeters) + " from the campus, so the map stays on the campus. It will zoom in when you get to the Main Gate.";
 }
 
 // Follow mode: the camera stays on the blue dot. Dragging the map turns it off.
@@ -397,9 +407,9 @@ function setFollowing(on) {
 function locateMe() {
   if (userPos && watchId !== null) {
     const here = classifyLocation(userPos.lat, userPos.lng);
-    if (here.zone === "far") {
-      showCampus();
-      setStatus("You are about " + formatDistance(here.centerMeters) + " from the campus, so the map stays on the campus. It will zoom in when you get near the Main Gate.");
+    if (here.zone === "far" || here.zone === "approaching") {
+      if (here.zone === "approaching") showGate(18); else showCampus();
+      setStatus(outsideMessage(here));
       return;
     }
     setFollowing(true);

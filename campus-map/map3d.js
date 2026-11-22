@@ -10,7 +10,7 @@
    setFloor(floor)        highlight one floor    setTilt(is3D)      3D or flat view
    flyToRoute(path,pad)   move the camera        showCampus()           camera back to the whole campus
    setMapTheme(dark)      dark or light map     setMapLook(look)   "color" or "plan" map
-   focusOn(lat,lng,zoom)   center on a point
+   focusOn(lat,lng,zoom)   center on a point     showGate(zoom)     look at the Main Gate
    refreshCampus()        redraw after the PLAN numbers changed
    setStreetMap(show)     street map on or off
    onMapClick(fn)         clicks on the map      showPopup(...)     small info bubble
@@ -29,6 +29,8 @@
 const TILT_3D = 60;                  // camera tilt in 3D view (degrees)
 const FLOOR_GAP_METERS = 0.3;        // thin gap between stacked floors
 const ROOF_THICKNESS_METERS = 0.6;   // the colored roof slab on top
+const FLAT_EDGE_METERS = 60;         // 2D: how far past the campus edge you can slide
+const FLAT_MIN_ZOOM = 16.3;          // 2D: how far you can zoom out
 
 const COLOR_FLOOR        = WALL_COLOR;  // a floor that is not selected (beige wall, see data.js)
 const COLOR_FLOOR_ACTIVE = "#f2b705";   // the selected floor (SAC yellow)
@@ -301,6 +303,7 @@ function addCampusLayers() {
 function refreshCampus() {
   map.getSource("plan").setCoordinates(planCorners());
   map.getSource("plan-clean").setCoordinates(planCorners());
+  if (!is3DView) map.setMaxBounds(campusBounds());      // 2D: the edge moves with the plan
   map.getSource("floors").setData(buildFloorsGeoJSON());
   map.getSource("nodes").setData(buildNodesGeoJSON());
   map.setPaintProperty("plan-image", "raster-opacity", PLAN.opacity);
@@ -460,9 +463,24 @@ function flyToRoute(path, padding) {
     padding: padding,
     maxZoom: 20.5,
     pitch: is3DView ? TILT_3D : 0,
-    bearing: is3DView ? bearingDegrees(first, last) : 0,
+    bearing: is3DView ? bearingDegrees(first, last) : planUpBearing(),   // 2D: the plan stays straight
     duration: 1600
   });
+}
+
+// The compass direction that makes the plan picture look straight (its top edge up).
+function planUpBearing() {
+  return ((PLAN.rotation % 360) + 360) % 360;
+}
+
+// The campus plus a little room around it. In 2D the map cannot be dragged past this.
+function campusBounds() {
+  const bounds = new maplibregl.LngLatBounds();
+  planCorners().forEach((corner) => bounds.extend(corner));
+  const pad = FLAT_EDGE_METERS;
+  return new maplibregl.LngLatBounds(
+    [bounds.getWest() - pad / metersPerDegreeLng(), bounds.getSouth() - pad / METERS_PER_DEGREE],
+    [bounds.getEast() + pad / metersPerDegreeLng(), bounds.getNorth() + pad / METERS_PER_DEGREE]);
 }
 
 function focusOn(lat, lng, zoom) {
@@ -471,14 +489,51 @@ function focusOn(lat, lng, zoom) {
 
 // Back to the whole campus (used when you are too far away to zoom in on yourself).
 function showCampus() {
-  map.easeTo({ center: [PLAN.lng, PLAN.lat], zoom: MAP_START.zoom, pitch: is3DView ? TILT_3D : 0, bearing: MAP_START.bearing, duration: 1000 });
+  map.easeTo({
+    center: [PLAN.lng, PLAN.lat], zoom: MAP_START.zoom,
+    pitch: is3DView ? TILT_3D : 0,
+    bearing: is3DView ? MAP_START.bearing : planUpBearing(),
+    duration: 1000
+  });
 }
 
-// 3D = tilted camera with the building blocks. 2D = flat, just your plan picture.
+// Look straight at the Main Gate entrance (the camera does not turn).
+function showGate(zoom) {
+  const gate = NODES[GATE_NODE_ID];
+  map.easeTo({ center: [gate.lng, gate.lat], zoom: zoom || 18, duration: 1000 });
+}
+
+// 3D = tilted camera with the building blocks, free to turn.
+// 2D = flat and straight like Google Maps: you can only slide it (up, down, left, right) and zoom,
+//      and it stops at the edge of the campus.
 function setTilt(is3D) {
   is3DView = is3D;
   map.setLayoutProperty("floors-3d", "visibility", is3D ? "visible" : "none");
-  map.easeTo({ pitch: is3D ? TILT_3D : 0, duration: 700 });
+  lockFlatView(!is3D);
+  if (is3D) {
+    map.easeTo({ pitch: TILT_3D, bearing: MAP_START.bearing, duration: 700 });
+  } else {
+    map.easeTo({ pitch: 0, bearing: planUpBearing(), duration: 700 });
+  }
+}
+
+// on = true: no turning, no tilting, edge limits.  on = false: free like 3D.
+function lockFlatView(on) {
+  if (on) {
+    map.dragRotate.disable();                      // right-drag turn / tilt
+    map.touchZoomRotate.disableRotation();         // two-finger turn
+    map.touchPitch.disable();                      // two-finger tilt
+    map.keyboard.disableRotation();
+    map.setMinZoom(FLAT_MIN_ZOOM);
+    map.setMaxBounds(campusBounds());
+  } else {
+    map.dragRotate.enable();
+    map.touchZoomRotate.enableRotation();
+    map.touchPitch.enable();
+    map.keyboard.enableRotation();
+    map.setMaxBounds(null);
+    map.setMinZoom(null);
+  }
 }
 
 
