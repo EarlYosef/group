@@ -39,8 +39,8 @@
       </button>
       <!-- 3D / 2D button, right of it. Maroon while 3D is on. -->
       <button id="viewToggle" class="view-btn" type="button" aria-pressed="false" aria-label="Switch between 3D and flat view">
-        <svg class="icon view-3d" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l8 4.3v9.8l-8 4.3-8-4.3V7.1z"></path><path d="M4.2 7.2L12 11.5l7.8-4.3M12 11.5v9.6"></path></svg>
-        <svg class="icon view-2d" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2.5"></rect><path d="M4 12h16M12 4v16"></path></svg>
+        <svg class="icon view-3d" viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M12 2.8l8 4.3v9.8l-8 4.3-8-4.3V7.1z"></path><path d="M12 2.8l8 4.3v9.8l-8 4.3-8-4.3V7.1z"></path><path d="M4.2 7.2L12 11.5l7.8-4.3M12 11.5v9.6"></path></svg>
+        <svg class="icon view-2d" viewBox="0 0 24 24" aria-hidden="true"><rect class="fill" x="4" y="4" width="16" height="16" rx="3.5"></rect><rect x="4" y="4" width="16" height="16" rx="3.5"></rect><path d="M4 12h16M12 4v16"></path></svg>
         <span id="viewLabel" class="view-label">2D</span>
       </button>
     </div>
@@ -67,6 +67,9 @@
     AR guide
   </button>
 
+  <!-- Short messages (like "Directions to Room D112"): shown at the top, then fade away (app.js setStatus) -->
+  <div id="status" class="toast" role="status" aria-live="polite"></div>
+
   <!-- The side panel (frosted glass). Opens from the menu button. -->
   <aside id="dock" aria-label="Campus directions">
     <div class="dock-scroll">
@@ -76,8 +79,15 @@
         <!-- The red arrow logo is also the "back to the map" button: tap it to slide the panel away -->
         <button id="panelToggle" class="logo-btn" type="button" title="Back to the map" aria-label="Back to the map" aria-expanded="true">
           <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
-            <rect width="32" height="32" rx="9" fill="#8a1c2b"></rect>
-            <path d="M16 6 L24 25 L16 20.5 L8 25 Z" fill="#fff7f2"></path>
+            <defs>
+              <linearGradient id="logoBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0405a"></stop><stop offset="1" stop-color="#7d0c1d"></stop></linearGradient>
+              <linearGradient id="logoGloss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"></stop><stop offset="1" stop-color="#fff" stop-opacity="0"></stop></linearGradient>
+            </defs>
+            <rect width="32" height="32" rx="9" fill="url(#logoBg)"></rect>
+            <circle cx="16" cy="16" r="10.5" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1"></circle>
+            <path d="M16 3.5v3M16 25.5v3M3.5 16h3M25.5 16h3" stroke="#ffd84d" stroke-width="1.6" stroke-linecap="round"></path>
+            <path class="arrow" d="M16 7.5 L22.5 24 L16 20 L9.5 24 Z" fill="#fff7f2" stroke="#fff7f2" stroke-width="1" stroke-linejoin="round"></path>
+            <path d="M0 0h32v14C22 17 10 17 0 14z" fill="url(#logoGloss)"></path>
           </svg>
         </button>
         <div>
@@ -104,7 +114,6 @@
         <!-- Places that match what you type (app.js fills this) -->
         <ul id="suggest" class="suggest" hidden role="listbox" aria-label="Matching places"></ul>
         </div>
-        <div id="status" role="status" aria-live="polite">Loading the 3D map...</div>
       </section>
 
       <!-- Floors and options -->
@@ -113,15 +122,24 @@
         <div class="pick-row">
           <div id="floorPicker" role="group" aria-label="Floors"></div>
           <div class="pick-col">
-            <label class="field start-field">Start from
-              <select id="startSelect"></select>
-            </label>
+            <div class="field start-field">
+              <span class="field-title">Start from</span>
+              <div id="startDd" class="dd">
+                <button type="button" class="dd-button" aria-haspopup="listbox" aria-expanded="false">
+                  <span class="dd-value"></span>
+                  <svg class="dd-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+                </button>
+                <ul class="dd-list" role="listbox" aria-label="Start from" hidden></ul>
+              </div>
+              <!-- The real dropdown stays here (hidden): the list above sets it -->
+              <select id="startSelect" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
+            </div>
             <div class="field algo-field">
             <span class="field-title">Algorithm</span>
             <div class="algo-list" role="radiogroup" aria-label="Algorithm">
               <button type="button" role="radio" class="algo-row" data-algo-choice="bfs" aria-checked="true"><span class="algo-name">BFS <em>(Fewest steps)</em></span><span class="algo-icons" aria-hidden="true"><svg class="ico-color" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.6"/><circle cx="5.5" cy="18" r="2.6"/><circle cx="18.5" cy="18" r="2.6"/><path d="M12 7.6v4M12 11.6L6.6 15.6M12 11.6l5.4 4"/></svg><svg class="ico-gray" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span></button>
               <button type="button" role="radio" class="algo-row" data-algo-choice="dfs" aria-checked="false"><span class="algo-name">DFS <em>(Any path)</em></span><span class="algo-icons" aria-hidden="true"><svg class="ico-color" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2.6"/><circle cx="12" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M7.5 7l3 3M13.5 14l3 3"/></svg><svg class="ico-gray" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="3"/><path d="M9 10h6M9 14h4"/></svg></span></button>
-              <button type="button" role="radio" class="algo-row" data-algo-choice="both" aria-checked="false"><span class="algo-name">Compare both</span><span class="algo-icons" aria-hidden="true"><svg class="ico-color" viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.6"/><circle cx="17" cy="8" r="2.6"/><circle cx="12" cy="18" r="2.6"/><path d="M9.2 9.4l2 6M14.8 9.4l-2 6M9.6 8h4.8"/></svg><svg class="ico-gray" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="1.5"/></svg></span></button>
+              <button type="button" role="radio" class="algo-row" data-algo-choice="both" aria-checked="false"><span class="algo-name">Both <em>(Compare)</em></span><span class="algo-icons" aria-hidden="true"><svg class="ico-color" viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.6"/><circle cx="17" cy="8" r="2.6"/><circle cx="12" cy="18" r="2.6"/><path d="M9.2 9.4l2 6M14.8 9.4l-2 6M9.6 8h4.8"/></svg><svg class="ico-gray" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="1.5"/></svg></span></button>
             </div>
             <!-- The real dropdown stays here (hidden): the list above sets it -->
             <select id="algoSelect" class="visually-hidden" tabindex="-1" aria-hidden="true">

@@ -32,6 +32,7 @@ const myLocation   = $("myLocation");    // round Google-style location button
 const testMode     = $("testMode");
 const coordMode    = $("coordMode");
 const statusBox    = $("status");
+let startDropdownSync = () => {};   // filled in by initStartDropdown() (section 10)
 const resultsBox   = $("results");
 const suggestBox   = $("suggest");       // the list of places that match what you type
 
@@ -72,8 +73,13 @@ let switchedToMyLocation = false;   // true once "Start from" switched to "my lo
 
 /* ===== 2. SMALL HELPERS ===== */
 
+let statusTimer = 0;
 function setStatus(text) {
   statusBox.textContent = text;
+  // Show the message at the top, then let it fade away (longer text stays a little longer)
+  statusBox.classList.toggle("is-showing", Boolean(text));
+  window.clearTimeout(statusTimer);
+  if (text) statusTimer = window.setTimeout(() => statusBox.classList.remove("is-showing"), Math.min(12000, 4500 + text.length * 60));
 }
 
 function isPhone() {
@@ -156,6 +162,7 @@ function fillStartSelect() {
 
   // Until the phone finds you, directions start from DEFAULT_START (the main gate).
   if (NODES[DEFAULT_START]) startSelect.value = DEFAULT_START;
+  syncStartDropdown();
 }
 
 
@@ -174,20 +181,26 @@ function buildFloorPicker() {
     button.textContent = choice.label;
     button.dataset.floor = choice.floor === null ? "all" : String(choice.floor);
     button.setAttribute("aria-label", choice.floor === null ? "All floors" : "Floor " + choice.floor);
-    button.addEventListener("click", () => selectFloor(choice.floor));
+    button.addEventListener("click", () => selectFloor(choice.floor, true));
     floorPicker.appendChild(button);
   });
 
   selectFloor(null);
 }
 
-function selectFloor(floor) {
+// The map change is heavy on phones, so the buttons move first and the map follows a moment later.
+// Quick taps (1, 2, 3 in a row) only change the map once, for the last floor.
+let floorTimer = 0;
+function selectFloor(floor, fromTap) {
   activeFloor = floor;
   const wanted = floor === null ? "all" : String(floor);
   floorPicker.querySelectorAll(".floor-btn").forEach((button) => {
     button.setAttribute("aria-pressed", String(button.dataset.floor === wanted));
   });
-  if (mapReady) setFloor(floor);
+  window.clearTimeout(floorTimer);
+  if (!mapReady) return;
+  if (fromTap) floorTimer = window.setTimeout(() => setFloor(activeFloor), 180);
+  else setFloor(floor);
 }
 
 function toggleView() {
@@ -351,6 +364,7 @@ function setUserPosition(lat, lng, meters, heading) {
   if (!switchedToMyLocation) {
     switchedToMyLocation = true;
     startSelect.value = "gps";
+    syncStartDropdown();
   }
 
   if (!mapReady) return;
@@ -694,6 +708,7 @@ function bindEvents() {
 
   initPanelSwipe();
   initLiquid();
+  initStartDropdown();
 }
 
 // Map clicks: test mode moves "you", coordinate helper shows lat/lng,
@@ -849,38 +864,71 @@ function initPanelSwipe() {
 }
 
 // A "liquid" highlight: one blob that stretches and slides to the chosen item, like water.
-function setupLiquid(container, itemSelector) {
+// It only uses transform (moved by the phone's graphics chip), so it stays smooth.
+// With { dividers: true } short liquid dashes sit between the items and fill down to the chosen one.
+function setupLiquid(container, options) {
   const blob = document.createElement("span");
   blob.className = "liquid-blob";
   blob.setAttribute("aria-hidden", "true");
   container.insertBefore(blob, container.firstChild);
-  let lastTop = null, lastBottom = null, timer = 0;
+
+  const wantsDividers = Boolean(options && options.dividers);
+
+  let lastTop = null, lastBottom = null, timer = 0, previousIndex = 0;
+
+  function move(top, bottom, baseHeight, stretching) {
+    blob.classList.toggle("is-stretching", stretching);
+    blob.style.transform = "translateY(" + top + "px) scaleY(" + ((bottom - top) / baseHeight) + ")";
+  }
 
   function place(animate) {
+    const items = container.querySelectorAll(".floor-btn, .algo-row");
     const item = container.querySelector('[aria-pressed="true"], [aria-checked="true"]');
     if (!item || !item.offsetHeight) return;
-    const top = item.offsetTop, height = item.offsetHeight, bottom = top + height;
+    const height = item.offsetHeight, top = item.offsetTop, bottom = top + height;
+    const selectedIndex = Array.prototype.indexOf.call(items, item);
+    blob.style.height = height + "px";
     window.clearTimeout(timer);
+
     if (!animate || lastTop === null) {
       blob.classList.add("no-anim");
-      blob.style.top = top + "px";
-      blob.style.height = height + "px";
-      blob.offsetHeight;                                          // apply now, before the animation comes back
+      move(top, bottom, height, false);
+      blob.offsetHeight;                                  // apply now, before the animation comes back
       blob.classList.remove("no-anim");
     } else if (top !== lastTop) {
       // 1) stretch from the old spot to the new one, 2) let the tail catch up and settle
-      blob.classList.add("is-stretching");
-      blob.style.top = Math.min(top, lastTop) + "px";
-      blob.style.height = (Math.max(bottom, lastBottom) - Math.min(top, lastTop)) + "px";
-      timer = window.setTimeout(() => {
-        blob.classList.remove("is-stretching");
-        blob.style.top = top + "px";
-        blob.style.height = height + "px";
-      }, 130);
-      drop(item);
+      move(Math.min(top, lastTop), Math.max(bottom, lastBottom), height, true);
+      timer = window.setTimeout(() => move(top, bottom, height, false), 120);
+      if (!document.body.classList.contains("is-touch")) drop(item);   // the water-drop ring is skipped on phones (lighter)
     }
     lastTop = top;
     lastBottom = bottom;
+
+    if (wantsDividers && items.length > 1) updateDividers(items, selectedIndex, previousIndex, animate);
+    previousIndex = selectedIndex;
+  }
+
+  // Short liquid dashes between the numbers (1 - 2 - 3). The ones above the chosen floor fill up like water.
+  function updateDividers(items, selectedIndex, fromIndex, animate) {
+    let dashes = container.querySelectorAll(".liquid-divider");
+    if (dashes.length !== items.length - 1) {
+      dashes.forEach((dash) => dash.remove());
+      for (let i = 0; i < items.length - 1; i++) {
+        const dash = document.createElement("span");
+        dash.className = "liquid-divider";
+        dash.setAttribute("aria-hidden", "true");
+        dash.appendChild(document.createElement("i"));
+        container.insertBefore(dash, container.firstChild);
+      }
+      dashes = container.querySelectorAll(".liquid-divider");
+    }
+    dashes = Array.from(dashes).reverse();          // (inserted at the front, so flip them back into order)
+    dashes.forEach((dash, i) => {
+      const gapMiddle = (items[i].offsetTop + items[i].offsetHeight + items[i + 1].offsetTop) / 2;
+      dash.style.top = (gapMiddle - 2) + "px";
+      dash.firstChild.style.transitionDelay = animate ? Math.abs(i - Math.min(fromIndex, selectedIndex)) * 60 + "ms" : "0ms";
+      dash.classList.toggle("is-full", i < selectedIndex);
+    });
   }
 
   new MutationObserver(() => place(true)).observe(container, { attributes: true, subtree: true, attributeFilter: ["aria-pressed", "aria-checked"] });
@@ -898,13 +946,14 @@ function drop(item) {
 }
 
 function initLiquid() {
-  setupLiquid(floorPicker, ".floor-btn");
-  setupLiquid(document.querySelector(".algo-list"), ".algo-row");
+  setupLiquid(floorPicker, { dividers: true });
+  setupLiquid(document.querySelector(".algo-list"));
 
   // Every glass button squishes a little and sends a ripple from where you touched it.
   document.addEventListener("pointerdown", (event) => {
-    const target = event.target.closest && event.target.closest(".floor-btn, .algo-row, #goButton, .btn-outline, .view-btn, .locate-fab");
+    const target = event.target.closest && event.target.closest(".floor-btn, .algo-row, .btn-outline, .view-btn, .locate-fab");
     if (!target || target.classList.contains("ar-start")) return;
+    if (document.body.classList.contains("is-touch") && target.matches(".floor-btn, .algo-row")) return;   // lighter on phones
     if (getComputedStyle(target).position === "static") target.style.position = "relative";
     const rect = target.getBoundingClientRect();
     const size = Math.max(rect.width, rect.height) * 1.6;
@@ -916,4 +965,81 @@ function initLiquid() {
     target.appendChild(ripple);
     window.setTimeout(() => ripple.remove(), 650);
   }, { passive: true });
+}
+
+
+/* ===== 10. THE "START FROM" LIST (our own glass list instead of the phone's plain one) ===== */
+
+// Other code calls this after it changes startSelect.value, so the box shows the new name.
+function syncStartDropdown() { startDropdownSync(); }
+
+function initStartDropdown() {
+  const root = $("startDd");
+  const button = root.querySelector(".dd-button");
+  const valueText = root.querySelector(".dd-value");
+  const list = root.querySelector(".dd-list");
+
+  function selectedOption() { return startSelect.options[startSelect.selectedIndex]; }
+
+  function sync() {
+    const chosen = selectedOption();
+    valueText.textContent = chosen ? chosen.textContent : "";
+    list.querySelectorAll("li").forEach((item) => item.setAttribute("aria-selected", String(chosen && item.dataset.value === chosen.value)));
+  }
+
+  function build() {
+    list.innerHTML = "";
+    Array.from(startSelect.options).forEach((option) => {
+      const item = document.createElement("li");
+      item.setAttribute("role", "option");
+      item.dataset.value = option.value;
+      item.textContent = option.textContent;
+      list.appendChild(item);
+    });
+    sync();
+  }
+
+  function setOpen(open) {
+    list.hidden = !open;
+    button.setAttribute("aria-expanded", String(open));
+    root.classList.toggle("is-open", open);
+    if (open) {
+      const current = list.querySelector('[aria-selected="true"]');
+      if (current) list.scrollTop = Math.max(0, current.offsetTop - 60);
+    }
+  }
+
+  function choose(value) {
+    startSelect.value = value;
+    startSelect.dispatchEvent(new Event("change"));
+    sync();
+    setOpen(false);
+    button.focus();
+  }
+
+  // Move the highlight up or down with the arrow keys
+  function step(direction) {
+    const next = Math.max(0, Math.min(startSelect.options.length - 1, startSelect.selectedIndex + direction));
+    startSelect.selectedIndex = next;
+    sync();
+    const current = list.querySelector('[aria-selected="true"]');
+    if (current && !list.hidden) current.scrollIntoView({ block: "nearest" });
+  }
+
+  button.addEventListener("click", () => setOpen(list.hidden));
+  list.addEventListener("click", (event) => {
+    const item = event.target.closest("li");
+    if (item) choose(item.dataset.value);
+  });
+  root.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") { setOpen(false); button.focus(); }
+    else if (event.key === "ArrowDown") { event.preventDefault(); if (list.hidden) setOpen(true); else step(1); }
+    else if (event.key === "ArrowUp") { event.preventDefault(); if (list.hidden) setOpen(true); else step(-1); }
+    else if (event.key === "Enter" && !list.hidden) { event.preventDefault(); choose(startSelect.value); }
+  });
+  document.addEventListener("pointerdown", (event) => { if (!root.contains(event.target)) setOpen(false); });
+
+  new MutationObserver(build).observe(startSelect, { childList: true });
+  startDropdownSync = sync;
+  build();
 }
