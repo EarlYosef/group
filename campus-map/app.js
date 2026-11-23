@@ -184,7 +184,7 @@ function buildFloorPicker() {
 function selectFloor(floor) {
   activeFloor = floor;
   const wanted = floor === null ? "all" : String(floor);
-  Array.from(floorPicker.children).forEach((button) => {
+  floorPicker.querySelectorAll(".floor-btn").forEach((button) => {
     button.setAttribute("aria-pressed", String(button.dataset.floor === wanted));
   });
   if (mapReady) setFloor(floor);
@@ -691,6 +691,9 @@ function bindEvents() {
   // The round arrow hides the panel; the menu button brings it back.
   panelToggle.addEventListener("click", () => setPanel(false));
   menuButton.addEventListener("click", () => setPanel(!document.body.classList.contains("panel-open")));
+
+  initPanelSwipe();
+  initLiquid();
 }
 
 // Map clicks: test mode moves "you", coordinate helper shows lat/lng,
@@ -797,3 +800,120 @@ function start() {
 }
 
 start();
+
+
+/* ===== 9. SWIPE THE PANEL AWAY + LIQUID BUTTONS ===== */
+
+// Swipe the panel to the left to close it (the round logo button still works too).
+// The panel follows your finger, then slides away. A short or mostly-vertical swipe does nothing.
+function initPanelSwipe() {
+  let startX = 0, startY = 0, startTime = 0, dragging = false, decided = false;
+
+  dock.addEventListener("touchstart", (event) => {
+    if (event.touches.length !== 1) return;
+    startX = event.touches[0].clientX;
+    startY = event.touches[0].clientY;
+    startTime = Date.now();
+    dragging = false;
+    decided = false;
+  }, { passive: true });
+
+  dock.addEventListener("touchmove", (event) => {
+    if (decided && !dragging) return;
+    const dx = event.touches[0].clientX - startX;
+    const dy = event.touches[0].clientY - startY;
+    if (!decided && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+      decided = true;
+      dragging = dx < 0 && Math.abs(dx) > Math.abs(dy) * 1.4;     // only a clear swipe to the left
+      if (dragging) dock.style.transition = "none";
+    }
+    if (dragging) dock.style.transform = "translateX(" + Math.min(0, dx) + "px)";
+  }, { passive: true });
+
+  function endSwipe(event) {
+    if (!dragging) return;
+    dragging = false;
+    const dx = (event.changedTouches[0].clientX) - startX;
+    const fast = Math.abs(dx) / Math.max(1, Date.now() - startTime) > 0.5;   // px per millisecond
+    dock.style.transition = "";
+    if (dx < -70 || (dx < -30 && fast)) {
+      dock.style.transform = "translateX(calc(-100% - 40px))";
+      setPanel(false);
+    } else {
+      dock.style.transform = "none";
+    }
+    setTimeout(() => { dock.style.transform = ""; }, 500);       // hand control back to the CSS
+  }
+  dock.addEventListener("touchend", endSwipe, { passive: true });
+  dock.addEventListener("touchcancel", endSwipe, { passive: true });
+}
+
+// A "liquid" highlight: one blob that stretches and slides to the chosen item, like water.
+function setupLiquid(container, itemSelector) {
+  const blob = document.createElement("span");
+  blob.className = "liquid-blob";
+  blob.setAttribute("aria-hidden", "true");
+  container.insertBefore(blob, container.firstChild);
+  let lastTop = null, lastBottom = null, timer = 0;
+
+  function place(animate) {
+    const item = container.querySelector('[aria-pressed="true"], [aria-checked="true"]');
+    if (!item || !item.offsetHeight) return;
+    const top = item.offsetTop, height = item.offsetHeight, bottom = top + height;
+    window.clearTimeout(timer);
+    if (!animate || lastTop === null) {
+      blob.classList.add("no-anim");
+      blob.style.top = top + "px";
+      blob.style.height = height + "px";
+      blob.offsetHeight;                                          // apply now, before the animation comes back
+      blob.classList.remove("no-anim");
+    } else if (top !== lastTop) {
+      // 1) stretch from the old spot to the new one, 2) let the tail catch up and settle
+      blob.classList.add("is-stretching");
+      blob.style.top = Math.min(top, lastTop) + "px";
+      blob.style.height = (Math.max(bottom, lastBottom) - Math.min(top, lastTop)) + "px";
+      timer = window.setTimeout(() => {
+        blob.classList.remove("is-stretching");
+        blob.style.top = top + "px";
+        blob.style.height = height + "px";
+      }, 130);
+      drop(item);
+    }
+    lastTop = top;
+    lastBottom = bottom;
+  }
+
+  new MutationObserver(() => place(true)).observe(container, { attributes: true, subtree: true, attributeFilter: ["aria-pressed", "aria-checked"] });
+  window.addEventListener("resize", () => place(false));
+  if (window.ResizeObserver) new ResizeObserver(() => place(false)).observe(container);
+  place(false);
+}
+
+// A water drop: a ring that spreads out from the item you chose.
+function drop(item) {
+  const ring = document.createElement("span");
+  ring.className = "liquid-drop";
+  item.appendChild(ring);
+  window.setTimeout(() => ring.remove(), 700);
+}
+
+function initLiquid() {
+  setupLiquid(floorPicker, ".floor-btn");
+  setupLiquid(document.querySelector(".algo-list"), ".algo-row");
+
+  // Every glass button squishes a little and sends a ripple from where you touched it.
+  document.addEventListener("pointerdown", (event) => {
+    const target = event.target.closest && event.target.closest(".floor-btn, .algo-row, #goButton, .btn-outline, .view-btn, .locate-fab");
+    if (!target || target.classList.contains("ar-start")) return;
+    if (getComputedStyle(target).position === "static") target.style.position = "relative";
+    const rect = target.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height) * 1.6;
+    const ripple = document.createElement("span");
+    ripple.className = "liquid-ripple";
+    ripple.style.width = ripple.style.height = size + "px";
+    ripple.style.left = (event.clientX - rect.left - size / 2) + "px";
+    ripple.style.top = (event.clientY - rect.top - size / 2) + "px";
+    target.appendChild(ripple);
+    window.setTimeout(() => ripple.remove(), 650);
+  }, { passive: true });
+}

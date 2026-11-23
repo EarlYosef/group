@@ -97,7 +97,7 @@
         <div class="search-wrap">
         <form id="searchForm" class="search">
           <svg class="search-pin" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
-          <input id="roomInput" type="text" placeholder="Type a room, e.g. D112" aria-label="Room to find"
+          <input id="roomInput" type="text" placeholder="Room, e.g. D112" aria-label="Room to find"
                  autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="go">
           <button id="goButton" type="submit">Go <svg class="go-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"></path></svg></button>
         </form>
@@ -109,19 +109,19 @@
 
       <!-- Floors and options -->
       <section class="card options-card">
-        <p class="section-title">Floor</p>
-        <div id="floorPicker" role="group" aria-label="Floors"></div>
-
-        <div class="options">
-          <label class="field">Start from
-            <select id="startSelect"></select>
-          </label>
-          <div class="field algo-field">
+        <!-- Left: tall red floor pill. Right: Start from, Algorithm, Use my location -->
+        <div class="pick-row">
+          <div id="floorPicker" role="group" aria-label="Floors"></div>
+          <div class="pick-col">
+            <label class="field start-field">Start from
+              <select id="startSelect"></select>
+            </label>
+            <div class="field algo-field">
             <span class="field-title">Algorithm</span>
             <div class="algo-list" role="radiogroup" aria-label="Algorithm">
-              <button type="button" role="radio" class="algo-row" data-algo-choice="bfs" aria-checked="true"><span class="algo-dot" style="--dot:#08a597"></span>BFS <em>(Fewest steps)</em></button>
-              <button type="button" role="radio" class="algo-row" data-algo-choice="dfs" aria-checked="false"><span class="algo-dot" style="--dot:#7a6cf0"></span>DFS <em>(Any path)</em></button>
-              <button type="button" role="radio" class="algo-row" data-algo-choice="both" aria-checked="false"><span class="algo-dot algo-dot-all"></span>Compare both</button>
+              <button type="button" role="radio" class="algo-row" data-algo-choice="bfs" aria-checked="true"><span class="algo-name">BFS <em>(Fewest steps)</em></span><span class="algo-icons" aria-hidden="true"><svg class="ico-color" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.6"/><circle cx="5.5" cy="18" r="2.6"/><circle cx="18.5" cy="18" r="2.6"/><path d="M12 7.6v4M12 11.6L6.6 15.6M12 11.6l5.4 4"/></svg><svg class="ico-gray" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span></button>
+              <button type="button" role="radio" class="algo-row" data-algo-choice="dfs" aria-checked="false"><span class="algo-name">DFS <em>(Any path)</em></span><span class="algo-icons" aria-hidden="true"><svg class="ico-color" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2.6"/><circle cx="12" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M7.5 7l3 3M13.5 14l3 3"/></svg><svg class="ico-gray" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="3"/><path d="M9 10h6M9 14h4"/></svg></span></button>
+              <button type="button" role="radio" class="algo-row" data-algo-choice="both" aria-checked="false"><span class="algo-name">Compare both</span><span class="algo-icons" aria-hidden="true"><svg class="ico-color" viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.6"/><circle cx="17" cy="8" r="2.6"/><circle cx="12" cy="18" r="2.6"/><path d="M9.2 9.4l2 6M14.8 9.4l-2 6M9.6 8h4.8"/></svg><svg class="ico-gray" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="1.5"/></svg></span></button>
             </div>
             <!-- The real dropdown stays here (hidden): the list above sets it -->
             <select id="algoSelect" class="visually-hidden" tabindex="-1" aria-hidden="true">
@@ -130,7 +130,8 @@
               <option value="both">Compare BFS and DFS</option>
             </select>
           </div>
-          <button id="locateButton" class="btn-outline" type="button">Use my location</button>
+            <button id="locateButton" class="btn-outline" type="button">Use my location</button>
+          </div>
         </div>
       </section>
 

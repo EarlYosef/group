@@ -1965,105 +1965,6 @@ body.dark ol li:last-child::before { box-shadow: 0 0 0 2px var(--maroon), 0 0 14
 
 
 /* =====================================================================
-   AURORA GLASS  (the final look: dark smoky glass with maroon, rose, violet and gold light)
-   It sits on top of everything above and uses the same dark glass in light and night mode.
-   Only gradients, borders and glows (no animated blur), so phones stay smooth.
-   To go back, delete this whole block.
-   ===================================================================== */
-
-:root {
-  --aurora-rose: #e0446a;
-  --aurora-violet: #6a4fd8;
-  --aurora-ink: rgba(24, 15, 28, 0.80);        /* the smoky dark glass */
-  --aurora-ink-solid: rgba(24, 15, 28, 0.96);  /* the same on phones (no blur) */
-}
-
-/* ---- The side panel: dark glass with colored light in the corners ---- */
-#dock {
-  background-color: var(--aurora-ink);
-  background-image:
-    radial-gradient(110% 55% at 0% 0%, rgba(224, 68, 106, 0.34), rgba(224, 68, 106, 0) 60%),
-    radial-gradient(90% 50% at 100% 100%, rgba(106, 79, 216, 0.30), rgba(106, 79, 216, 0) 60%),
-    radial-gradient(70% 40% at 100% 0%, rgba(242, 183, 5, 0.16), rgba(242, 183, 5, 0) 60%),
-    linear-gradient(165deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0) 40%);
-  border-color: rgba(255, 255, 255, 0.18);
-}
-body.is-touch #dock,
-body.is-touch.dark #dock { background-color: var(--aurora-ink-solid); }
-
-/* The search card: rose to maroon to deep violet, with a gold glow in the corner */
-.hero {
-  background:
-    radial-gradient(90% 80% at 100% 0%, rgba(242, 183, 5, 0.38), rgba(242, 183, 5, 0) 60%),
-    radial-gradient(80% 90% at 0% 100%, rgba(106, 79, 216, 0.45), rgba(106, 79, 216, 0) 65%),
-    linear-gradient(140deg, #e0446a 0%, #8a1c2b 52%, #3d0f33 100%);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.35), 0 14px 34px rgba(224, 68, 106, 0.28);
-}
-
-/* Small section titles pick up a gold tint */
-#dock .section-title { color: #e9c46a; }
-#dock h1 { color: #ffffff; }
-
-/* ---- The buttons on the map: the same dark glass, day and night ---- */
-.glass-btn:not(.ar-start),
-.zone-card,
-.locate-fab {
-  --ink: #f6ebe5;
-  --muted: #bda89f;
-  color: #f6ebe5;
-  background-color: rgba(24, 15, 28, 0.66);
-  background-image:
-    radial-gradient(120% 140% at 0% 0%, rgba(224, 68, 106, 0.28), rgba(224, 68, 106, 0) 60%),
-    linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.03));
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.22), 0 8px 24px rgba(10, 4, 16, 0.45);
-}
-body.is-touch .glass-btn:not(.ar-start),
-body.is-touch.dark .glass-btn:not(.ar-start),
-body.is-touch .zone-card,
-body.is-touch.dark .zone-card { background-color: rgba(24, 15, 28, 0.93); }
-.glass-btn:not(.ar-start):hover { background-color: rgba(44, 28, 50, 0.78); }
-.zone-card .zone-sub { color: #cdb9b1; }
-
-.locate-fab { color: #f6ebe5; }
-.locate-fab.is-on { color: #8bbcff; }
-.locate-fab.is-following { color: #ffffff; background-image: none; background-color: #1a73e8; }
-
-/* Find a room: its icon bubble is rose to maroon */
-#menuButton .icon { background: linear-gradient(135deg, #e0446a, #8a1c2b); box-shadow: 0 0 14px rgba(224, 68, 106, 0.6); }
-
-/* The two square buttons */
-.view-btn[aria-pressed="false"] { color: #ffd84d; background: linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.03)), rgb(34, 22, 40); border-color: rgba(255, 255, 255, 0.35); }
-.view-btn[aria-pressed="true"] { background: linear-gradient(160deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 45%), linear-gradient(135deg, #e0446a, #8a1c2b 60%, #4a1040); border-color: rgba(242, 183, 5, 0.85); box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.4), 0 0 22px rgba(224, 68, 106, 0.55), 0 8px 20px rgba(10, 4, 16, 0.5); }
-.look-btn { border-color: rgba(255, 255, 255, 0.55); }
-
-/* The selected floor and Use my location glow in rose and maroon */
-#dock .floor-btn[aria-pressed="true"],
-#dock .floor-btn[aria-pressed="true"]:hover {
-  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 50%), linear-gradient(135deg, #e0446a, #8a1c2b);
-  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.4), 0 0 0 1px rgba(242, 183, 5, 0.5), 0 0 22px rgba(224, 68, 106, 0.6), 0 8px 18px rgba(0, 0, 0, 0.5);
-}
-#dock .btn-outline:hover { background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)), linear-gradient(135deg, #e0446a, #8a1c2b); }
-
-/* Direction steps pick up the glow of their route color */
-#dock li { color: #f6ebe5; }
-
-/* ---- AR guide: aurora tint on the banner and the distance ---- */
-.ar-banner {
-  background-color: rgba(24, 15, 28, 0.72);
-  background-image: radial-gradient(100% 140% at 0% 0%, rgba(224, 68, 106, 0.30), rgba(224, 68, 106, 0) 60%), linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 50%);
-}
-body.is-touch .ar-banner { background-color: rgba(24, 15, 28, 0.88); }
-.ar-banner-icon { background: linear-gradient(145deg, #6a8bff, #4a2fd0); box-shadow: 0 0 18px rgba(106, 79, 216, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
-.ar-distance { background: linear-gradient(135deg, rgba(106, 79, 216, 0.95), rgba(224, 68, 106, 0.92)); border-color: rgba(255, 255, 255, 0.9); box-shadow: 0 0 26px rgba(224, 68, 106, 0.55), 0 8px 22px rgba(0, 0, 0, 0.4); }
-.ar-left { background-color: rgba(24, 15, 28, 0.72); }
-body.is-touch .ar-left { background-color: rgba(24, 15, 28, 0.88); }
-.ar-bar i { background: linear-gradient(90deg, #e0446a, #f2b705, #3ddc84); }
-.ar-ring { border-color: rgba(224, 68, 106, 0.85); }
-
-
-/* =====================================================================
    COMMAND PANEL  (the look from your picture: dark glass search with a red GO, suggestions,
    a tall red floor pill, calm dark map). The buttons on the right side are not touched.
    To go back, delete this whole block.
@@ -2349,3 +2250,193 @@ body.is-touch.dark .glass-btn:not(.ar-start),
 body.is-touch .zone-card,
 body.is-touch.dark .zone-card { background-color: rgba(30, 30, 34, 0.94); }
 .glass-btn:not(.ar-start):hover { background-color: rgba(48, 48, 54, 0.82); }
+
+
+/* =====================================================================
+   PICTURE PANEL (final): exactly the look of your picture
+   Neutral dark glass, red only on GO / floor pill / small accents, tall floor pill on the left,
+   algorithm rows with little logos on the right. No aurora colors. Animations are untouched.
+   To go back, delete this whole block.
+   ===================================================================== */
+
+/* Title: warm tan serif, italic word in soft red (like the picture) */
+#dock .hero h2 { color: #cdb7ae; font-weight: 600; }
+#dock .hero h2 em {
+  background: none; -webkit-text-fill-color: #e0707c; color: #e0707c; font-style: italic;
+}
+
+/* Search pill: dark with a red outline glow, red GO */
+#dock .search {
+  background: rgba(10, 10, 14, 0.78);
+  border-color: #e0364c;
+  box-shadow: 0 0 0 3px rgba(224, 54, 76, 0.16), 0 0 20px rgba(224, 54, 76, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+#dock .search-pin { color: #e0364c; }
+#dock #goButton { background-image: linear-gradient(135deg, #f0405a, #b3162f); color: #fff; }
+
+/* Floors + Start from sit side by side */
+#dock .pick-row { display: flex; gap: 14px; align-items: flex-start; }
+#dock .pick-row .start-field { flex: 1; min-width: 0; margin: 0; padding-top: 4px; }
+
+/* Floors: one tall red glass pill, top to bottom */
+#dock #floorPicker {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  flex: none; width: 54px; padding: 8px 6px; margin: 0;
+  border-radius: 28px;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 40%), linear-gradient(180deg, #e0364c, #8f0f20);
+  background-color: #8f0f20;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.35), 0 0 20px rgba(224, 54, 76, 0.35), 0 8px 18px rgba(0, 0, 0, 0.45);
+}
+#dock #floorPicker .floor-btn,
+#dock #floorPicker .floor-btn.all {
+  width: 40px; height: 40px; min-width: 0; padding: 0; border-radius: 50%;
+  background: transparent; border: 1px solid transparent; box-shadow: none;
+  color: rgba(255, 255, 255, 0.88); font-weight: 700; font-size: 15px;
+}
+#dock #floorPicker .floor-btn[aria-pressed="true"],
+#dock #floorPicker .floor-btn[aria-pressed="true"]:hover {
+  background-image: none; background-color: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.55); color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 12px rgba(255, 255, 255, 0.35);
+}
+
+/* Algorithm list: name on the left, two little logos on the right */
+#dock .algo-row { display: flex; align-items: center; gap: 10px; }
+#dock .algo-name { flex: 1; text-align: left; }
+#dock .algo-icons { display: inline-flex; align-items: center; gap: 12px; }
+#dock .algo-icons svg { width: 20px; height: 20px; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#dock .algo-icons .ico-color { stroke: #3ddc84; fill: rgba(61, 220, 132, 0.25); }
+#dock .algo-row[data-algo-choice="dfs"] .ico-color { stroke: #f2b705; fill: rgba(242, 183, 5, 0.25); }
+#dock .algo-row[data-algo-choice="both"] .ico-color { stroke: #6aa8ff; fill: rgba(106, 168, 255, 0.25); }
+#dock .algo-icons .ico-gray { stroke: #8f8c94; }
+#dock .algo-row[aria-checked="true"] .ico-gray { stroke: #d8d4d8; }
+
+/* The little algorithm dots and any leftover aurora tints are not used any more */
+#dock .algo-dot { display: none; }
+
+/* The card is a simple stack now: [floors | start from], then the algorithm list */
+#dock .options-card { display: block; }
+#dock .options-card .pick-row { margin-bottom: 14px; }
+#dock .options-card #floorPicker { grid-column: auto; grid-row: auto; }
+#dock .options-card .options { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+#dock .options-card .algo-field { width: 100%; }
+#dock .options-card .algo-list { display: flex; flex-direction: column; width: 100%; border-radius: 18px; padding: 6px; }
+#dock .options-card .algo-row { width: 100%; padding: 11px 12px; border-radius: 12px; font-size: 15px; }
+#dock .options-card .algo-row em { font-style: normal; }
+#dock .options-card .btn-outline { width: 100%; }
+
+
+/* =====================================================================
+   LAYOUT, HIDDEN SCROLLBAR, LIQUID BUTTONS, AR CLEAN-UP  (latest)
+   Each part is separate, so you can delete just one to undo it.
+   ===================================================================== */
+
+/* ---- Layout: floor pill on the left, everything else in one column on the right ---- */
+#dock .pick-row { display: flex; gap: 14px; align-items: stretch; margin: 0; }
+#dock .pick-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+#dock .options-card .pick-col .start-field { padding-top: 0; }
+#dock .options-card #floorPicker {
+  justify-content: space-evenly; align-self: stretch; position: relative; min-height: 230px;
+}
+
+/* ---- The panel still scrolls, but no scroll bar is drawn ---- */
+.dock-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+.dock-scroll::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+/* ---- Liquid highlight (the blob that slides between 1 / 2 / 3 and BFS / DFS) ---- */
+.liquid-blob {
+  position: absolute; z-index: 0; pointer-events: none;
+  transition: top 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: top, height;
+}
+.liquid-blob.is-stretching { transition: top 0.13s ease-out, height 0.13s ease-out; }
+.liquid-blob.no-anim { transition: none; }
+
+#dock #floorPicker .liquid-blob {
+  left: 6px; width: 40px; border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.16));
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 14px rgba(255, 255, 255, 0.35), 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+#dock .algo-list { position: relative; }
+#dock .algo-list .liquid-blob {
+  left: 6px; right: 6px; border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.08));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5), 0 0 14px rgba(255, 255, 255, 0.14);
+}
+
+/* the chosen item itself no longer paints its own background: the blob does */
+#dock #floorPicker .floor-btn,
+#dock #floorPicker .floor-btn[aria-pressed="true"],
+#dock #floorPicker .floor-btn[aria-pressed="true"]:hover {
+  position: relative; z-index: 1; background: transparent; box-shadow: none; border-color: transparent;
+  overflow: hidden;
+}
+#dock #floorPicker .floor-btn[aria-pressed="true"] { color: #fff; }
+#dock .options-card .algo-row,
+#dock .algo-row[aria-checked="true"] { position: relative; z-index: 1; background: transparent; box-shadow: none; overflow: hidden; }
+
+/* water drop: a ring that spreads from the item you chose */
+.liquid-drop {
+  position: absolute; left: 50%; top: 50%; width: 100%; height: 100%; border-radius: 50%;
+  margin: -50% 0 0 -50%; border: 2px solid rgba(255, 255, 255, 0.8); pointer-events: none;
+  animation: liq-drop 0.65s ease-out forwards;
+}
+.algo-row .liquid-drop { width: 60px; height: 60px; margin: -30px 0 0 -30px; }
+@keyframes liq-drop { from { transform: scale(0.3); opacity: 0.9; } to { transform: scale(1.9); opacity: 0; } }
+
+/* touch ripple */
+.liquid-ripple {
+  position: absolute; border-radius: 50%; pointer-events: none; background: rgba(255, 255, 255, 0.35);
+  transform: scale(0); animation: liq-ripple 0.6s ease-out forwards;
+}
+@keyframes liq-ripple { to { transform: scale(1); opacity: 0; } }
+.floor-btn, .algo-row, #goButton, .btn-outline, .view-btn, .locate-fab { overflow: hidden; }
+
+/* squish when pressed, then spring back (uses "scale", so it never fights other transforms) */
+.glass-btn, .view-btn, .locate-fab, #goButton, .btn-outline, .floor-btn, .algo-row {
+  transition-property: scale, background-color, box-shadow, color, border-color;
+  transition-duration: 0.4s, 0.2s, 0.2s, 0.2s, 0.2s;
+  transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1), ease, ease, ease, ease;
+}
+.glass-btn:active, .view-btn:active, .locate-fab:active, #goButton:active, .btn-outline:active, .floor-btn:active, .algo-row:active { scale: 0.94 0.88; }
+
+@media (prefers-reduced-motion: reduce) {
+  .liquid-blob, .liquid-drop, .liquid-ripple { transition: none; animation: none; }
+}
+
+/* ---- Text boxes: clean, even edges in light and dark mode ---- */
+#dock .search { overflow: hidden; }
+#dock #roomInput, #dock select {
+  outline: none; -webkit-appearance: none; appearance: none; background-clip: padding-box;
+}
+#dock #roomInput { background: transparent; border: 0; box-shadow: none; color: #f6f3f4; }
+#dock select { border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.2); color: #f6f3f4; }
+#dock select:focus-visible { box-shadow: 0 0 0 2px rgba(224, 54, 76, 0.7); }
+
+/* ---- AR: no big distance, no yellow room tag; smaller see-through arrow ---- */
+.ar-distance, .ar-dest, .ar-dest[hidden] { display: none !important; }
+.ar-floor { width: 140px; height: 160px; margin-left: -70px; bottom: 17%; }
+.ar-arrow { opacity: 0.78; filter: drop-shadow(0 0 8px rgba(70, 130, 255, 0.8)) drop-shadow(0 6px 6px rgba(0, 0, 0, 0.35)); }
+
+/* ---- AR: icon buttons in the same liquid black glass as the panel ---- */
+.ar-banner {
+  background-color: rgba(22, 22, 26, 0.72);
+  background-image: linear-gradient(170deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02) 50%, transparent);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.22), 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+.ar-banner-icon, .ar-close {
+  background-color: rgba(10, 10, 14, 0.7);
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.02) 55%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.3), 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+.ar-banner-icon { border-radius: 16px; }
+.ar-close:active { background-color: rgba(60, 60, 68, 0.8); }
+.ar-mini, .ar-left { border-color: rgba(255, 255, 255, 0.28); }
+
+/* Phones: keep each algorithm on one line */
+#dock .algo-name { white-space: nowrap; }
+@media (max-width: 480px) { #dock .algo-row em { display: none; } }
