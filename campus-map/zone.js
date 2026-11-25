@@ -116,8 +116,74 @@ function describeZone(info) {
 function initZone() {
   ["zoneCard", "zoneArrow", "zoneTitle", "zoneSub"].forEach((id) => { zoneEl[id] = document.getElementById(id); });
   zoneEl.zoneCard.addEventListener("click", () => {
+    if (zoneDragged) { zoneDragged = false; return; }     // that was a swipe, not a tap
     const gate = NODES[GATE_NODE_ID];
     focusOn(gate.lat, gate.lng);          // tap the card: fly to the Main Gate
+  });
+  initZoneSwipe();
+}
+
+/* ===== 5. SWIPE THE CARD AWAY (a liquid tab stays on the edge) ===== */
+// Swipe the card right, left or up and it slides off the screen. A small liquid tab stays on that edge:
+// tap it, or swipe it back toward the middle, and the card returns.
+let zoneTucked = null;       // null (showing), "left" or "right"
+let zoneDragged = false;     // true right after a swipe, so the tap that follows does nothing
+
+function setZoneTucked(side) {
+  zoneTucked = side;
+  const card = zoneEl.zoneCard;
+  card.classList.toggle("is-tucked-right", side === "right");
+  card.classList.toggle("is-tucked-left", side === "left");
+  card.style.translate = "";
+  syncZoneTabs();
+}
+
+function syncZoneTabs() {
+  const visible = !zoneEl.zoneCard.hidden;
+  document.getElementById("zoneTabLeft").hidden = !(visible && zoneTucked === "left");
+  document.getElementById("zoneTabRight").hidden = !(visible && zoneTucked === "right");
+}
+
+function initZoneSwipe() {
+  const card = zoneEl.zoneCard;
+  let startX = 0, startY = 0, startTime = 0, dragging = false;
+
+  card.addEventListener("pointerdown", (event) => {
+    startX = event.clientX; startY = event.clientY; startTime = Date.now(); dragging = true; zoneDragged = false;
+    card.setPointerCapture(event.pointerId);
+  });
+  card.addEventListener("pointermove", (event) => {
+    if (!dragging) return;
+    const dx = event.clientX - startX, dy = event.clientY - startY;
+    if (Math.abs(dx) > 6 || Math.abs(dy) > 6) zoneDragged = true;
+    if (zoneDragged) { card.classList.add("is-dragging"); card.style.translate = dx + "px " + Math.min(0, dy) + "px"; }
+  });
+  function release(event) {
+    if (!dragging) return;
+    dragging = false;
+    card.classList.remove("is-dragging");
+    const dx = event.clientX - startX, dy = event.clientY - startY;
+    const fast = Math.hypot(dx, dy) / Math.max(1, Date.now() - startTime) > 0.5;
+    if (Math.abs(dx) > 70 || (Math.abs(dx) > 30 && fast)) setZoneTucked(dx > 0 ? "right" : "left");
+    else if (dy < -45 || (dy < -25 && fast)) setZoneTucked("right");      // swiped up
+    else card.style.translate = "";                                        // not far enough: springs back
+    window.setTimeout(() => { zoneDragged = false; }, 50);
+  }
+  card.addEventListener("pointerup", release);
+  card.addEventListener("pointercancel", release);
+
+  // The tabs: tap, or swipe toward the middle of the screen
+  ["zoneTabLeft", "zoneTabRight"].forEach((id) => {
+    const tab = document.getElementById(id);
+    tab.addEventListener("click", () => setZoneTucked(null));     // a tap brings the card back
+    let tabStartX = null;                                          // so does a swipe toward the middle of the screen
+    tab.addEventListener("pointerdown", (event) => { tabStartX = event.clientX; tab.setPointerCapture(event.pointerId); });
+    tab.addEventListener("pointermove", (event) => {
+      if (tabStartX === null) return;
+      const inward = tab.dataset.side === "right" ? tabStartX - event.clientX : event.clientX - tabStartX;
+      if (inward > 25) { tabStartX = null; setZoneTucked(null); }
+    });
+    tab.addEventListener("pointerup", () => { tabStartX = null; });
   });
 }
 
@@ -131,6 +197,8 @@ function updateZone(lat, lng) {
   zoneEl.zoneSub.textContent = words.sub;
   zoneEl.zoneCard.hidden = false;
   zoneEl.zoneCard.dataset.zone = info.zone;
+  document.querySelectorAll(".zone-tab").forEach((tab) => { tab.dataset.zone = info.zone; });
+  syncZoneTabs();
 
   // The little arrow points to the Main Gate (turned with the map, so it stays correct).
   const turn = info.toGateBearing - (map.getBearing ? map.getBearing() : 0);
@@ -143,6 +211,10 @@ function updateZone(lat, lng) {
     void zoneEl.zoneCard.offsetWidth;     // lets the animation start again
     zoneEl.zoneCard.classList.add("pop");
     if (navigator.vibrate && info.zone !== "far") navigator.vibrate(120);
+    if (zoneTucked) {                         // the card is tucked away: the tab pulses to say "something changed"
+      const tab = document.getElementById(zoneTucked === "left" ? "zoneTabLeft" : "zoneTabRight");
+      tab.classList.remove("pulse"); void tab.offsetWidth; tab.classList.add("pulse");
+    }
   }
 
   // The pulsing circle at the Main Gate: near the gate, or on campus walking toward it.

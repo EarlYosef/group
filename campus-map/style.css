@@ -17,7 +17,6 @@
 
 :root {
   --maroon: #8a1c2b;
-  --gold: #f2b705;
   --maroon-deep: #55101b;
   --ink: #2d1a15;
   --black: #17110f;
@@ -312,15 +311,11 @@ body.dark .dock-scroll:hover::-webkit-scrollbar-thumb { background: rgba(246, 23
 .logo-btn {
   flex: none;
   position: relative;
-  width: 42px;
-  height: 42px;
   margin: 0 12px 0 0;
   padding: 0;
   background: none;
   border: 0;
-  border-radius: 11px;
   cursor: pointer;
-  box-shadow: 0 3px 10px rgba(85, 16, 27, 0.28);
   transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s;
 }
 
@@ -891,15 +886,8 @@ ol li:last-child::before {
 }
 
 .ar-start .icon {
-  width: 30px;
-  height: 30px;
-  padding: 5px;
   box-sizing: content-box;
-  margin: 0 10px 0 -6px;
-  color: var(--maroon-deep);
-  background: var(--gold);
   border-radius: 50%;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 .ar-start:active { -webkit-transform: translateX(-50%) scale(0.95); transform: translateX(-50%) scale(0.95); }
 @media (hover: hover) { .ar-start:hover { -webkit-transform: translateX(-50%) translateY(-3px); transform: translateX(-50%) translateY(-3px); } }
@@ -986,10 +974,8 @@ body.is-touch .ar-start { display: -webkit-inline-flex; display: inline-flex; }
 
 .ar-sub {
   margin-top: 3px;
-  font-size: 14px;
   color: rgba(255, 255, 255, 0.82);
   overflow: hidden;
-  white-space: nowrap;
   text-overflow: ellipsis;
 }
 
@@ -1101,9 +1087,7 @@ body.is-touch .ar-start { display: -webkit-inline-flex; display: inline-flex; }
 .ar-left {
   display: inline-block;
   max-width: 100%;
-  padding: 9px 16px;
   font: 700 16px var(--font-body);
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: bottom;
@@ -1600,8 +1584,14 @@ body.is-touch.dark .ar-start { background: linear-gradient(135deg, var(--maroon)
 @keyframes ar-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 
 /* Bottom box: the number is big and gold, the room name small */
-.ar-left strong { font-size: 20px; font-weight: 800; color: var(--gold); margin-right: 2px; }
-.ar-left span { font-size: 14px; font-weight: 600; }
+.ar-left strong {
+  font-weight: 800;
+  color: var(--gold);
+  margin-right: 2px;
+}
+.ar-left span {
+  font-weight: 600;
+}
 
 /* Progress bar: fills from the start of the route to the room */
 .ar-bar {
@@ -1799,7 +1789,9 @@ body.dark .view-btn { border-color: rgba(255, 255, 255, 0.5); }
 #dock .floor-btn[aria-pressed="true"],
 #dock .floor-btn[aria-pressed="true"]:hover { color: #ffffff; background-color: transparent; }
 #dock .btn-outline:hover { color: #ffffff; background-color: var(--maroon); }
-#dock .theme-btn { color: var(--ink); background-color: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.18); }
+#dock .theme-btn {
+  border-color: rgba(255, 255, 255, 0.18);
+}
 
 #dock select {
   border-color: rgba(255, 255, 255, 0.18);
@@ -2004,20 +1996,17 @@ body.dark ol li:last-child::before { box-shadow: 0 0 0 2px var(--maroon), 0 0 14
   height: 44px;
   margin: 3px 0;
   padding: 0;
-  color: #ffffff;
   font-size: 15px;
   background: transparent;
   background-image: none;
   border: 1px solid transparent;
   box-shadow: none;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
   -webkit-animation: none;
   animation: none;
 }
 #dock #floorPicker .floor-btn:hover { background: rgba(255, 255, 255, 0.18); border-color: rgba(255, 255, 255, 0.35); box-shadow: none; }
 #dock #floorPicker .floor-btn[aria-pressed="true"],
 #dock #floorPicker .floor-btn[aria-pressed="true"]:hover {
-  text-shadow: none;
   background: linear-gradient(160deg, #ffffff, #ffd9de);
 }
 #dock .options-card .field select { font-size: 15px; padding-left: 10px; }
@@ -2033,9 +2022,6 @@ body.dark ol li:last-child::before { box-shadow: 0 0 0 2px var(--maroon), 0 0 14
 .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
 
 /* Panel: smoky gray glass you can see the map through (computers). Phones: nearly solid, no blur. */
-#dock {
-  border-color: rgba(255, 255, 255, 0.28);
-}
 
 /* Algorithm list: one glass box, one row per algorithm, the chosen row glows red */
 .field-title { margin-bottom: 5px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
@@ -2097,10 +2083,8 @@ body.dark ol li:last-child::before { box-shadow: 0 0 0 2px var(--maroon), 0 0 14
 :root { --muted: #a9a6ac; }
 #dock {
   --muted: #a9a6ac;
-  background-color: rgba(26, 26, 30, 0.82);
   background-image: linear-gradient(170deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.02) 45%, rgba(255, 255, 255, 0) 100%);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.2), 0 24px 60px rgba(0, 0, 0, 0.5);
 }
 body.is-touch #dock,
 body.is-touch.dark #dock { background-color: rgba(30, 30, 34, 0.96); }
@@ -2119,7 +2103,7 @@ body.is-touch.dark #dock { background-color: rgba(30, 30, 34, 0.96); }
 
 /* Title: soft gray, with a soft red italic word like the picture */
 .hero h2 { color: #d8d4d8; }
-.hero h2 em { background: linear-gradient(90deg, #d9777f, #b9404a); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
+.hero h2 em { background: linear-gradient(90deg, var(--brand-text), var(--brand)); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
 
 /* Search: dark glass pill, white outline */
 
@@ -2132,7 +2116,7 @@ body.is-touch.dark #dock { background-color: rgba(30, 30, 34, 0.96); }
 #dock .chip,
 #dock .theme-btn { background-color: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.16); }
 #dock select { background-color: rgba(255, 255, 255, 0.08); }
-#dock .btn-outline:hover { background-image: linear-gradient(135deg, #e0364c, #8f0f20); }
+
 .algo-list { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.16); }
 .algo-row em { color: #a9a6ac; }
 .algo-row:hover { background: rgba(255, 255, 255, 0.08); }
@@ -2171,19 +2155,20 @@ body.is-touch.dark .zone-card { background-color: rgba(30, 30, 34, 0.94); }
    ===================================================================== */
 
 /* Title: warm tan serif, italic word in soft red (like the picture) */
-#dock .hero h2 { color: #cdb7ae; font-weight: 600; }
+#dock .hero h2 {
+  font-weight: 600;
+}
 #dock .hero h2 em {
-  background: none; -webkit-text-fill-color: #e0707c; color: #e0707c; font-style: italic;
+  background: none;
+  font-style: italic;
 }
 
 /* Search pill: dark with a red outline glow, red GO */
 #dock .search {
   background: rgba(10, 10, 14, 0.78);
-  border-color: #e0364c;
-  box-shadow: 0 0 0 3px rgba(224, 54, 76, 0.16), 0 0 20px rgba(224, 54, 76, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
-#dock .search-pin { color: #e0364c; }
-#dock #goButton { background-image: linear-gradient(135deg, #f0405a, #b3162f); color: #fff; }
+
+#dock #goButton { background-image: linear-gradient(135deg, var(--brand-hi), var(--brand)); color: #fff; }
 
 /* Floors + Start from sit side by side */
 
@@ -2194,29 +2179,45 @@ body.is-touch.dark .zone-card { background-color: rgba(30, 30, 34, 0.94); }
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   flex: none; width: 54px; padding: 8px 6px; margin: 0;
   border-radius: 28px;
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 40%), linear-gradient(180deg, #e0364c, #8f0f20);
-  background-color: #8f0f20;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 40%), linear-gradient(180deg, var(--brand-hi), var(--brand-lo));
+  background-color: var(--brand-lo);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.35), 0 0 20px rgba(224, 54, 76, 0.35), 0 8px 18px rgba(0, 0, 0, 0.45);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.35), 0 0 20px rgba(var(--brand-rgb), 0.35), 0 8px 18px rgba(0, 0, 0, 0.45);
 }
 #dock #floorPicker .floor-btn,
 #dock #floorPicker .floor-btn.all {
-  width: 40px; height: 40px; min-width: 0; padding: 0; border-radius: 50%;
-  background: transparent; border: 1px solid transparent; box-shadow: none;
-  color: rgba(255, 255, 255, 0.88); font-weight: 700; font-size: 15px;
+  min-width: 0;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid transparent;
+  box-shadow: none;
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 700;
 }
 #dock #floorPicker .floor-btn[aria-pressed="true"],
 #dock #floorPicker .floor-btn[aria-pressed="true"]:hover {
-  background-image: none; background-color: rgba(255, 255, 255, 0.24);
-  border-color: rgba(255, 255, 255, 0.55); color: #fff;
+  background-image: none;
+  background-color: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.55);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 12px rgba(255, 255, 255, 0.35);
 }
 
 /* Algorithm list: name on the left, two little logos on the right */
 #dock .algo-row { display: flex; align-items: center; gap: 10px; }
-#dock .algo-name { flex: 1; text-align: left; }
-#dock .algo-icons { display: inline-flex; align-items: center; gap: 12px; }
-#dock .algo-icons svg { width: 20px; height: 20px; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#dock .algo-name {
+  text-align: left;
+}
+#dock .algo-icons {
+  display: inline-flex;
+  align-items: center;
+}
+#dock .algo-icons svg {
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 #dock .algo-icons .ico-color { stroke: #3ddc84; fill: rgba(61, 220, 132, 0.25); }
 #dock .algo-row[data-algo-choice="dfs"] .ico-color { stroke: #f2b705; fill: rgba(242, 183, 5, 0.25); }
 #dock .algo-row[data-algo-choice="both"] .ico-color { stroke: #6aa8ff; fill: rgba(106, 168, 255, 0.25); }
@@ -2264,22 +2265,30 @@ body.is-touch.dark .zone-card { background-color: rgba(30, 30, 34, 0.94); }
 
 /* Liquid dashes between the numbers: they fill with water down to the chosen floor */
 .liquid-divider {
-  position: absolute; z-index: 1; left: 50%; width: 20px; height: 4px; margin-left: -10px; border-radius: 2px;
-  overflow: hidden; pointer-events: none; background: rgba(0, 0, 0, 0.3);
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  height: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.3);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.14);
 }
 .liquid-divider i {
-  display: block; width: 100%; height: 100%; border-radius: 2px; transform-origin: left center; transform: scaleX(0);
-  background: linear-gradient(90deg, #ffffff, #ffd6dc); box-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 2px;
+  transform-origin: left center;
+  transform: scaleX(0);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
   transition: transform 0.4s cubic-bezier(0.34, 1.3, 0.64, 1);
 }
 .liquid-divider.is-full i { transform: scaleX(1); }
 
 #dock #floorPicker .liquid-blob {
-  left: 6px; width: 40px; border-radius: 20px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.16));
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 14px rgba(255, 255, 255, 0.35), 0 4px 10px rgba(0, 0, 0, 0.25);
+  border-radius: 20px;
 }
 #dock .algo-list { position: relative; }
 #dock .algo-list .liquid-blob {
@@ -2335,7 +2344,7 @@ body.is-touch.dark .zone-card { background-color: rgba(30, 30, 34, 0.94); }
 }
 #dock #roomInput { background: transparent; border: 0; box-shadow: none; color: #f6f3f4; }
 #dock select { border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.2); color: #f6f3f4; }
-#dock select:focus-visible { box-shadow: 0 0 0 2px rgba(224, 54, 76, 0.7); }
+#dock select:focus-visible { box-shadow: 0 0 0 2px rgba(var(--brand-rgb), 0.7); }
 
 /* ---- AR: no big distance, no yellow room tag; smaller see-through arrow ---- */
 .ar-distance, .ar-dest, .ar-dest[hidden] { display: none !important; }
@@ -2394,12 +2403,7 @@ body.is-touch .look-btn, body.is-touch .view-btn[aria-pressed] { background-colo
 .view-btn, .view-btn[aria-pressed], body.dark .view-btn[aria-pressed], .view-btn .view-label { color: #fff; }
 .view-btn .icon { width: 26px; height: 26px; fill: none; stroke: #fff; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .view-btn .icon .fill { fill: rgba(255, 255, 255, 0.22); stroke: none; }
-.view-btn[aria-pressed="true"], body.dark .view-btn[aria-pressed="true"] {
-  background-color: #8f0f20;
-  background-image: radial-gradient(120% 70% at 50% -10%, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 60%), linear-gradient(135deg, #f0405a, #b3162f 70%);
-  border-color: rgba(255, 255, 255, 0.5);
-  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.55), inset 0 -7px 12px rgba(110, 0, 20, 0.45), 0 0 22px rgba(224, 54, 76, 0.55), 0 10px 22px rgba(0, 0, 0, 0.4);
-}
+
 .look-btn { overflow: hidden; }
 
 /* ---- Start from: a glass box and a glass list (no red or yellow edges, no scroll bar) ---- */
@@ -2442,7 +2446,6 @@ body.is-touch .look-btn, body.is-touch .view-btn[aria-pressed] { background-colo
 #dock #floorPicker .floor-btn { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 #dock .algo-row { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 
-
 /* Algorithm rows: name and logos always fit (BFS, DFS, Both), on every phone and on desktop */
 #dock .algo-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 #dock .algo-icons { flex: none; gap: 8px; }
@@ -2452,11 +2455,12 @@ body.is-touch .look-btn, body.is-touch .view-btn[aria-pressed] { background-colo
   #dock .algo-icons { gap: 6px; }
 }
 
-
 /* ---- Logo (left of the name) and the dark-mode button (right of the name): glass look ---- */
 .logo-btn {
-  width: 46px; height: 46px; border-radius: 14px; overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), 0 0 16px rgba(224, 54, 76, 0.45), 0 6px 14px rgba(0, 0, 0, 0.4);
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  overflow: hidden;
 }
 .logo-btn .logo path.arrow { transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); transform-origin: 16px 16px; }
 .logo-btn:hover .logo path.arrow { transform: rotate(18deg); }
@@ -2472,3 +2476,303 @@ body.is-touch .look-btn, body.is-touch .view-btn[aria-pressed] { background-colo
 #dock .theme-btn .icon-moon { fill: rgba(255, 255, 255, 0.25); }
 #dock .theme-btn .icon-sun circle { fill: rgba(255, 216, 77, 0.35); stroke: #ffd84d; }
 #dock .theme-btn .icon-sun path { stroke: #ffd84d; }
+
+/* ---- Message bubble: as wide as its text, and below the top cards on phones (it covered the search bar) ---- */
+.toast { width: max-content; }
+@media (max-width: 700px) {  }
+
+/* ---- AR text that always fits: the distance on one line, the place name under it; the banner can use 2 lines ---- */
+.ar-sub { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: 13.5px; line-height: 1.25; }
+.ar-action { font-size: 20px; }
+.ar-left { white-space: normal; text-align: center; line-height: 1.15; padding: 8px 12px; }
+.ar-left strong { display: block; font-size: 22px; margin: 0; }
+.ar-left span { display: block; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* =====================================================================
+   THEME COLORS: change the look of the panel HERE, in one place.
+   Every red in the panel reads from these 5 lines. The colors now come from the roofs on your map
+   (data.js ROOF_COLORS), so the panel matches what is behind it.
+   ===================================================================== */
+:root {
+  --brand-hi: #ffffff;
+  --brand: #d5d9de;
+  --brand-lo: #3a3f46;
+  --brand-text: #e9ecf0;
+  --brand-rgb: 255, 255, 255;
+  --logo-hi: #b3243a;
+  --logo-lo: #58101c;
+  --ink-on-white: #6b1322;
+  --gold-hi: #ffe27a;
+  --gold: #f2b705;
+  --gold-lo: #c98a00;
+}
+
+/* =====================================================================
+   SOFT EDGES (not liquid glass): a thin light line and a soft shadow, like the red version you liked.
+   ===================================================================== */
+#dock {
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+#dock .card, #dock .dd-button, #dock .btn-outline, #dock .algo-list, #dock .suggest {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+#dock .dd-list { box-shadow: 0 16px 34px rgba(0, 0, 0, 0.5); }
+
+/* =====================================================================
+   FLOOR PILL: bigger numbers, and SUNKEN into the panel (like a groove cut into glass), not raised.
+   The white bubble that moves between 1 / 2 / 3 is the only raised part.
+   ===================================================================== */
+#dock .options-card #floorPicker {
+  width: 68px;
+  padding: 10px 0;
+  border-radius: 34px;
+  gap: 8px;
+}
+#dock #floorPicker .floor-btn,
+#dock #floorPicker .floor-btn.all { width: 52px; height: 52px; font-size: 19px; }
+#dock #floorPicker .floor-btn.all { font-size: 17px; }
+#dock #floorPicker .liquid-blob { left: 8px; width: 52px; }
+.liquid-divider { width: 24px; margin-left: -12px; }
+
+/* Message bubble when the panel is open on a phone: sit above the panel's top edge so it never covers the search box */
+@media (max-width: 700px) {  }
+
+/* =====================================================================
+   MONOCHROME SILVER & PURE WHITE
+   Colors come from THEME COLORS above. Only these parts have their own rules:
+   white GO button, white floor bubble with dark number, silver sunken floor pill, silver logo.
+   ===================================================================== */
+
+/* Search: thin white outline with a soft white glow */
+
+#dock .search-pin { color: #ffffff; }
+
+/* GO: pure white with dark text and arrow */
+#dock #goButton, #dock #goButton:hover, #dock #goButton:active {
+  color: var(--ink-on-white);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+}
+#dock #goButton .go-arrow, #dock #goButton svg { stroke: var(--ink-on-white); color: var(--ink-on-white); }
+
+/* Floor pill: silver to steel, sunken into the panel */
+#dock .options-card #floorPicker {
+  background-color: var(--pill-mid);
+}
+/* The floor bubble: white, with a dark number */
+#dock #floorPicker .liquid-blob {
+  border: 1px solid #ffffff;
+}
+#dock #floorPicker .floor-btn[aria-pressed="true"],
+#dock #floorPicker .floor-btn[aria-pressed="true"]:hover {
+  text-shadow: none;
+}
+
+/* Buttons hover: a quiet white glass, not a color */
+#dock .btn-outline:hover { background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06)); }
+
+/* Plan / 2D-3D buttons: the 3D one turns white when 3D is on */
+
+/* Logo: silver glass, the arrow stays white, the little ticks turn white */
+
+/* Silver & white: the heading and the search pin are white too (no tan, no pink) */
+#dock .hero h2 { color: #f2f4f7; }
+
+#dock .search-pin path:first-child { fill: rgba(255, 255, 255, 0.15); }
+
+/* =====================================================================
+   SILVER PILL (no black gap), MAROON + GOLD ACCENTS, MAP BUTTONS LIKE THE PANEL
+   ===================================================================== */
+
+/* Floor pill: soft silver, only a light sunken shade (the black gap is gone) */
+#dock .options-card #floorPicker {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.26), inset 0 -2px 6px rgba(255, 255, 255, 0.2), 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* The soft top line every button shares (same as the panel): one place to change */
+:root {
+  --rim: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.look-btn, .view-btn, .locate-fab, .zone-card, .zone-tab, #menuButton, .glass-btn:not(.ar-start) {
+  background-color: rgba(26, 26, 30, 0.74);
+  background-image: linear-gradient(170deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.02) 50%, transparent);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: var(--rim), 0 10px 24px rgba(0, 0, 0, 0.4);
+  color: #f4f5f7;
+}
+body.is-touch .look-btn, body.is-touch .view-btn, body.is-touch .locate-fab, body.is-touch .zone-card,
+body.is-touch .zone-tab, body.is-touch #menuButton, body.is-touch .glass-btn:not(.ar-start) { background-color: rgba(30, 30, 34, 0.95); }
+.zone-card .zone-title { color: #f4f5f7; }
+.zone-card .zone-sub { color: rgba(244, 245, 247, 0.7); }
+
+/* GO and the floor bubble: white, with a maroon arrow / number */
+#dock #goButton, #dock #goButton .go-arrow { color: var(--ink-on-white); }
+#dock #floorPicker .floor-btn[aria-pressed="true"], #dock #floorPicker .floor-btn[aria-pressed="true"]:hover { color: var(--ink-on-white); }
+
+/* 3D button when 3D is on: maroon liquid with a gold icon */
+
+.view-btn[aria-pressed="true"], body.dark .view-btn[aria-pressed="true"], .view-btn[aria-pressed="true"] .view-label { color: #ffffff; }
+.view-btn[aria-pressed="true"] .icon { stroke: var(--gold-hi); }
+.view-btn[aria-pressed="true"] .icon .fill { fill: rgba(255, 226, 122, 0.25); }
+
+/* AR guide: maroon glass, and a glossy gold camera chip (the yellow, enhanced) */
+
+/* Logo: maroon and gold (your icon) */
+
+/* ---- The location card slides away (swipe it); a liquid tab stays on the edge ---- */
+.zone-card {
+  touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none;
+  translate: 0 0; transition: translate 0.55s cubic-bezier(0.34, 1.25, 0.64, 1), opacity 0.3s ease;
+}
+.zone-card.is-dragging { transition: none; cursor: grabbing; }
+.zone-card.is-tucked-right { translate: calc(100% + 40px) 0; pointer-events: none; }
+.zone-card.is-tucked-left  { translate: calc(-100% - 40px) 0; pointer-events: none; }
+
+.zone-tab {
+  position: absolute; z-index: 3; top: 18px; width: 28px; height: 64px; padding: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px;
+  cursor: pointer; --zone: #7d625a;
+}
+.zone-tab[hidden] { display: none; }
+.zone-tab[data-zone="approaching"] { --zone: #e39a1c; }
+.zone-tab[data-zone="gate"]        { --zone: #1f9d55; }
+.zone-tab[data-zone="campus"]      { --zone: #ffcf3d; }
+.zone-tab[data-side="right"] { right: 0; border-radius: 30px 0 0 30px; border-right: 0; transform-origin: right center; animation: tab-ooze-right 0.55s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.zone-tab[data-side="left"]  { left: 0;  border-radius: 0 30px 30px 0; border-left: 0;  transform-origin: left center;  animation: tab-ooze-left 0.55s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.zone-tab svg { width: 16px; height: 16px; fill: none; stroke: #f4f5f7; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.zone-tab-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--zone); box-shadow: 0 0 8px var(--zone); }
+/* the liquid "neck": small curved joins above and below the tab, so it looks like it grows out of the screen edge */
+.zone-tab::before, .zone-tab::after { content: ""; position: absolute; width: 14px; height: 14px; pointer-events: none; }
+.zone-tab[data-side="right"]::before { right: 0; top: -14px;    background: radial-gradient(circle at 0 0, transparent 13px, rgba(30, 30, 34, 0.95) 14px); }
+.zone-tab[data-side="right"]::after  { right: 0; bottom: -14px; background: radial-gradient(circle at 0 100%, transparent 13px, rgba(30, 30, 34, 0.95) 14px); }
+.zone-tab[data-side="left"]::before  { left: 0;  top: -14px;    background: radial-gradient(circle at 100% 0, transparent 13px, rgba(30, 30, 34, 0.95) 14px); }
+.zone-tab[data-side="left"]::after   { left: 0;  bottom: -14px; background: radial-gradient(circle at 100% 100%, transparent 13px, rgba(30, 30, 34, 0.95) 14px); }
+.zone-tab.pulse .zone-tab-dot { animation: tab-pulse 0.9s ease-out 2; }
+@keyframes tab-ooze-right { from { transform: scaleX(0.2); opacity: 0; } to { transform: scaleX(1); opacity: 1; } }
+@keyframes tab-ooze-left  { from { transform: scaleX(0.2); opacity: 0; } to { transform: scaleX(1); opacity: 1; } }
+@keyframes tab-pulse { 0% { transform: scale(1); } 50% { transform: scale(2.1); } 100% { transform: scale(1); } }
+@media (max-width: 700px) { .zone-tab { top: 74px; } body.panel-open .zone-tab { opacity: 0; pointer-events: none; } }
+body.panel-open .zone-tab[data-side="left"] { opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .zone-card, .zone-tab, .zone-tab-dot { transition: none; animation: none; } }
+
+/* Floor pill: a soft light at the top (behind "All"), getting darker toward the last number */
+
+#dock #floorPicker .floor-btn { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 6px rgba(0, 0, 0, 0.25); }
+#dock #floorPicker .floor-btn[aria-pressed="true"] { text-shadow: none; }
+
+/* =====================================================================
+   EASY ON THE EYES + LIGHT / DARK PANEL
+   1) Softer lights: the white parts are now a gentle silver, so nothing glares.
+   2) The panel follows the mode button:
+        both modes -> the same graphite glass with soft silver text (no white panel)
+   To go back, delete this whole block.
+   ===================================================================== */
+
+/* 1) Softer lights (both modes) */
+:root {
+  --soft-hi:   #e4e7eb;   /* brightest part of GO / floor bubble (was pure white) */
+  --soft-lo:   #c3c8cf;   /* its lower part */
+  --pill-top:  #a9b0b8;   /* floor pill: top is gentler ... */
+  --pill-mid:  #7b838d;
+  --pill-bottom: #3d4249;
+}
+#dock .search { border-color: rgba(255, 255, 255, 0.5); box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05), 0 0 10px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.08); }
+#dock .search-pin, #dock .search-pin * { color: #dfe2e6; stroke: #dfe2e6; }
+#dock #goButton, #dock #goButton:hover, #dock #goButton:active {
+  background-color: var(--soft-hi);
+  background-image: linear-gradient(180deg, var(--soft-hi), var(--soft-lo));
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.14), 0 0 8px rgba(255, 255, 255, 0.12), 0 6px 14px rgba(0, 0, 0, 0.3);
+}
+#dock .options-card #floorPicker {
+  background-image:
+    radial-gradient(90% 24% at 50% 0%, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 100%),
+    linear-gradient(180deg, var(--pill-top) 0%, var(--pill-mid) 46%, var(--pill-bottom) 100%);
+}
+#dock #floorPicker .liquid-blob {
+  background: linear-gradient(180deg, var(--soft-hi), var(--soft-lo));
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.14), 0 0 8px rgba(255, 255, 255, 0.18), 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+#dock #floorPicker .floor-btn { color: #f1f3f5; }
+.liquid-divider i { background: linear-gradient(90deg, var(--soft-hi), var(--soft-lo)); }
+.view-btn[aria-pressed="true"], body.dark .view-btn[aria-pressed="true"] {
+  background-color: var(--soft-hi); background-image: linear-gradient(180deg, var(--soft-hi), var(--soft-lo)); border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 -4px 8px rgba(0, 0, 0, 0.14), 0 0 10px rgba(255, 255, 255, 0.15), 0 10px 22px rgba(0, 0, 0, 0.35);
+}
+#dock .hero h2, #dock .pf-title, #dock h1 { color: #dfe2e6; }
+#dock .hero h2 em { -webkit-text-fill-color: #c9ced5; color: #c9ced5; }
+.logo-btn { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25), 0 6px 14px rgba(0, 0, 0, 0.35); }
+
+/* 2) Panel: the same graphite glass in dark AND light mode (never white) */
+#dock {
+  background-color: rgba(24, 25, 29, 0.86);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+body.is-touch #dock { background-color: rgba(28, 29, 33, 0.97); }
+
+/* Message bubble, neat and small: right under the search pill (not in the middle of the map) */
+@media (max-width: 700px) {
+  .toast { top: 80px; max-width: calc(100vw - 32px); padding: 8px 16px; border-radius: 16px; font-size: 13px; line-height: 1.35; }
+}
+
+/* =====================================================================
+   AR GUIDE BUTTON: taller and wider, flat graphite like the panel buttons
+   (no liquid, no glow). The camera chip is maroon (your color) instead of yellow.
+   To go back, delete this whole block.
+   ===================================================================== */
+.ar-start, body.is-touch .ar-start, body.is-touch.dark .ar-start {
+  min-height: 58px;
+  padding: 0 30px 0 18px;
+  justify-content: center;
+  color: #eef0f3;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 30px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 8px 20px rgba(0, 0, 0, 0.35);
+  overflow: visible;
+}
+.ar-start .icon {
+  width: 24px; height: 24px; padding: 8px; margin: 0 12px 0 0;
+  color: #ffffff; stroke: #ffffff;
+  background: linear-gradient(180deg, #b3243a, #7a1626);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+.ar-start:active { scale: 1; }
+@media (hover: hover) { .ar-start:hover { background-color: rgba(44, 45, 50, 0.96); } }
+
+/* AR guide: frosted dark glass (you can see the map behind it), nicer text, fits small phones */
+.ar-start, body.is-touch .ar-start, body.is-touch.dark .ar-start {
+  min-width: 0;
+  background-color: rgba(18, 19, 23, 0.5);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02));
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  backdrop-filter: blur(14px) saturate(1.2);
+  border-color: rgba(255, 255, 255, 0.24);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: 0.4px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+@media (max-width: 360px) {
+  .ar-start, body.is-touch .ar-start, body.is-touch.dark .ar-start { padding: 0 18px 0 10px; font-size: 16px; }
+  .ar-start .icon { margin-right: 9px; }
+}
+
+/* =====================================================================
+   PHONE SIZES (iPhone and Android): the panel and buttons scale to the screen
+   ===================================================================== */
+@media (max-width: 700px) {
+  #dock { max-height: calc(100dvh - 24px); }
+  #dock .dock-scroll { padding-bottom: max(14px, env(safe-area-inset-bottom)); }
+}
+@media (max-width: 360px) {
+  #dock h1 { font-size: 16px; }
+  #dock .hero h2 { font-size: 23px; }
+  #dock #goButton { padding-left: 14px; padding-right: 14px; }
+}
+@media (max-height: 640px) and (max-width: 700px) {
+  .ar-start, body.is-touch .ar-start { min-height: 50px; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+}
+/* With the panel open on a phone, the message goes to the bottom so it never covers the panel's title */
+@media (max-width: 700px) { body.panel-open .toast { top: auto; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); } }

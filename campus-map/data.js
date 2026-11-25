@@ -43,7 +43,7 @@ const OFFLINE_STYLE = {
 const SHOW_STREET_MAP = false;
 
 // Color behind the plan when the street map is hidden (the tan ground around the campus).
-const MAP_BACKGROUND = "#bfb48f";
+const MAP_BACKGROUND = "#383f3b";
 const MAP_BACKGROUND_DARK = "#1a1412";   // the same, for dark mode
 const MAP_BACKGROUND_PLAN = "#f6f5f1";   // the same, for the plan look (the white 2D plan)
 
@@ -59,6 +59,7 @@ const MAP_START = {
 
 // If the user is farther than this (meters) from every point, warn them.
 const FAR_FROM_CAMPUS_METERS = 300;
+const SNAP_TO_WALKWAY_METERS = 12;    // the blue dot sits on the nearest walkway when it is closer than this. null = off
 
 // The campus limit and the Main Gate zone (used by zone.js for the "where am I" card).
 // Distances are real meters. Measured from the middle of the plan picture.
@@ -170,8 +171,8 @@ const DEFAULT_FLOORS = 3;
 const FLOOR_HEIGHT_METERS = 3.5;
 
 // Roof colors (the design from your PDF). Give a building  roof: "red"  / "orange" / "green" / "blue".
-const ROOF_COLORS = { red: "#b24a32", orange: "#c4663a", green: "#3b8a57", blue: "#5278a6" };
-const WALL_COLOR = "#dcd3b2";            // walls of every floor that is not selected
+const ROOF_COLORS = { red: "#c4513a", orange: "#d06a3c", green: "#3d8f5a", blue: "#5a84b8" };
+const WALL_COLOR = "#e6dec4";            // walls of every floor that is not selected
 
 // The plan look (the white 2D plan from your PDF): blue-grey buildings like on the plan.
 const ROOF_PLAN = "#d6dbe3";
@@ -182,9 +183,35 @@ const WALL_PLAN = "#c3cad5";
 // These outlines were traced automatically from the new layout. The names are
 // placeholders (rename them). Each building has 3 floors (see the 3D side views)
 // and a roof color.
+// Spots of the little 3D trees on the plan: [x, y, size]. Delete a line to remove a tree.
+const TREES = [
+  [154,25,4.4],[526,28,4.2],[152,38,6.3],[529,48,4.2],[524,53,4.2],[550,69,4.4],
+  [299,78,6.1],[278,92,4.4],[296,98,4.4],[383,99,6.3],[711,99,4.4],[374,100,4.2],
+  [282,101,4.2],[691,110,4.4],[651,111,6.1],[705,114,5.2],[629,116,4.2],[717,117,6.3],
+  [603,125,4.2],[578,132,6.1],[556,145,6.1],[458,149,6.1],[222,150,4.2],[537,154,6.1],
+  [512,155,4.4],[454,163,6.1],[513,164,5.2],[240,167,4.4],[541,168,4.4],[159,171,5.3],
+  [513,171,4.2],[521,171,6.3],[154,178,4.2],[836,178,5.2],[491,180,4.8],[162,181,6.3],
+  [501,183,4.8],[150,187,4.4],[471,188,6.1],[512,189,4.4],[493,190,4.8],[861,190,6.3],
+  [502,195,4.2],[463,200,6.3],[470,226,4.2],[863,232,6.3],[478,262,6.1],[488,271,4.4],
+  [474,272,4.2],[465,275,6.3],[868,280,6.1],[461,282,4.2],[877,297,4.2],[891,306,4.2],
+  [862,312,5.2],[498,326,4.2],[475,327,4.8],[486,328,4.2],[841,332,6.3],[504,334,4.8],
+  [494,335,4.2],[482,336,4.4],[521,346,4.2],[808,364,6.3],[310,375,4.2],[326,380,4.2],
+  [310,387,5.2],[885,398,6.1],[905,400,6.1],[897,406,5.2],[290,423,6.1],[174,439,6.3],
+  [287,453,4.2],[276,465,4.2],[546,467,4.8],[676,468,6.1],[353,470,4.2],[296,477,4.4],
+  [323,483,4.4],[341,484,6.3],[351,484,4.2],[295,487,4.4],[344,497,4.4],[641,499,4.4],
+  [831,503,4.2],[81,511,4.4],[838,511,4.4],[644,514,5.3],[146,520,4.2],[270,522,4.4],
+  [264,531,5.2],[276,542,4.2],[269,547,4.2],[661,551,4.8],[284,555,4.2],[438,556,4.2],
+  [634,557,4.2],[246,559,4.8],[238,560,4.8],[450,569,6.3],[813,570,4.2],[640,574,4.8],
+  [816,580,4.2],[226,582,4.8],[180,583,4.4],[188,587,4.2],[812,589,4.2],[826,591,4.4],
+  [157,593,4.2],[169,597,4.2],[251,599,4.2],[761,599,4.4],[754,603,4.2],[223,607,6.3],
+  [752,610,4.2],[784,615,4.2],[364,618,4.2],[789,625,5.6],[352,631,4.4],[333,643,4.4],
+  [617,666,6.1],[572,667,6.3],[595,667,6.3],[644,667,4.8],[665,669,4.2],[506,670,4.4],
+  [529,670,4.8],[336,697,5.2],[325,708,4.2],[272,709,5.2],[308,717,4.4],[144,718,4.4]
+];
+
 const BUILDINGS = [
   {
-    id: "B01", name: "Building 1", roof: "orange",
+    id: "B01", name: "Building 1", roof: "blue",
     footprint: [[231, 72], [176, 72], [176, 49], [231, 49]]
   },
   {
@@ -192,19 +219,19 @@ const BUILDINGS = [
     footprint: [[516, 105], [415, 105], [415, 6], [516, 6]]
   },
   {
-    id: "B03", name: "Building 3", roof: "blue",
+    id: "B03", name: "Building 3", roof: "red",
     footprint: [[683, 114], [553, 63], [572, 15], [702, 66]]
   },
   {
-    id: "B04", name: "Building 4", roof: "orange",
+    id: "B04", name: "Building 4", roof: "blue",
     footprint: [[162, 126], [140, 126], [140, 91], [162, 91]]
   },
   {
-    id: "B05", name: "Building 5", roof: "green",
+    id: "B05", name: "Building 5", roof: "blue",
     footprint: [[809, 156], [724, 111], [744, 74], [828, 119]]
   },
   {
-    id: "B06", name: "Building 6", roof: "green",
+    id: "B06", name: "Building 6", roof: "blue",
     footprint: [[927, 219], [810, 151], [833, 112], [950, 179]]
   },
   {
@@ -212,12 +239,12 @@ const BUILDINGS = [
     footprint: [[212, 255], [171, 255], [171, 229], [212, 229]]
   },
   {
-    id: "B08", name: "Building 8", roof: "green",
+    id: "B08", name: "Building 8", roof: "red",
     footprint: [[300, 151], [300, 370], [447, 370], [447, 151]],
     holes: [[[336, 186], [416, 187], [415, 367], [335, 366]]]
   },
   {
-    id: "B09", name: "Building 9", roof: "green",
+    id: "B09", name: "Building 9", roof: "red",
     footprint: [[144, 430], [104, 430], [104, 214], [144, 214]]
   },
   {
@@ -225,39 +252,39 @@ const BUILDINGS = [
     footprint: [[222, 291], [164, 291], [164, 259], [222, 259]]
   },
   {
-    id: "B11", name: "Building 11", roof: "red",
+    id: "B11", name: "Building 11", roof: "green",
     footprint: [[272, 229], [228, 229], [227, 301], [146, 301], [146, 430], [272, 430]]
   },
   {
-    id: "B12", name: "Building 12", roof: "red",
+    id: "B12", name: "Building 12", roof: "blue",
     footprint: [[408, 360], [342, 360], [342, 244], [408, 244]]
   },
   {
-    id: "B13", name: "Building 13", roof: "orange",
+    id: "B13", name: "Building 13", roof: "red",
     footprint: [[987, 351], [896, 351], [896, 229], [987, 229]]
   },
   {
-    id: "B14", name: "Building 14", roof: "red",
+    id: "B14", name: "Building 14", roof: "blue",
     footprint: [[444, 460], [299, 460], [299, 397], [444, 397]]
   },
   {
-    id: "B15", name: "Building 15", roof: "green",
+    id: "B15", name: "Building 15", roof: "red",
     footprint: [[759, 456], [461, 456], [461, 421], [759, 421]]
   },
   {
-    id: "B16", name: "Building 16", roof: "orange",
+    id: "B16", name: "Building 16", roof: "blue",
     footprint: [[857, 456], [768, 456], [768, 427], [857, 427]]
   },
   {
-    id: "B17", name: "Building 17", roof: "red",
+    id: "B17", name: "Building 17", roof: "blue",
     footprint: [[60, 427], [19, 583], [44, 597], [87, 441]]
   },
   {
-    id: "B18", name: "Building 18", roof: "red",
+    id: "B18", name: "Building 18", roof: "blue",
     footprint: [[65, 648], [42, 613], [247, 475], [271, 510]]
   },
   {
-    id: "B19", name: "Building 19", roof: "green",
+    id: "B19", name: "Building 19", roof: "blue",
     footprint: [[495, 473], [465, 519], [642, 654], [672, 613]]
   },
   {
@@ -265,7 +292,7 @@ const BUILDINGS = [
     footprint: [[821, 562], [771, 562], [771, 461], [821, 461]]
   },
   {
-    id: "B21", name: "Building 21", roof: "green",
+    id: "B21", name: "Building 21", roof: "red",
     footprint: [[523, 648], [460, 599], [487, 564], [550, 613]]
   },
   {
@@ -273,27 +300,27 @@ const BUILDINGS = [
     footprint: [[84, 670], [26, 670], [26, 646], [84, 646]]
   },
   {
-    id: "B23", name: "Building 23", roof: "green",
+    id: "B23", name: "Building 23", roof: "blue",
     footprint: [[312, 663], [119, 663], [119, 616], [312, 616]]
   },
   {
-    id: "B24", name: "Building 24", roof: "orange",
+    id: "B24", name: "Building 24", roof: "blue",
     footprint: [[429, 651], [398, 651], [398, 622], [429, 622]]
   },
   {
-    id: "B25", name: "Building 25", roof: "green",
+    id: "B25", name: "Building 25", roof: "red",
     footprint: [[198, 709], [83, 709], [83, 682], [198, 682]]
   },
   {
-    id: "B26", name: "Building 26", roof: "orange",
+    id: "B26", name: "Building 26", roof: "green",
     footprint: [[312, 702], [209, 702], [209, 679], [312, 679]]
   },
   {
-    id: "B27", name: "Building 27", roof: "orange",
+    id: "B27", name: "Building 27", roof: "red",
     footprint: [[456, 720], [374, 720], [374, 661], [456, 661]]
   },
   {
-    id: "B28", name: "Building 28", roof: "orange",
+    id: "B28", name: "Building 28", roof: "red",
     footprint: [[141, 133], [155, 133], [155, 146], [141, 146]]
   }
 ];

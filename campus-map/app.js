@@ -33,6 +33,8 @@ const testMode     = $("testMode");
 const coordMode    = $("coordMode");
 const statusBox    = $("status");
 let startDropdownSync = () => {};   // filled in by initStartDropdown() (section 10)
+let lastGoodFix = null;                  // the last GPS point we trusted (section 11)
+let jumpsIgnored = 0;
 const resultsBox   = $("results");
 const suggestBox   = $("suggest");       // the list of places that match what you type
 
@@ -449,7 +451,9 @@ function startTracking() {
     (pos) => {
       if (testMode.checked) return;  // in test mode we ignore real GPS
       const c = pos.coords;
-      setUserPosition(c.latitude, c.longitude, c.accuracy, c.heading);
+      const here = cleanFix(c.latitude, c.longitude, c.accuracy);     // smooth out GPS jumps, stick to the walkways
+      if (!here) return;                                              // a wild jump: wait for the next point
+      setUserPosition(here.lat, here.lng, c.accuracy, c.heading);
       if (!destinationId && lastZone !== "far") {     // (far away: the "from the campus" message stays)
         setStatus(`Location found (accurate to about ${Math.round(c.accuracy)} m). Type a room and press Go.`);
       }
@@ -1042,4 +1046,38 @@ function initStartDropdown() {
   new MutationObserver(build).observe(startSelect, { childList: true });
   startDropdownSync = sync;
   build();
+}
+
+
+/* ===== 11. KEEP THE BLUE DOT STEADY AND ON THE WALKWAYS (automatic) ===== */
+// Phone GPS wanders a few meters and sometimes jumps. Every point goes through three steps:
+//   1. a wild jump with a poor signal is ignored (the next point decides),
+//   2. the point is blended with the last one, more when the signal is poor, so the dot does not shake,
+//   3. if the point is close to a walkway, the dot sits on the walkway (SNAP_TO_WALKWAY_METERS in data.js).
+
+function cleanFix(lat, lng, accuracy) {
+  const meters = Math.max(accuracy || 20, 3);
+
+  // 1. wild jump? (far from the last point, but the phone itself says it is not sure)
+  if (lastGoodFix) {
+    const jump = distanceMeters(lastGoodFix.lat, lastGoodFix.lng, lat, lng);
+    const recent = Date.now() - lastGoodFix.time < 3000;           // after a pause, a big move is real
+    if (recent && jump > 40 && meters > 25 && jumpsIgnored < 3) { jumpsIgnored++; return null; }
+  }
+  jumpsIgnored = 0;
+
+  // 2. smooth: a precise point (5 m) is trusted fully, a poor one (30 m) only a little
+  let smooth = { lat, lng };
+  if (lastGoodFix && distanceMeters(lastGoodFix.lat, lastGoodFix.lng, lat, lng) < 30) {   // (a big move is real: no blending)
+    const weight = Math.min(1, Math.max(0.25, 8 / meters));
+    smooth = {
+      lat: lastGoodFix.lat + (lat - lastGoodFix.lat) * weight,
+      lng: lastGoodFix.lng + (lng - lastGoodFix.lng) * weight
+    };
+  }
+  lastGoodFix = { lat: smooth.lat, lng: smooth.lng, time: Date.now() };
+
+  // 3. stick to the walkway when it is close
+  const onWalkway = SNAP_TO_WALKWAY_METERS ? snapToWalkway(smooth.lat, smooth.lng, SNAP_TO_WALKWAY_METERS) : null;
+  return onWalkway || smooth;
 }

@@ -179,3 +179,27 @@ function nearestNode(lat, lng) {
   }
   return { id: bestId, meters: bestMeters };
 }
+
+
+// The closest point on any walkway (the lines between places on the ground floor) to a GPS point.
+// Returns { lat, lng, meters } or null when no walkway is within maxMeters.
+function snapToWalkway(lat, lng, maxMeters) {
+  const metersPerLng = metersPerDegreeLng();
+  let best = null;
+  for (const [fromId, toId] of EDGES) {
+    const a = NODES[fromId], b = NODES[toId];
+    if (!a || !b || a.floor !== 1 || b.floor !== 1) continue;
+    // work in meters around the GPS point
+    const ax = (a.lng - lng) * metersPerLng, ay = (a.lat - lat) * METERS_PER_DEGREE;
+    const bx = (b.lng - lng) * metersPerLng, by = (b.lat - lat) * METERS_PER_DEGREE;
+    const dx = bx - ax, dy = by - ay;
+    const lengthSquared = dx * dx + dy * dy;
+    const t = lengthSquared === 0 ? 0 : Math.max(0, Math.min(1, -(ax * dx + ay * dy) / lengthSquared));
+    const px = ax + t * dx, py = ay + t * dy;
+    const meters = Math.hypot(px, py);
+    if (meters <= maxMeters && (!best || meters < best.meters)) {
+      best = { lat: lat + py / METERS_PER_DEGREE, lng: lng + px / metersPerLng, meters };
+    }
+  }
+  return best;
+}

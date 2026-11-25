@@ -7,18 +7,19 @@
    When you change any file, change CACHE_NAME below (v1 -> v2) so phones refresh.
    ===================================================================== */
 
-const CACHE_NAME = "sac-map-v17";
+const CACHE_NAME = "sac-map-v36";
 
 // Our files (relative to this file)
 const OWN_FILES = [
   "./", "index.html", "style.css", "manifest.webmanifest",
-  "plan-image.js", "plan-image-clean.js", "plan-image-flat.js", "data.js", "plan.js", "graph.js", "map3d.js", "ar.js", "zone.js", "app.js",
+  "plan-image.js", "plan-image-clean.js", "plan-image-flat.js", "data.js", "plan.js", "graph.js", "campus3d.js", "map3d.js", "ar.js", "zone.js", "app.js",
   "icon-192.png", "icon-512.png"
 ];
 
 // Files from the internet that the page needs (saved on the first visit)
 const OUTSIDE_FILES = [
   "https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js",
+  "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js",
   "https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
 ];
 

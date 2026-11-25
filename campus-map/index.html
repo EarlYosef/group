@@ -61,6 +61,14 @@
     </span>
   </button>
 
+  <!-- The liquid tabs: when you swipe the card away, a small tab stays on that edge. Tap it (or swipe it back) to bring the card back. -->
+  <button id="zoneTabLeft" class="zone-tab" data-side="left" type="button" hidden aria-label="Show the location card">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg><i class="zone-tab-dot"></i>
+  </button>
+  <button id="zoneTabRight" class="zone-tab" data-side="right" type="button" hidden aria-label="Show the location card">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg><i class="zone-tab-dot"></i>
+  </button>
+
   <!-- "AR guide" button (phones and tablets only): opens the camera view (ar.js) -->
   <button id="arButton" class="ar-start glass-btn" type="button">
     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5h3l1.5-2.5h7L17 8.5h3a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5a1 1 0 0 1 1-1z"></path><circle cx="12" cy="13.2" r="3.4"></circle></svg>
@@ -80,7 +88,7 @@
         <button id="panelToggle" class="logo-btn" type="button" title="Back to the map" aria-label="Back to the map" aria-expanded="true">
           <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
             <defs>
-              <linearGradient id="logoBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0405a"></stop><stop offset="1" stop-color="#7d0c1d"></stop></linearGradient>
+              <linearGradient id="logoBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--logo-hi)"></stop><stop offset="1" style="stop-color:var(--logo-lo)"></stop></linearGradient>
               <linearGradient id="logoGloss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"></stop><stop offset="1" stop-color="#fff" stop-opacity="0"></stop></linearGradient>
             </defs>
             <rect width="32" height="32" rx="9" fill="url(#logoBg)"></rect>
@@ -277,15 +285,18 @@
   <!-- Order matters: map library, then our files from top to bottom.
        plan-image.js  the campus ground pictures (color + white)      data.js   rooms, buildings, settings
        plan.js        plan pixels <-> GPS          graph.js  BFS and DFS route finding
+       campus3d.js   your 3D buildings + trees (Three.js)
        map3d.js       the 3D map                   ar.js     AR camera guide
        zone.js        "where am I" card            app.js    connects everything -->
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="plan-image.js"></script>
   <script src="plan-image-clean.js"></script>
   <script src="plan-image-flat.js"></script>
   <script src="data.js"></script>
   <script src="plan.js"></script>
   <script src="graph.js"></script>
+  <script src="campus3d.js"></script>
   <script src="map3d.js"></script>
   <script src="ar.js"></script>
   <script src="zone.js"></script>

@@ -28,7 +28,7 @@
 
 const TILT_3D = 60;                  // camera tilt in 3D view (degrees)
 const FLOOR_GAP_METERS = 0.3;        // thin gap between stacked floors
-const ROOF_THICKNESS_METERS = 0.6;   // the colored roof slab on top
+const ROOF_THICKNESS_METERS = 1.4;   // the colored roof slab on top
 const FLAT_EDGE_METERS = 60;         // 2D: how far past the campus edge you can slide
 const FLAT_MIN_ZOOM = 16.3;          // 2D: how far you can zoom out
 const MIN_ZOOM_3D = 16.6;            // 3D: how far you can zoom out (a fair distance, the whole campus still fits)
@@ -38,7 +38,9 @@ const COLOR_FLOOR        = WALL_COLOR;  // a floor that is not selected (beige w
 const COLOR_FLOOR_ACTIVE = "#f2b705";   // the selected floor (SAC yellow)
 const COLOR_CASING       = "#2d1a15";   // dark brown outline under route lines
 const COLOR_USER         = "#1a73e8";   // the blue "you are here" color
-const COLOR_GOLD         = "#f2b705";   // the rings of the place dots
+const COLOR_GOLD         = "#f2b705";   // floor highlight yellow
+const COLOR_WINDOW       = "#6f8fb3";   // the glass of the windows
+const COLOR_DOT_RING     = "#ffcf3d";   // the rings of the place dots (a richer gold)
 
 let userHeading = null;              // which way you are walking (degrees), or null
 
@@ -52,6 +54,8 @@ let basemapLayerIds = [];            // the street map's own layers (filled when
 let streetShown = SHOW_STREET_MAP;   // is the street map on right now?
 let darkTheme = false;               // dark mode on?
 let lookName = "color";              // "color" (the PDF design) or "plan" (the white 2D plan)
+let threeActive = false;             // true when your Three.js 3D (campus3d.js) is drawing the buildings
+let focusBuildingId = null;          // the building that is opened into floors (null = none)
 let shownFloor = null;               // the floor that is lit up (null = none)
 let streetBackground = null;         // the street map's own background color (remembered, to switch it back on)
 const readyCallbacks = [];
@@ -84,6 +88,7 @@ function createMap(containerId) {
     basemapLayerIds = map.getStyle().layers.map((layer) => layer.id);   // remember them before we add ours
     setStreetMap(SHOW_STREET_MAP);
     addCampusLayers();
+    threeActive = initCampus3D(map, "routes-glow");   // your 3D buildings (campus3d.js); false = use the simple 3D below
     lockFlatView(!is3DView);                  // 2D rules from the first frame
     applyGroundVisibility();
     readyCallbacks.forEach((fn) => fn());
@@ -101,6 +106,8 @@ function onMapReady(fn) {
 
 // The color behind the plan.
 function paperColor() {
+  // 3D color look: dark night-blue around the campus in dark mode, a soft light gray (not pure white) in light mode
+  if (is3DView && lookName !== "plan") return darkTheme ? "#1e222b" : "#d6dae0";
   if (darkTheme) return MAP_BACKGROUND_DARK;
   return lookName === "plan" ? MAP_BACKGROUND_PLAN : MAP_BACKGROUND;
 }
@@ -110,7 +117,7 @@ function setMapTheme(dark) {
   darkTheme = dark;
   if (!map || !map.getLayer("plan-image")) return;      // the map is not ready yet: onMapReady will call us again
   setStreetMap(streetShown);                            // redraws the paper color
-  ["plan-image", "plan-image-flat", "plan-image-clean"].forEach((id) => map.setPaintProperty(id, "raster-brightness-max", dark ? 0.5 : 1));
+  ["plan-image", "plan-image-flat", "plan-image-clean"].forEach((id) => map.setPaintProperty(id, "raster-brightness-max", dark && lookName === "plan" ? 0.5 : 1));
 }
 
 // Which picture lies on the ground, and are the 3D blocks shown?
@@ -122,7 +129,10 @@ function applyGroundVisibility() {
   ["plan-image", "plan-image-flat", "plan-image-clean"].forEach((id) => {
     map.setLayoutProperty(id, "visibility", id === show ? "visible" : "none");
   });
-  map.setLayoutProperty("floors-3d", "visibility", is3DView ? "visible" : "none");
+  const simple3D = is3DView && !threeActive;                  // the simple 3D only when campus3d.js is not running
+  map.setLayoutProperty("floors-3d", "visibility", simple3D ? "visible" : "none");
+  if (map.getLayer("trees-3d")) map.setLayoutProperty("trees-3d", "visibility", simple3D ? "visible" : "none");
+  if (threeActive) { campus3dSetVisible(is3DView); campus3dSetLook(lookName); }
 }
 
 // The look of the map: "color" (the design from your PDF) or "plan" (the white 2D plan).
@@ -130,6 +140,7 @@ function setMapLook(look) {
   lookName = look === "plan" ? "plan" : "color";
   if (!map || !map.getLayer("plan-image-flat")) return;    // not ready: onMapReady will call us again
   applyGroundVisibility();
+  setMapTheme(darkTheme);                                  // the white plan is dimmed in dark mode, the color picture is not
   map.setPaintProperty("floors-3d", "fill-extrusion-color", floorColorExpression(shownFloor));
   setStreetMap(streetShown);                               // redraws the paper color
 }
@@ -178,39 +189,166 @@ function toRing(points) {
 }
 
 // Each building becomes one slice per floor, stacked on top of each other.
-function buildFloorsGeoJSON() {
+// Only the FOCUS building (the one that holds the room you searched) is cut into floors 1, 2, 3.
+// Every other building is one solid 3D block. All of them get a row of windows on every floor
+// and a stepped, pitched roof.
+const SILL_METERS = 0.8;        // wall under the windows
+const WINDOW_METERS = 1.5;      // the window band
+
+// A slice of wall: kind "wall" or "window"
+function wallSlice(rings, id, floor, base, top, kind) {
+  return {
+    type: "Feature",
+    properties: { building: id, floor: floor, base: base, top: top, glass: kind === "window" },
+    geometry: { type: "Polygon", coordinates: rings }
+  };
+}
+
+// One floor = wall, window band, wall (so every floor shows a row of windows)
+function floorSlices(rings, id, floor, base, top) {
+  const w1 = base + SILL_METERS, w2 = w1 + WINDOW_METERS;
+  return [
+    wallSlice(rings, id, floor, base, w1, "wall"),
+    wallSlice(rings, id, floor, w1, w2, "window"),
+    wallSlice(rings, id, floor, w2, top, "wall")
+  ];
+}
+
+// Moves every side of a convex outline inward by "d" pixels. Returns null if it cannot (not convex / too small).
+function insetOutline(pts, d) {
+  const n = pts.length;
+  const lines = [];
+  for (let i = 0; i < n; i++) {
+    const p = pts[i], q = pts[(i + 1) % n];
+    const dx = q[0] - p[0], dy = q[1] - p[1], len = Math.hypot(dx, dy);
+    if (len < 1e-6) return null;
+    lines.push({ nx: -dy / len, ny: dx / len, px: p[0], py: p[1], dx: dx, dy: dy });
+  }
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const a = lines[(i + n - 1) % n], b = lines[i];
+    const a0 = [a.px + a.nx * d, a.py + a.ny * d], b0 = [b.px + b.nx * d, b.py + b.ny * d];
+    const den = a.dx * b.dy - a.dy * b.dx;
+    if (Math.abs(den) < 1e-9) return null;
+    const t = ((b0[0] - a0[0]) * b.dy - (b0[1] - a0[1]) * b.dx) / den;
+    out.push([a0[0] + a.dx * t, a0[1] + a.dy * t]);
+  }
+  return out;
+}
+
+// Is the outline convex, and which way does it turn? (+1 / -1, or 0 if not convex)
+function turnOf(pts) {
+  let sign = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length], c = pts[(i + 2) % pts.length];
+    const cr = (b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0]);
+    if (Math.abs(cr) < 1e-6) continue;
+    const s = cr > 0 ? 1 : -1;
+    if (sign === 0) sign = s; else if (s !== sign) return 0;
+  }
+  return sign;
+}
+
+// The roof: steps that get smaller toward the top, like a pitched (hip) roof. Flat slab if the outline is not simple.
+function roofFeatures(b, rings, baseMeters, totalFloors) {
+  const color = ROOF_COLORS[b.roof] || ROOF_COLORS.red;
+  const flat = [{
+    type: "Feature",
+    properties: { building: b.id, floor: 0, roof: color, base: baseMeters, top: baseMeters + ROOF_THICKNESS_METERS },
+    geometry: { type: "Polygon", coordinates: rings }
+  }];
+  if ((b.holes || []).length > 0) return flat;
+  const turn = turnOf(b.footprint);
+  if (turn === 0) return flat;
+
+  // the outline must run the same way the insets expect
+  const pts = turn > 0 ? b.footprint.slice().reverse() : b.footprint.slice();
+  let area = 0, perim = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i], q = pts[(i + 1) % pts.length];
+    area += p[0] * q[1] - q[0] * p[1];
+    perim += Math.hypot(q[0] - p[0], q[1] - p[1]);
+  }
+  const inRadius = Math.abs(area) / perim;                 // about half the narrow side, in pixels
+  const height = Math.max(1.6, Math.min(4.8, inRadius * PLAN.metersPerPixel * 0.9));
+  const steps = 5;
   const features = [];
+  for (let i = 0; i < steps; i++) {
+    const inset = insetOutline(pts, inRadius * 0.94 * (i / steps));
+    if (!inset) return flat;
+    features.push({
+      type: "Feature",
+      properties: { building: b.id, floor: 0, roof: color, shade: i / steps,
+                    base: baseMeters + height * (i / steps), top: baseMeters + height * ((i + 1) / steps) + (i === 0 ? 0.3 : 0.05) },
+      geometry: { type: "Polygon", coordinates: [toRing(inset)] }
+    });
+  }
+  return features;
+}
+
+function buildFloorsGeoJSON(focusId) {
+  let features = [];
   BUILDINGS.forEach((b) => {
     const floors = b.floors || DEFAULT_FLOORS;
     const rings = [toRing(b.footprint)].concat((b.holes || []).map(toRing));
+    const topOfWalls = floors * FLOOR_HEIGHT_METERS - FLOOR_GAP_METERS;
 
     for (let floor = 1; floor <= floors; floor++) {
-      features.push({
-        type: "Feature",
-        properties: {
-          building: b.id,
-          floor: floor,
-          base: (floor - 1) * FLOOR_HEIGHT_METERS,
-          top: floor * FLOOR_HEIGHT_METERS - FLOOR_GAP_METERS
-        },
-        geometry: { type: "Polygon", coordinates: rings }
-      });
+      const base = (floor - 1) * FLOOR_HEIGHT_METERS, top = floor * FLOOR_HEIGHT_METERS - FLOOR_GAP_METERS;
+      // floor: -2 means "not the opened building": never highlighted
+      features = features.concat(floorSlices(rings, b.id, b.id === focusId ? floor : -2, base, top));
     }
-
-    // The roof: a thin colored slab on top of the top floor.
-    features.push({
-      type: "Feature",
-      properties: {
-        building: b.id,
-        floor: 0,
-        roof: ROOF_COLORS[b.roof] || ROOF_COLORS.red,
-        base: floors * FLOOR_HEIGHT_METERS - FLOOR_GAP_METERS,
-        top: floors * FLOOR_HEIGHT_METERS + ROOF_THICKNESS_METERS
-      },
-      geometry: { type: "Polygon", coordinates: rings }
-    });
+    features = features.concat(roofFeatures(b, rings, topOfWalls, floors));
   });
   return { type: "FeatureCollection", features };
+}
+
+// Little 3D trees: a brown trunk and two green crowns. TREES (data.js) holds their spots on the plan.
+function buildTreesGeoJSON() {
+  const GREENS = ["#4f9a4f", "#3f8a45", "#5aa55a", "#357a3e"];
+  const features = [];
+  const circle = (x, y, r) => toRing(Array.from({ length: 9 }, (_, i) => [x + r * Math.cos(i * 2 * Math.PI / 9), y + r * Math.sin(i * 2 * Math.PI / 9)]));
+  const part = (x, y, r, base, top, color) => features.push({
+    type: "Feature", properties: { color: color, base: base, top: top },
+    geometry: { type: "Polygon", coordinates: [circle(x, y, r)] }
+  });
+  TREES.forEach(([x, y, r], i) => {
+    const crown = r * 1.25;                                // crown size in plan pixels
+    const h = 3.2 + (i % 4) * 0.5;                         // a little different from tree to tree
+    const g = GREENS[i % GREENS.length];
+    part(x, y, 0.8, 0, 1.8, "#6b4a2f");                    // trunk
+    part(x, y, crown, 1.6, 1.6 + h * 0.6, g);              // big crown
+    part(x, y, crown * 0.62, 1.6 + h * 0.6, 1.6 + h, GREENS[(i + 1) % GREENS.length]);   // top crown
+  });
+  return { type: "FeatureCollection", features };
+}
+
+// Which building holds this place? (the place's spot on the plan is inside the building's outline)
+function pointInRing(x, y, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+function buildingOfNode(id) {
+  const n = NODES[id];
+  if (!n) return null;
+  const hit = BUILDINGS.find((b) => pointInRing(n.x, n.y, b.footprint) && !(b.holes || []).some((h) => pointInRing(n.x, n.y, h)));
+  return hit ? hit.id : null;
+}
+
+// Opens one building into floors (null = every building solid).
+function setFocusBuilding(id) {
+  focusBuildingId = id;
+  if (threeActive) campus3dSetFocus(id);
+  if (map && map.getSource("floors")) map.getSource("floors").setData(buildFloorsGeoJSON(id));
+}
+
+// Only the places on the route show a dot (like Google Maps). ids = [] hides them all.
+function showRouteDots(ids) {
+  if (map && map.getLayer("nodes-dots")) map.setFilter("nodes-dots", ["in", ["get", "id"], ["literal", ids]]);
 }
 
 // One small dot per place, so you can SEE your graph.
@@ -231,10 +369,10 @@ function floorColorExpression(floor) {
   return ["case",
     ["has", "roof"], plan ? ROOF_PLAN : ["get", "roof"],                   // roofs keep their own color
     ["==", ["get", "floor"], floor === null ? -1 : floor], COLOR_FLOOR_ACTIVE,
+    ["get", "glass"], plan ? "#9aa6b8" : COLOR_WINDOW,                     // the window band
     plan ? WALL_PLAN : COLOR_FLOOR];
 }
 
-// A phone or tablet (finger, not mouse)?
 function isCoarsePointer() {
   return !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
 }
@@ -279,7 +417,8 @@ function addCampusLayers() {
   map.addSource("plan",   { type: "image", url: PLAN.image, coordinates: planCorners() });
   map.addSource("plan-clean", { type: "image", url: PLAN_IMAGE_CLEAN, coordinates: planCorners() });
   map.addSource("plan-flat",  { type: "image", url: (typeof PLAN_IMAGE_FLAT === "string" ? PLAN_IMAGE_FLAT : PLAN_IMAGE), coordinates: planCorners() });
-  map.addSource("floors", { type: "geojson", data: buildFloorsGeoJSON() });
+  map.addSource("floors", { type: "geojson", data: buildFloorsGeoJSON(focusBuildingId) });
+  map.addSource("trees",  { type: "geojson", data: buildTreesGeoJSON() });
   map.addSource("routes", { type: "geojson", data: emptyCollection() });
   map.addSource("nodes",  { type: "geojson", data: buildNodesGeoJSON() });
   map.addSource("user-accuracy", { type: "geojson", data: emptyCollection() });
@@ -319,8 +458,16 @@ function addCampusLayers() {
       "fill-extrusion-color": floorColorExpression(null),
       "fill-extrusion-base": ["get", "base"],
       "fill-extrusion-height": ["get", "top"],
-      "fill-extrusion-opacity": isCoarsePointer() ? 1 : 0.88   // solid blocks are faster to draw on a phone
+      "fill-extrusion-opacity": 1   // solid blocks are faster to draw on a phone
     }
+  });
+
+  map.addLayer({
+    id: "trees-3d",
+    type: "fill-extrusion",
+    source: "trees",
+    layout: { visibility: is3DView ? "visible" : "none" },
+    paint: { "fill-extrusion-color": ["get", "color"], "fill-extrusion-base": ["get", "base"], "fill-extrusion-height": ["get", "top"], "fill-extrusion-opacity": 1 }
   });
 
   // A soft glow under the route, in the route's own color (BFS teal, DFS indigo)
@@ -368,14 +515,23 @@ function addCampusLayers() {
     });
   }
 
+  // Invisible bigger circles so a tap on a place is still found when its dot is hidden
+  map.addLayer({
+    id: "nodes-hit",
+    type: "circle",
+    source: "nodes",
+    paint: { "circle-radius": 9, "circle-opacity": 0 }
+  });
+
   map.addLayer({
     id: "nodes-dots",
     type: "circle",
     source: "nodes",
+    filter: ["in", ["get", "id"], ["literal", []]],     // hidden until a route is drawn
     paint: {
       "circle-radius": 4.5,
-      "circle-color": "#2d1a15",
-      "circle-stroke-color": COLOR_GOLD,
+      "circle-color": "#4a0c16",
+      "circle-stroke-color": COLOR_DOT_RING,
       "circle-stroke-width": 2.5
     }
   });
@@ -432,16 +588,21 @@ function drawRoutes(routes) {
     });
   });
   map.getSource("routes").setData({ type: "FeatureCollection", features });
+  const ids = [];
+  routes.forEach((route) => route.path.forEach((id) => { if (ids.indexOf(id) < 0) ids.push(id); }));
+  showRouteDots(ids);
 }
 
 function clearRoutes() {
   map.getSource("routes").setData(emptyCollection());
+  showRouteDots([]);
 }
 
 // Highlight one floor and show only that floor's part of the route.
 // floor = null shows everything.
 function setFloor(floor) {
   shownFloor = floor;
+  if (threeActive) campus3dSetFloor(floor);
   map.setPaintProperty("floors-3d", "fill-extrusion-color", floorColorExpression(floor));
 
   const onFloor = floor === null ? null : ["==", ["get", "floor"], floor];
@@ -459,6 +620,7 @@ function setFloor(floor) {
 
 // Yellow pulsing dot at the destination (the pulse is in style.css).
 function showDestination(id) {
+  setFocusBuilding(id ? buildingOfNode(id) : null);     // only this building opens into floors 1, 2, 3
   if (destinationMarker) {
     destinationMarker.remove();
     destinationMarker = null;
@@ -603,6 +765,7 @@ function showGate(zoom) {
 function setTilt(is3D) {
   is3DView = is3D;
   applyGroundVisibility();
+  setStreetMap(streetShown);                                // 3D color look has a dark background
   lockFlatView(!is3D);
   if (is3D) {
     map.easeTo({ pitch: TILT_3D, bearing: MAP_START.bearing, duration: 700 });
@@ -637,10 +800,10 @@ function lockFlatView(on) {
 function onMapClick(handler) {
   map.on("click", (e) => {
     let nodeId = null;
-    if (map.getLayer("nodes-dots")) {
+    if (map.getLayer("nodes-hit")) {
       // A box around the tap makes small dots easy to hit with a finger.
       const box = [[e.point.x - 12, e.point.y - 12], [e.point.x + 12, e.point.y + 12]];
-      const hits = map.queryRenderedFeatures(box, { layers: ["nodes-dots"] });
+      const hits = map.queryRenderedFeatures(box, { layers: ["nodes-hit"] });
       if (hits.length > 0) nodeId = hits[0].properties.id;
     }
     handler({ lat: e.lngLat.lat, lng: e.lngLat.lng, nodeId: nodeId });
