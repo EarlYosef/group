@@ -7,12 +7,12 @@
    When you change any file, change CACHE_NAME below (v1 -> v2) so phones refresh.
    ===================================================================== */
 
-const CACHE_NAME = "sac-map-v36";
+const CACHE_NAME = "sac-map-v54";
 
 // Our files (relative to this file)
 const OWN_FILES = [
   "./", "index.html", "style.css", "manifest.webmanifest",
-  "plan-image.js", "plan-image-clean.js", "plan-image-flat.js", "data.js", "plan.js", "graph.js", "campus3d.js", "map3d.js", "ar.js", "zone.js", "app.js",
+  "plan-image.js", "plan-image-clean.js", "plan-image-flat.js", "data.js", "layout.js", "plan.js", "graph.js", "campus3d.js", "map3d.js", "ar.js", "zone.js", "share.js", "app.js",
   "icon-192.png", "icon-512.png"
 ];
 

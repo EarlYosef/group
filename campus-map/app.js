@@ -57,6 +57,8 @@ const PHONE_WIDTH = 820;   // narrower than this = phone layout (must match styl
 const FLOOR_COUNT = Math.max.apply(null,
   Object.keys(NODES).map((id) => NODES[id].floor)
     .concat(BUILDINGS.map((b) => b.floors || DEFAULT_FLOORS)));
+// The places a person can pick (walkway and stair points are hidden).
+const SEARCHABLE = Object.keys(NODES).filter((id) => !NODES[id].hidden);
 const FLOORS = Array.from({ length: FLOOR_COUNT }, (_, i) => i + 1);
 
 let mapReady = false;        // true once the 3D map has loaded
@@ -160,7 +162,7 @@ function cameraPadding() {
 function fillStartSelect() {
   startSelect.innerHTML =
     '<option value="gps">Auto (my location)</option>' +
-    Object.keys(NODES).map((id) => `<option value="${id}">${NODES[id].name}</option>`).join("");
+    SEARCHABLE.map((id) => `<option value="${id}">${NODES[id].name}</option>`).join("");
 
   // Until the phone finds you, directions start from DEFAULT_START (the main gate).
   if (NODES[DEFAULT_START]) startSelect.value = DEFAULT_START;
@@ -617,7 +619,7 @@ function showSuggestions() {
 
   // Places that START with what you typed come first (D -> D101, D112, D Stairs...), then places that only contain it.
   const startsWith = (id) => id.indexOf(wanted) === 0 || normalize(NODES[id].name).indexOf(wanted) === 0;
-  const matches = Object.keys(NODES)
+  const matches = SEARCHABLE
     .filter((id) => id.indexOf(wanted) !== -1 || normalize(NODES[id].name).indexOf(wanted) !== -1)
     .sort((a, b) => (startsWith(a) ? 0 : 1) - (startsWith(b) ? 0 : 1))
     .slice(0, 6);
@@ -658,6 +660,7 @@ function onGo() {
     return;
   }
   destinationId = found;
+  selectFloor(null);          // a new room: the floor picker goes back to "All" so the room is not hidden
   showRoute(true);
 
   // On a phone: put the keyboard away and close the panel so the route is visible.
@@ -781,6 +784,7 @@ function start() {
     if (routePath) flyToRoute(routePath, cameraPadding());
   });
   initZone();             // the "where am I" card (zone.js)
+  initShare();            // "Share my location" and shared links (share.js)
   initOffline();          // saves the app on the phone so it opens without internet
   loadSavedPlan();        // numbers you fixed earlier on this phone (before the map starts)
   setPanel(!isPhone());   // computer: panel open. phone: closed until you tap the button.

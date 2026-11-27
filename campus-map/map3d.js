@@ -1,3 +1,4 @@
+
 /* =====================================================================
    map3d.js  -  everything that touches the 3D map (MapLibre GL)
    app.js only calls the functions listed here. It never uses the map
@@ -118,6 +119,7 @@ function setMapTheme(dark) {
   if (!map || !map.getLayer("plan-image")) return;      // the map is not ready yet: onMapReady will call us again
   setStreetMap(streetShown);                            // redraws the paper color
   ["plan-image", "plan-image-flat", "plan-image-clean"].forEach((id) => map.setPaintProperty(id, "raster-brightness-max", dark && lookName === "plan" ? 0.5 : 1));
+  updateLandLook();
 }
 
 // Which picture lies on the ground, and are the 3D blocks shown?
@@ -131,8 +133,9 @@ function applyGroundVisibility() {
   });
   const simple3D = is3DView && !threeActive;                  // the simple 3D only when campus3d.js is not running
   map.setLayoutProperty("floors-3d", "visibility", simple3D ? "visible" : "none");
-  if (map.getLayer("trees-3d")) map.setLayoutProperty("trees-3d", "visibility", simple3D ? "visible" : "none");
+  if (map.getLayer("trees-3d")) map.setLayoutProperty("trees-3d", "visibility", simple3D && lookName !== "plan" ? "visible" : "none");
   if (threeActive) { campus3dSetVisible(is3DView); campus3dSetLook(lookName); }
+  if (roomViewId) updateRoomView();                    // 3D and 2D draw the room view differently
 }
 
 // The look of the map: "color" (the design from your PDF) or "plan" (the white 2D plan).
@@ -335,6 +338,7 @@ function pointInRing(x, y, ring) {
 function buildingOfNode(id) {
   const n = NODES[id];
   if (!n) return null;
+  if (n.building) return n.building;                    // rooms from layout.js know their building
   const hit = BUILDINGS.find((b) => pointInRing(n.x, n.y, b.footprint) && !(b.holes || []).some((h) => pointInRing(n.x, n.y, h)));
   return hit ? hit.id : null;
 }
@@ -357,7 +361,7 @@ function buildNodesGeoJSON() {
     type: "FeatureCollection",
     features: Object.keys(NODES).map((id) => ({
       type: "Feature",
-      properties: { id: id, name: NODES[id].name, floor: NODES[id].floor },
+      properties: { id: id, name: NODES[id].name, floor: NODES[id].floor, hidden: !!NODES[id].hidden },
       geometry: { type: "Point", coordinates: toLngLat(id) }
     }))
   };
@@ -413,11 +417,88 @@ function addRouteArrowImage() {
   }
 }
 
+/* ===== GRASS LAND =====
+   The green land you added in your page (CAMPUS_LAND), drawn under the plan picture.
+   The picture's dark margin is see-through, so the grass shows there and past the picture's edge. */
+const LAND_COLORS = { grass: ["#4a7646", "#3c6139"], lush: ["#76b85c", "#5c9748"], dirt: ["#a98f6c", "#86714f"], sand: ["#e3d3a0", "#bdb085"] };   // [light, dark]
+
+function buildLandGeoJSON() {
+  const planPoint = (x, y) => planToLngLat(1.5061 * (x + 12) - 40.52, 1.5085 * (y + 5) - 8.71);   // page units -> map
+  return {
+    type: "FeatureCollection",
+    features: CAMPUS_LAND.map((l) => ({
+      type: "Feature",
+      properties: { kind: l[4] },
+      geometry: { type: "Polygon", coordinates: [[planPoint(l[0], l[1]), planPoint(l[0] + l[2], l[1]), planPoint(l[0] + l[2], l[1] + l[3]), planPoint(l[0], l[1] + l[3]), planPoint(l[0], l[1])]] }
+    }))
+  };
+}
+
+// Light or dark colors, and hidden in the plain white "Plan" look
+function updateLandLook() {
+  if (!map || !map.getLayer("land")) return;
+  const shade = darkTheme ? 1 : 0;
+  const colors = ["match", ["get", "kind"]];
+  Object.keys(LAND_COLORS).forEach((kind) => colors.push(kind, LAND_COLORS[kind][shade]));
+  colors.push(LAND_COLORS.grass[shade]);
+  map.setPaintProperty("land", "fill-color", colors);
+  map.setLayoutProperty("land", "visibility", lookName === "plan" ? "none" : "visible");
+  CAMPUS_LAND.forEach((l, i) => {
+    if (!map.getLayer("land-grass-" + i)) return;
+    map.setLayoutProperty("land-grass-" + i, "visibility", lookName === "plan" ? "none" : "visible");
+    map.setPaintProperty("land-grass-" + i, "raster-brightness-max", darkTheme ? 0.8 : 1);
+  });
+}
+
+/* The grass picture: painted in the browser the same way as your page paints it
+   (a green base, soft darker and lighter patches, small blades), then repeated over the grass land. */
+function paintGrassTile(size) {
+  const c = document.createElement("canvas"); c.width = c.height = size;
+  const g = c.getContext("2d");
+  let seed = 11;
+  const random = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  const colors = ["#35603f", "#35603f", "#3d6a45", "#6a9355", "#7a9a55", "#2f5a3a"];
+  g.fillStyle = "#46744a"; g.fillRect(0, 0, size, size);
+  for (let i = 0; i < 46; i++) {                                    // soft patches (drawn 9 times so the tile joins up)
+    const x = random() * size, y = random() * size, r = (18 + random() * 34) * size / 256, color = colors[i % colors.length];
+    for (let ox = -1; ox <= 1; ox++) for (let oy = -1; oy <= 1; oy++) {
+      const cx = x + ox * size, cy = y + oy * size, grad = g.createRadialGradient(cx, cy, 0, cx, cy, r);
+      grad.addColorStop(0, color); grad.addColorStop(1, color + "00");
+      g.globalAlpha = 0.34; g.fillStyle = grad; g.fillRect(cx - r, cy - r, 2 * r, 2 * r);
+    }
+  }
+  g.globalAlpha = 0.4;                                              // small blades
+  for (let i = 0; i < 900 * (size * size) / 65536; i++) { g.fillStyle = colors[i % colors.length]; g.fillRect(random() * size, random() * size, 2, 3); }
+  return c;
+}
+
+// One picture of grass for a land rectangle (page units), made from repeated tiles
+function grassPicture(l) {
+  const tile = paintGrassTile(256), pxW = Math.round(l[2] * 1.5061), pxH = Math.round(l[3] * 1.5085);
+  const c = document.createElement("canvas"); c.width = pxW; c.height = pxH;
+  const g = c.getContext("2d"), step = 170 * 1.5061;                // one tile = 170 units on the ground (big, so the repeat is hard to see)
+  for (let x = 0; x < pxW; x += step) for (let y = 0; y < pxH; y += step) g.drawImage(tile, x, y, step + 1, step + 1);
+  return c.toDataURL("image/jpeg", 0.85);
+}
+
+function addGrassLayers() {
+  const planPoint = (x, y) => planToLngLat(1.5061 * (x + 12) - 40.52, 1.5085 * (y + 5) - 8.71);
+  CAMPUS_LAND.forEach((l, i) => {
+    if (l[4] !== "grass") return;                                   // other kinds (dirt, sand...) stay flat colors
+    map.addSource("land-grass-" + i, { type: "image", url: grassPicture(l), coordinates: [planPoint(l[0], l[1]), planPoint(l[0] + l[2], l[1]), planPoint(l[0] + l[2], l[1] + l[3]), planPoint(l[0], l[1] + l[3])] });
+    map.addLayer({ id: "land-grass-" + i, type: "raster", source: "land-grass-" + i, paint: { "raster-fade-duration": 0, "raster-resampling": "linear" } });
+  });
+}
+
 function addCampusLayers() {
+  map.addSource("land", { type: "geojson", data: buildLandGeoJSON() });
+  map.addLayer({ id: "land", type: "fill", source: "land", paint: { "fill-color": LAND_COLORS.grass[0], "fill-antialias": false } });
+  addGrassLayers();
   map.addSource("plan",   { type: "image", url: PLAN.image, coordinates: planCorners() });
   map.addSource("plan-clean", { type: "image", url: PLAN_IMAGE_CLEAN, coordinates: planCorners() });
   map.addSource("plan-flat",  { type: "image", url: (typeof PLAN_IMAGE_FLAT === "string" ? PLAN_IMAGE_FLAT : PLAN_IMAGE), coordinates: planCorners() });
   map.addSource("floors", { type: "geojson", data: buildFloorsGeoJSON(focusBuildingId) });
+  map.addSource("room-area", { type: "geojson", data: emptyCollection() });
   map.addSource("trees",  { type: "geojson", data: buildTreesGeoJSON() });
   map.addSource("routes", { type: "geojson", data: emptyCollection() });
   map.addSource("nodes",  { type: "geojson", data: buildNodesGeoJSON() });
@@ -470,6 +551,13 @@ function addCampusLayers() {
     paint: { "fill-extrusion-color": ["get", "color"], "fill-extrusion-base": ["get", "base"], "fill-extrusion-height": ["get", "top"], "fill-extrusion-opacity": 1 }
   });
 
+  // The room you chose, lit up on the plan (gold)
+  map.addLayer({ id: "room-area", type: "fill", source: "room-area", paint: {
+    "fill-color": ["case", ["get", "chosen"], COLOR_GOLD, "#7fb7b0"],
+    "fill-opacity": ["case", ["get", "chosen"], 0.6, 0.3]
+  } });
+  map.addLayer({ id: "room-area-line", type: "line", source: "room-area", paint: { "line-color": "#ffffff", "line-width": 2 } });
+
   // A soft glow under the route, in the route's own color (BFS teal, DFS indigo)
   map.addLayer({
     id: "routes-glow",
@@ -520,6 +608,7 @@ function addCampusLayers() {
     id: "nodes-hit",
     type: "circle",
     source: "nodes",
+    filter: ["!", ["get", "hidden"]],                    // only real places can be tapped
     paint: { "circle-radius": 9, "circle-opacity": 0 }
   });
 
@@ -603,6 +692,7 @@ function clearRoutes() {
 function setFloor(floor) {
   shownFloor = floor;
   if (threeActive) campus3dSetFloor(floor);
+  if (roomViewId) updateRoomView();                    // the room view opens the floor you picked
   map.setPaintProperty("floors-3d", "fill-extrusion-color", floorColorExpression(floor));
 
   const onFloor = floor === null ? null : ["==", ["get", "floor"], floor];
@@ -619,7 +709,99 @@ function setFloor(floor) {
 /* ===== 5. MARKERS AND CAMERA ===== */
 
 // Yellow pulsing dot at the destination (the pulse is in style.css).
+// Lights up the rectangle of the chosen room (nothing if it has no rectangle)
+/* ===== ROOM VIEW =====
+   Choose a room (D118, O-104...) and its building opens like a dollhouse on that floor:
+   the outer walls stay, the rooms inside show with their names, and your room is gold.
+   3D with campus3d.js draws it with Three.js; otherwise (2D) the map draws the rooms + name tags. */
+let destinationPin = null;      // the round pin on the room
+let roomViewId = null;          // the room you chose
+let roomMarkers = [];           // name tags on the map (2D)
+
+// Rooms of one building floor: [{ id, name, x1, y1, x2, y2, chosen }]
+function roomsOnFloor(buildingId, floor, chosenId) {
+  if (typeof ROOM_AREAS === "undefined") return [];
+  const seen = {};
+  const list = [];
+  Object.keys(ROOM_AREAS).forEach((key) => {
+    const node = NODES[key], a = ROOM_AREAS[key];
+    if (!node || node.hidden || node.building !== buildingId || a[0] !== floor) return;
+    const spot = a.slice(1).map(Math.round).join(",");           // two rooms on one rectangle: show one
+    const room = { id: key, name: node.name.replace(/^Room\s+/i, ""), x1: a[1], y1: a[2], x2: a[3], y2: a[4], chosen: key === chosenId };
+    if (seen[spot] === undefined) { seen[spot] = list.length; list.push(room); }
+    else if (room.chosen) list[seen[spot]] = room;
+  });
+  return list;
+}
+
+function clearRoomMarkers() {
+  roomMarkers.forEach((m) => m.remove());
+  roomMarkers = [];
+}
+
+function highlightRoom(id) {
+  roomViewId = id || null;
+  updateRoomView();
+}
+
+// Draw (or clear) the room view for the chosen room. Call again when the floor changes.
+function updateRoomView() {
+  clearRoomMarkers();
+  const node = roomViewId ? NODES[roomViewId] : null;
+  showPinOnFloor(node);
+  const area = node && typeof ROOM_AREAS !== "undefined" ? ROOM_AREAS[roomViewId] : null;
+  const floor = shownFloor || (area ? area[0] : 1);
+  const rooms = area && node.building ? roomsOnFloor(node.building, floor, roomViewId) : [];
+  const inThree = threeActive && is3DView;
+
+  if (threeActive) campus3dSetRooms(rooms, floor);
+  if (!map || !map.getSource("room-area")) return;
+  ["room-area", "room-area-line"].forEach((layer) => {
+    if (map.getLayer(layer)) map.setLayoutProperty(layer, "visibility", inThree ? "none" : "visible");
+  });
+  map.getSource("room-area").setData({
+    type: "FeatureCollection",
+    features: inThree ? [] : rooms.map((r) => ({
+      type: "Feature",
+      properties: { chosen: r.chosen },
+      geometry: { type: "Polygon", coordinates: [toRing([[r.x1, r.y1], [r.x2, r.y1], [r.x2, r.y2], [r.x1, r.y2]])] }
+    }))
+  });
+  if (inThree) return;
+  rooms.forEach((r) => {                                          // name tags (2D)
+    const el = document.createElement("div");
+    el.className = "room-tag" + (r.chosen ? " chosen" : "");
+    el.textContent = r.name;
+    roomMarkers.push(new maplibregl.Marker({ element: el }).setLngLat(planToLngLat((r.x1 + r.x2) / 2, (r.y1 + r.y2) / 2)).addTo(map));
+  });
+}
+
+// The pin (and the gold room) only show on the floor the room is on: pick another floor and it hides.
+function showPinOnFloor(node) {
+  if (!destinationPin) return;
+  const onFloor = !node || !shownFloor || node.floor === shownFloor;
+  const drawnInThree = threeActive && is3DView && node && node.building;   // campus3d.js draws the pin on the floor itself
+  destinationPin.style.display = onFloor && !drawnInThree ? "" : "none";
+}
+
+// Fly close to the room so the opened building fills the screen.
+function flyToRoom(id, padding) {
+  const area = typeof ROOM_AREAS !== "undefined" ? ROOM_AREAS[id] : null;
+  if (!area) return false;
+  const c = planToLngLat((area[1] + area[3]) / 2, (area[2] + area[4]) / 2);
+  map.easeTo({
+    center: c,
+    zoom: 20,
+    padding: padding,                                 // keep the room clear of the panels
+    pitch: is3DView ? 55 : 0,
+    bearing: is3DView ? MAP_START.bearing : planUpBearing(),
+    duration: 1600
+  });
+  return true;
+}
+
 function showDestination(id) {
+  highlightRoom(id);
   setFocusBuilding(id ? buildingOfNode(id) : null);     // only this building opens into floors 1, 2, 3
   if (destinationMarker) {
     destinationMarker.remove();
@@ -629,6 +811,8 @@ function showDestination(id) {
 
   const el = document.createElement("div");
   el.className = "dest-pin";
+  destinationPin = el;
+  showPinOnFloor(NODES[id]);
   destinationMarker = new maplibregl.Marker({ element: el }).setLngLat(toLngLat(id)).addTo(map);
 }
 
@@ -710,6 +894,7 @@ function onMapDrag(fn) {
 // Zoom to the route and turn the camera so the route points up the screen.
 // padding = space (px) that the panels cover, so the route stays visible.
 function flyToRoute(path, padding) {
+  if (flyToRoom(path[path.length - 1], padding)) return;       // a room with a known area: go close to it
   const bounds = new maplibregl.LngLatBounds();
   path.forEach((id) => bounds.extend(toLngLat(id)));
 

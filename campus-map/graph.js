@@ -39,6 +39,16 @@ function buildPath(cameFrom, goal) {
 
 // BFS: explores level by level, so the first time it reaches the goal
 // it has used the fewest steps.
+// Rules for walking through a place on the way to somewhere else:
+//  - the Campus Exit is an end point (a route never goes through it);
+//  - a hallway point only counts when the start or the goal is in that same hallway zone (no cutting through another building).
+function canPassThrough(place, start, goal) {
+  if (place === "EXIT") return goal === "EXIT";
+  const node = NODES[place];
+  if (node && node.hall) return [start, goal].some((id) => NODES[id] && NODES[id].zone === node.zone);
+  return true;
+}
+
 function bfs(start, goal) {
   const queue = [start];
   const cameFrom = { [start]: null };   // also acts as the "visited" list
@@ -51,7 +61,7 @@ function bfs(start, goal) {
     }
 
     for (const next of graph[current]) {
-      if (!(next in cameFrom)) {
+      if (!(next in cameFrom) && canPassThrough(next, start, goal)) {
         cameFrom[next] = current;
         queue.push(next);               // add to the BACK
       }
@@ -61,15 +71,22 @@ function bfs(start, goal) {
   return null;                          // no route exists
 }
 
+// How far a place is from the goal in a straight line (used only to choose which way DFS tries first).
+function straightDistance(a, b) {
+  return distanceMeters(NODES[a].lat, NODES[a].lng, NODES[b].lat, NODES[b].lng);
+}
+
 // DFS: goes as deep as possible first, then backs up.
-// It finds A path, but not always the shortest one.
+// It tries the neighbor closest to the goal first, so it heads for the goal instead of
+// circling around the buildings. It is still DFS (not always the shortest path).
 function dfs(current, goal, visited = new Set(), path = []) {
   visited.add(current);
   path.push(current);
 
   if (current === goal) return path;
 
-  for (const next of graph[current]) {
+  const nextPlaces = graph[current].filter((n) => canPassThrough(n, path[0], goal)).sort((a, b) => straightDistance(a, goal) - straightDistance(b, goal));
+  for (const next of nextPlaces) {
     if (!visited.has(next)) {
       const result = dfs(next, goal, visited, path);
       if (result) return result;
@@ -106,9 +123,24 @@ function pathCost(path) {
 
 // Everything the page needs to know about each algorithm, in one place.
 // To add another one, write the function above and add a line here.
+// Cuts the wasted turns out of a path: if a place on the path touches a place further along,
+// jump straight there (like a GPS that does not walk to the end of a street and back).
+function skipDetours(path) {
+  if (!path) return path;
+  const shorter = [path[0]];
+  let i = 0;
+  while (i < path.length - 1) {
+    let j = path.length - 1;
+    while (j > i + 1 && !graph[path[i]].includes(path[j])) j--;   // the furthest place we can step to directly
+    shorter.push(path[j]);
+    i = j;
+  }
+  return shorter;
+}
+
 function findWithDfs(start, goal) {
   const visited = new Set();
-  const path = dfs(start, goal, visited);
+  const path = skipDetours(dfs(start, goal, visited));
   lastSearchVisited = visited.size;
   return path;
 }
@@ -121,9 +153,9 @@ const ALGORITHMS = {
 
 /* ===== 4. HELPERS ===== */
 
-// "d 112" and "D112" should mean the same thing.
+// "d 112", "D-112" and "D112" should all mean the same thing.
 function normalize(text) {
-  return text.trim().toUpperCase().replace(/\s+/g, "");
+  return text.trim().toUpperCase().replace(/[\s\-.]+/g, "");
 }
 
 // Turns what the user typed ("d112", "main gate") into a node id.
@@ -132,9 +164,15 @@ function findNodeFromText(text) {
   if (wanted === "") return null;
 
   for (const id in NODES) {
+    if (NODES[id].hidden) continue;                       // walkway and stair points are not places
     if (id === wanted || normalize(NODES[id].name) === wanted) return id;
   }
-  return null;
+
+  // No exact match: take the best partial one ("engineering" -> Engineering Dept., "clin" -> Clinic).
+  const ids = Object.keys(NODES).filter((id) => !NODES[id].hidden);
+  const starts = ids.find((id) => id.indexOf(wanted) === 0 || normalize(NODES[id].name).indexOf(wanted) === 0);
+  const contains = ids.find((id) => id.indexOf(wanted) !== -1 || normalize(NODES[id].name).indexOf(wanted) !== -1);
+  return starts || contains || null;
 }
 
 // Position of a node the way MapLibre wants it: [lng, lat]  (longitude FIRST)
@@ -189,6 +227,7 @@ function snapToWalkway(lat, lng, maxMeters) {
   for (const [fromId, toId] of EDGES) {
     const a = NODES[fromId], b = NODES[toId];
     if (!a || !b || a.floor !== 1 || b.floor !== 1) continue;
+    if (a.building || b.building) continue;              // only outdoor walkways, not lines inside buildings
     // work in meters around the GPS point
     const ax = (a.lng - lng) * metersPerLng, ay = (a.lat - lat) * METERS_PER_DEGREE;
     const bx = (b.lng - lng) * metersPerLng, by = (b.lat - lat) * METERS_PER_DEGREE;

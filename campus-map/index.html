@@ -157,6 +157,7 @@
             </select>
           </div>
             <button id="locateButton" class="btn-outline" type="button">Use my location</button>
+            <button id="shareButton" class="btn-outline" type="button">Share my location</button>
           </div>
         </div>
       </section>
@@ -285,21 +286,24 @@
   <!-- Order matters: map library, then our files from top to bottom.
        plan-image.js  the campus ground pictures (color + white)      data.js   rooms, buildings, settings
        plan.js        plan pixels <-> GPS          graph.js  BFS and DFS route finding
+       layout.js     rooms, entrances, walkways (made from your saved layout file)
        campus3d.js   your 3D buildings + trees (Three.js)
        map3d.js       the 3D map                   ar.js     AR camera guide
-       zone.js        "where am I" card            app.js    connects everything -->
+       zone.js        "where am I" card   share.js   share my location            app.js    connects everything -->
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="plan-image.js"></script>
   <script src="plan-image-clean.js"></script>
   <script src="plan-image-flat.js"></script>
   <script src="data.js"></script>
+  <script src="layout.js"></script>
   <script src="plan.js"></script>
   <script src="graph.js"></script>
   <script src="campus3d.js"></script>
   <script src="map3d.js"></script>
   <script src="ar.js"></script>
   <script src="zone.js"></script>
+  <script src="share.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

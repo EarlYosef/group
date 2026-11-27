@@ -94,74 +94,16 @@ const PLAN = {
 
 /* ===== 3. PLACES (change this part) ===== */
 
-// Every place. The key (like "D112") is what the user types.
-// x, y = position on the plan picture (see "HOW TO ADD A ROOM" above).
-// floor: 1 = ground floor, 2 = second floor, 3 = third floor.
-//
-// NOTE: only the D Building (the one north of the triangle garden) has sample rooms,
-// on all 3 floors, so you can try the app. Replace them with your final rooms.
-const NODES = {
-  // Outside: the road, the walkways and the triangle garden
-  GATE:          { name: "Main Gate",             x: 335, y: 738, floor: 1 },
-  BOTTOM_WALK:   { name: "Bottom Walkway",        x: 335, y: 670, floor: 1 },
-  SOUTH_WALK:    { name: "South Walkway",         x: 373, y: 670, floor: 1 },
-  SOUTH_EAST:    { name: "South-East Walkway",    x: 463, y: 670, floor: 1 },
-  EAST_WALK:     { name: "East Walkway",          x: 463, y: 490, floor: 1 },
-  GARDEN_EAST:   { name: "Garden East Corner",    x: 430, y: 497, floor: 1 },
-  GARDEN_NORTH:  { name: "Garden North",          x: 360, y: 497, floor: 1 },
-  GARDEN:        { name: "Triangle Garden",       x: 360, y: 552, floor: 1 },
-  GARDEN_SOUTH:  { name: "Garden South",          x: 373, y: 627, floor: 1 },
-
-  // D Building, floor 1
-  D_ENTRANCE:    { name: "D Building Entrance",   x: 372, y: 466, floor: 1 },
-  D_HALL_1F:     { name: "D Hallway (1F)",        x: 372, y: 430, floor: 1 },
-  D101:          { name: "Room D101",             x: 330, y: 430, floor: 1 },
-  D112:          { name: "Room D112",             x: 415, y: 430, floor: 1 },
-  D_STAIRS_1F:   { name: "D Stairs (1F)",         x: 430, y: 412, floor: 1 },
-
-  // D Building, floor 2
-  D_STAIRS_2F:   { name: "D Stairs (2F)",         x: 430, y: 412, floor: 2 },
-  D_HALL_2F:     { name: "D Hallway (2F)",        x: 372, y: 430, floor: 2 },
-  D201:          { name: "Room D201",             x: 330, y: 430, floor: 2 },
-  D210:          { name: "Room D210",             x: 415, y: 430, floor: 2 },
-
-  // D Building, floor 3
-  D_STAIRS_3F:   { name: "D Stairs (3F)",         x: 430, y: 412, floor: 3 },
-  D_HALL_3F:     { name: "D Hallway (3F)",        x: 372, y: 430, floor: 3 },
-  D301:          { name: "Room D301",             x: 330, y: 430, floor: 3 },
-  D310:          { name: "Room D310",             x: 415, y: 430, floor: 3 }
-};
+// Every place. Rooms, building entrances and walkway points now come from layout.js
+// (made from your saved layout file), so this starts empty.
+const NODES = {};
 
 
 /* ===== 4. WALKABLE CONNECTIONS ===== */
 
 // Each pair works in BOTH directions.
-const EDGES = [
-  ["GATE", "BOTTOM_WALK"],
-  ["BOTTOM_WALK", "SOUTH_WALK"],
-  ["SOUTH_WALK", "SOUTH_EAST"],       // the long way round (listed first, so DFS takes it)
-  ["SOUTH_WALK", "GARDEN_SOUTH"],     // the short way through the garden
-  ["SOUTH_EAST", "EAST_WALK"],
-  ["EAST_WALK", "GARDEN_EAST"],
-  ["GARDEN_EAST", "GARDEN_NORTH"],
-  ["GARDEN_NORTH", "GARDEN"],
-  ["GARDEN", "GARDEN_SOUTH"],
-  ["GARDEN_NORTH", "D_ENTRANCE"],
-
-  // D Building
-  ["D_ENTRANCE", "D_HALL_1F"],
-  ["D_HALL_1F", "D101"],
-  ["D_HALL_1F", "D112"],
-  ["D_HALL_1F", "D_STAIRS_1F"],
-  ["D_STAIRS_1F", "D_STAIRS_2F"],
-  ["D_STAIRS_2F", "D_HALL_2F"],
-  ["D_HALL_2F", "D201"],
-  ["D_HALL_2F", "D210"],
-  ["D_STAIRS_2F", "D_STAIRS_3F"],
-  ["D_STAIRS_3F", "D_HALL_3F"],
-  ["D_HALL_3F", "D301"],
-  ["D_HALL_3F", "D310"]
-];
+// Each pair works in BOTH directions. layout.js adds the real ones.
+const EDGES = [];
 
 
 /* ===== 5. BUILDINGS (stacked floors in 3D) ===== */

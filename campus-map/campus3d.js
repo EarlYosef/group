@@ -20,50 +20,18 @@ var STOREY = 8;                                        // height of one floor in
 var C3_SCALE = 1.507, C3_OFFSET_X = -40.52, C3_OFFSET_Z = -8.71;
 var C3_CX = 350, C3_CZ = 250;                          // the middle your page used
 
-// name, x, y, width, depth, angle, height, id of the matching building in data.js
-var CAMPUS_BUILDINGS = [
-  ["Bishop Martinez Hall", 290, 5, 68, 63, 0, 8, "B02"],
-  ["Maintenance Building", 130, 30, 38, 16, 0, 8, "B01"],
-  ["PP Office", 106, 58, 16, 24, 0, 8, "B04"],
-  ["Guardhouse", 107, 86, 9, 9, 0, 6, "B28"],
-  ["OC-MIT Hall - West rooms", 82, 140, 28, 145, 0, 16, "B09"],
-  ["OC-MIT Hall - East rooms", 165, 150, 30, 135, 0, 16, "B11"],
-  ["OC-MIT Hall", 110, 198, 55, 87, 0, 16, "B11"],
-  ["Stage", 122, 170, 40, 22, 0, 10, "B10"],
-  ["Atrium", 127, 150, 28, 18, 0, 10, "B07"],
-  ["Library (Ground Floor)", 241, 160, 45, 78, 0, 16, "B12"],
-  ["Vaughan Building", 212, 262, 98, 43, 0, 18, "B14"],
-  ["Dome Building", 320, 278, 200, 24, 0, 24, "B15"],
-  ["Dome Building Extension", 525, 282, 60, 20, 0, 24, "B16"],
-  ["Lamenair Building (east strip)", 527, 305, 34, 68, 0, 16, "B20"],
-  ["Dormitory (far west)", -6, 329, 108, 18, -75, 16, "B17"],
-  ["Heinkens Building (west wing)", 35, 358, 165, 28, -34, 8, "B18"],
-  ["Oomen Building (east wing)", 317, 357, 150, 36, 38, 8, "B19"],
-  ["Chapel", 325, 389, 50, 26, 38, 8, "B21"],
-  ["High School Building", 92, 408, 130, 32, 0, 24, "B23"],
-  ["Compass Building", 68, 452, 78, 19, 0, 24, "B25"],
-  ["Hope Building", 30, 428, 40, 17, 0, 10, "B22"],
-  ["3-Storey Building", 152, 450, 70, 16, 0, 24, "B26"],
-  ["LAD Office (Liberal Arts Dept.)", 278, 412, 22, 20, 0, 8, "B24"],
-  ["Canteen", 262, 438, 56, 40, 0, 16, "B27"],
-  ["North-east Building A", 387, 23, 90, 34, 22, 16, "B03"],
-  ["North-east Building B", 499, 61, 66, 28, 28, 16, "B05"],
-  ["North-east Building C", 555, 93, 90, 30, 30, 16, "B06"],
-  ["East Wing Building", 610, 150, 62, 82, 0, 24, "B13"],
-  ["Gislander Building (courtyard block)", 213, 98, 99, 24, 0, 8, "B08"],
-  ["Gislander Building (courtyard block)", 213, 242, 99, 3, 0, 8, "B08"],
-  ["Gislander Building (courtyard block)", 213, 122, 24, 120, 0, 8, "B08"],
-  ["Gislander Building (courtyard block)", 290, 122, 22, 120, 0, 8, "B08"]
-];
+// CAMPUS_BUILDINGS and CAMPUS_EXTRA_TREES come from layout.js (made from your saved layout file).
 
 var c3 = {                                             // everything this file keeps
   scene: null, camera: null, renderer: null, world: null,
   parts: [],              // one entry per building: { def, body, floors[], apron }
   roofMats: [], wallMats: [],
-  visible: false, focus: null, floor: null, look: "color", map: null
+  visible: false, focus: null, floor: null, look: "color", map: null,
+  roomList: [], roomFloor: 1, roomView: null, labels: []   // the room view (see campus3dSetRooms)
 };
 
-var C3_WALLS = [0xd9d2c0, 0xd3ccb9, 0xdcd6c6];   // soft beige walls (not too bright)
+var C3_WALLS = [0xd9d2c0, 0xd3ccb9, 0xdcd6c6];
+var C3_ROOFS = [0xc8553a, 0x4f78a8, 0x4f78a8, 0x3f8d5a, 0x5b7fae, 0xb94a34, 0x4a6f9c];   // for buildings you drew   // soft beige walls (not too bright)
 var C3_FLOOR_GOLD = 0xffd24a;                          // the opened floor
 
 function c3Hash(text) { var h = 0; for (var i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) | 0; return Math.abs(h); }
@@ -143,8 +111,9 @@ function c3Roof(def, roofColor, wallW, wallD) {
 function c3Building(def, facade) {
   var name = def[0], x = def[1], y = def[2], w = def[3], h = def[4], angle = def[5], H = def[6], id = def[7];
   var data = BUILDINGS.filter(function (b) { return b.id === id; })[0];
-  var roofColor = parseInt((ROOF_COLORS[data && data.roof] || ROOF_COLORS.red).slice(1), 16);
-  var wall = C3_WALLS[c3Hash(name) % C3_WALLS.length];
+  var mine = def[8];                                      // a building you drew has its own colors
+  var roofColor = mine ? C3_ROOFS[mine.rc % C3_ROOFS.length] : parseInt((ROOF_COLORS[data && data.roof] || ROOF_COLORS.red).slice(1), 16);
+  var wall = mine ? C3_WALLS[mine.wc % C3_WALLS.length] : C3_WALLS[c3Hash(name) % C3_WALLS.length];
 
   var mats = [0, 1, 2, 3, 4, 5].map(function () { var m = c3Material(wall, facade); c3.wallMats.push(m); return m; });
   var body = new THREE.Mesh(c3Box(w, H, h), mats);
@@ -183,62 +152,81 @@ function c3InBuilding(x, y) {
 }
 
 // the spots: a row beside the field, a row along the road, and small groups (same as your page)
+/* The trees are made the same way as in your page, so the same trees show up:
+   1. the page's own trees (every 6th one is skipped)
+   2. in the artwork style: many more over the grass, away from walkways and your roads
+   3. the trees you planted
+   Trees you removed (CAMPUS_HIDDEN_TREES) and trees inside a building are left out. */
+function c3TreeKey(t) { return Math.round(t[0]) + "," + Math.round(t[1]); }
+
+function c3DistToSegment(x, y, a, b) {
+  var dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy;
+  var t = l2 ? Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / l2)) : 0;
+  return Math.hypot(x - (a[0] + t * dx), y - (a[1] + t * dy));
+}
+
 function c3TreeSpots() {
-  var spots = [], seed = 7, a, k;
+  var seed = 7, a, k;
   function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
-  for (k = 100; k <= 250; k += 13) spots.push([328, k]);
-  for (a = -130; a <= 72; a += 8) spots.push([465 + 125 * Math.cos(a * Math.PI / 180), 172 + 98 * Math.sin(a * Math.PI / 180)]);
-  for (k = 335; k <= 520; k += 15) spots.push([k, 443]);
-  function group(cx, cy, n, r) { for (var j = 0; j < n; j++) { var q = rnd() * 6.28, d = Math.sqrt(rnd()) * r; spots.push([cx + d * Math.cos(q), cy + d * Math.sin(q)]); } }
+
+  // 1. the page's own trees
+  var own = [];
+  for (k = 100; k <= 250; k += 13) own.push([328, k]);
+  for (a = -130; a <= 72; a += 8) own.push([465 + 125 * Math.cos(a * Math.PI / 180), 172 + 98 * Math.sin(a * Math.PI / 180)]);
+  for (k = 335; k <= 520; k += 15) own.push([k, 443]);
+  function group(cx, cy, n, r) { for (var j = 0; j < n; j++) { var q = rnd() * 6.28, d = Math.sqrt(rnd()) * r; own.push([cx + d * Math.cos(q), cy + d * Math.sin(q)]); } }
   group(108, 342, 6, 14); group(98, 390, 4, 8); group(430, 408, 8, 16); group(370, 332, 5, 10);
   group(340, 345, 4, 8); group(160, 345, 4, 10); group(300, 265, 3, 8); group(200, 305, 4, 6);
 
-  // plus many more spread over the campus grass (skipping the track, pool, courts, paths and buildings)
-  var site = [[28,490],[60,300],[95,140],[118,10],[290,3],[360,15],[490,42],[560,92],[610,150],[680,160],[660,215],[600,300],[590,425],[520,442],[330,450],[315,480]];
-  var paths = [[[200,100],[200,300]],[[262,306],[262,412],[290,420]],[[300,330],[335,322],[455,418]],[[207,330],[185,322],[50,420]],[[110,288],[110,322],[85,345]],[[420,302],[462,320]],[[322,250],[322,420]],[[58,445],[320,445]],[[320,445],[520,438]],[[540,300],[540,260],[580,230]]];
-  function inSite(x, y) {
-    var c = false;
-    for (var i = 0, j = site.length - 1; i < site.length; j = i++) {
-      var p = site[i], q = site[j];
-      if ((p[1] > y) !== (q[1] > y) && x < (q[0] - p[0]) * (y - p[1]) / (q[1] - p[1]) + p[0]) c = !c;
-    }
-    return c;
-  }
-  function nearPath(x, y) {
-    return paths.some(function (pl) {
-      for (var i = 0; i < pl.length - 1; i++) {
-        var A = pl[i], B = pl[i + 1], dx = B[0] - A[0], dy = B[1] - A[1], l2 = dx * dx + dy * dy;
-        var t = l2 ? Math.max(0, Math.min(1, ((x - A[0]) * dx + (y - A[1]) * dy) / l2)) : 0;
-        if (Math.hypot(x - (A[0] + t * dx), y - (A[1] + t * dy)) < 7) return true;
-      }
-      return false;
-    });
-  }
-  function ok(x, y) {
-    if (!inSite(x, y) || y > 476) return false;
-    if (Math.pow((x - 465) / 118, 2) + Math.pow((y - 172) / 94, 2) < 1) return false;    // the track
-    if (x > 455 && x < 525 && y > 314 && y < 388) return false;                          // the pool
-    if (x > 368 && x < 430 && y > 54 && y < 94) return false;                            // the volleyball court
-    if (x > 396 && x < 426 && y > 310 && y < 352) return false;
-    return !nearPath(x, y);
-  }
-  var seed2 = 31;
-  function r2() { seed2 = (seed2 * 9301 + 49297) % 233280; return seed2 / 233280; }
+  // 2. the artwork style: more trees over the grass
   var extra = [];
-  for (var tries = 0; tries < 400 && extra.length < 420; tries++) {
-    var cx = 30 + r2() * 660, cy = 10 + r2() * 470;
-    if (!ok(cx, cy)) continue;
-    var n = 3 + Math.floor(r2() * 5);
-    for (var i = 0; i < n; i++) {
-      var an = r2() * 6.28, rr = r2() * 13, tx = cx + Math.cos(an) * rr, ty = cy + Math.sin(an) * rr;
-      if (ok(tx, ty)) extra.push([tx, ty]);
+  if (CAMPUS_ART_TREES) {
+    var site = [[28,490],[60,300],[95,140],[118,10],[290,3],[360,15],[490,42],[560,92],[610,150],[680,160],[660,215],[600,300],[590,425],[520,442],[330,450],[315,480]];
+    var seed2 = 31;
+    var r2 = function () { seed2 = (seed2 * 9301 + 49297) % 233280; return seed2 / 233280; };
+    var inSite = function (x, y) {
+      var c = false;
+      for (var i = 0, j = site.length - 1; i < site.length; j = i++) {
+        var p = site[i], q = site[j];
+        if ((p[1] > y) !== (q[1] > y) && x < (q[0] - p[0]) * (y - p[1]) / (q[1] - p[1]) + p[0]) c = !c;
+      }
+      return c;
+    };
+    var ok = function (x, y) {
+      if (!inSite(x, y) || y > 476) return false;
+      if (Math.pow((x - 465) / 118, 2) + Math.pow((y - 172) / 94, 2) < 1) return false;    // the track
+      if (x > 455 && x < 525 && y > 314 && y < 388) return false;                          // the pool
+      if (x > 368 && x < 430 && y > 54 && y < 94) return false;                            // the volleyball court
+      if (x > 396 && x < 426 && y > 310 && y < 352) return false;
+      return !CAMPUS_OP.some(function (pl) {
+        for (var i = 0; i < pl.length - 1; i++) if (c3DistToSegment(x, y, pl[i], pl[i + 1]) < 7) return true;
+        return false;
+      });
+    };
+    for (var tries = 0; tries < 400 && extra.length < 420; tries++) {
+      var cx = 30 + r2() * 660, cy = 10 + r2() * 470;
+      if (!ok(cx, cy)) continue;
+      var n = 3 + Math.floor(r2() * 5);
+      for (var i = 0; i < n; i++) {
+        var an = r2() * 6.28, rr = r2() * 13, tx = cx + Math.cos(an) * rr, ty = cy + Math.sin(an) * rr;
+        if (ok(tx, ty)) extra.push([tx, ty]);
+      }
     }
   }
-  return spots.filter(function (t, i) { return i % 6 !== 5; }).concat(extra);
+
+  var removed = {};
+  CAMPUS_HIDDEN_TREES.forEach(function (key) { removed[key] = true; });
+  function wanted(t) { return !removed[c3TreeKey(t)] && !c3InBuilding(t[0], t[1]); }
+  function offRoads(t) {                                  // your own roads and paths: no trees on them
+    return !CAMPUS_ROADS.some(function (r) { return c3DistToSegment(t[0], t[1], [r[0], r[1]], [r[2], r[3]]) < r[4] / 2 + 4; });
+  }
+  return own.filter(function (t, i) { return i % 6 !== 5 && wanted(t); })
+    .concat(extra.filter(function (t) { return wanted(t) && offRoads(t); }),
+            CAMPUS_EXTRA_TREES.filter(function (t) { return !removed[c3TreeKey(t)]; }));
 }
 
 function c3Trees() {
-  var spots = c3TreeSpots().filter(function (t) { return !c3InBuilding(t[0], t[1]); });
+  var spots = c3TreeSpots();
   var greens = [0x2d6a3a, 0x3b7d43, 0x4f9150, 0x255a33, 0x5a9a4c];
   var trunks = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.6, 0.9, 5, 6), new THREE.MeshStandardMaterial({ color: 0x7a5a3a, roughness: 0.9 }), spots.length);
   var crowns = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(4.8, 1), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 }), spots.length);
@@ -251,7 +239,9 @@ function c3Trees() {
     d.position.set(x, 8.4 * s, z); d.scale.set(s, s * 0.9, s); d.updateMatrix(); crowns.setMatrixAt(i, d.matrix); crowns.setColorAt(i, new THREE.Color(col));
     d.position.set(x + 0.8 * s, 10.7 * s, z - 0.8 * s); d.updateMatrix(); tops.setMatrixAt(i, d.matrix); tops.setColorAt(i, new THREE.Color(c3Lit(col, 1.35)));
   });
-  [trunks, crowns, tops].forEach(function (m) { m.frustumCulled = false; c3.world.add(m); });
+  c3.trees = new THREE.Group();                         // one group, so the white Plan look can hide every tree
+  [trunks, crowns, tops].forEach(function (m) { m.frustumCulled = false; c3.trees.add(m); });
+  c3.world.add(c3.trees);
 }
 
 // ---------- the map layer ----------
@@ -303,6 +293,7 @@ var campus3DLayer = {
     if (!c3.visible) return;
     var m = matrix && matrix.length ? matrix : matrix.defaultProjectionData.mainMatrix;
     c3.camera.projectionMatrix = new THREE.Matrix4().fromArray(m).multiply(c3Matrix());
+    c3FaceCamera();
     c3.renderer.resetState();
     c3.renderer.render(c3.scene, c3.camera);
   }
@@ -320,21 +311,124 @@ function campus3dSetVisible(on) { c3.visible = !!on; if (c3.map) c3.map.triggerR
 // Only the building with this id is opened into floors; every other building stays solid.
 function campus3dSetFocus(buildingId) { c3.focus = buildingId; c3Refresh(); }
 function campus3dSetFloor(floor) { c3.floor = floor; c3Refresh(); }
+
+/* ===== ROOM VIEW (like a dollhouse): the chosen building is cut open on one floor =====
+   list = [{ name, x1, y1, x2, y2, chosen }] in plan pixels, floor = 1, 2 or 3.
+   An empty list closes the room view again. */
+function campus3dSetRooms(list, floor) { c3.roomList = list || []; c3.roomFloor = floor; c3Refresh(); }
+
+// A flat picture (a name or the pin) that always turns to face you, from the front AND the back.
+// (A THREE.Sprite does not do this in a map layer: seen from behind it disappears.)
+function c3FacingPlane(texture, w, h, order) {
+  var plane = new THREE.Mesh(new THREE.PlaneGeometry(w, h),
+    new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthTest: false, side: THREE.DoubleSide }));
+  plane.renderOrder = order;
+  c3.labels.push(plane);
+  return plane;
+}
+
+// Turn every label toward the camera (only left/right turning, so the text stays upright).
+function c3FaceCamera() {
+  if (!c3.labels.length) return;
+  var inv = new THREE.Matrix4();
+  if (inv.copy(c3.camera.projectionMatrix).invert) inv.copy(c3.camera.projectionMatrix).invert();
+  else inv.getInverse(c3.camera.projectionMatrix);
+  var near = new THREE.Vector3(0, 0, -1).applyMatrix4(inv), far = new THREE.Vector3(0, 0, 1).applyMatrix4(inv);
+  var yaw = Math.atan2(near.x - far.x, near.z - far.z);       // the plane's front must point back at the camera
+  c3.labels.forEach(function (label) { label.rotation.y = yaw; });
+}
+
+function c3NameSprite(text, chosen) {
+  var size = chosen ? 30 : 22;
+  var canvas = document.createElement("canvas");
+  canvas.width = 512; canvas.height = 96;
+  (function (g, w, h) {
+    g.font = "bold " + size * 2 + "px sans-serif";
+    g.textAlign = "center"; g.textBaseline = "middle";
+    var pad = g.measureText(text).width + 40;
+    g.fillStyle = chosen ? "rgba(255,210,74,0.95)" : "rgba(30,34,43,0.72)";
+    g.fillRect((w - pad) / 2, 8, pad, h - 16);
+    g.fillStyle = chosen ? "#1e222b" : "#ffffff";
+    g.fillText(text, w / 2, h / 2 + 2);
+  })(canvas.getContext("2d"), 512, 96);
+  var tex = new THREE.CanvasTexture(canvas);
+  var k = chosen ? 0.05 : 0.034;
+  return c3FacingPlane(tex, 512 * k, 96 * k, 10);
+}
+
+// Plan pixels (what the room list uses) -> the units of your page that the buildings use
+function c3FromPx(x, y) { return [(x + 40.52) / 1.5061 - 12 - C3_CX, (y + 8.71) / 1.5085 - 5 - C3_CZ]; }
+
+// The round pin that sits ON the chosen room's floor (so on floor 3 it floats at floor 3, not on the ground)
+function c3PinSprite() {
+  var canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 128;
+  var g = canvas.getContext("2d");
+  g.beginPath(); g.arc(64, 64, 52, 0, Math.PI * 2);
+  g.fillStyle = "rgba(242,183,5,0.35)"; g.fill();                  // soft glow ring
+  g.beginPath(); g.arc(64, 64, 34, 0, Math.PI * 2);
+  g.fillStyle = "#f2b705"; g.fill();
+  g.lineWidth = 8; g.strokeStyle = "#7a1f2b"; g.stroke();          // gold dot, maroon edge
+  return c3FacingPlane(new THREE.CanvasTexture(canvas), 7, 7, 9);
+}
+
+// The open floor of the focus building, all in one group:
+// a floor plate + low outer walls for every part of the building, then the rooms (tile, partitions, name).
+function c3BuildRoomView() {
+  var g = new THREE.Group();
+  c3.parts.forEach(function (part) {
+    var d = part.def;
+    if (d[7] !== c3.focus) return;
+    var w = d[3], h = d[4], each = d[6] / 3, base = (c3.roomFloor - 1) * each, wallH = Math.min(5, each - 0.6);
+    var turn = -d[5] * Math.PI / 180, cx = d[1] + w / 2 - C3_CX, cz = d[2] + h / 2 - C3_CZ;
+    var plate = new THREE.Mesh(new THREE.BoxGeometry(w, 0.8, h), new THREE.MeshStandardMaterial({ color: 0xe9e4d6, roughness: 0.9 }));
+    plate.position.set(cx, base + 0.4, cz); plate.rotation.y = turn; g.add(plate);
+    var wallMat = new THREE.MeshStandardMaterial({ color: part.floors[0].wall, roughness: 0.9 });
+    var c = Math.cos(turn), n = Math.sin(turn);
+    [[w, 0.8, 0, h / 2], [w, 0.8, 0, -h / 2], [0.8, h, w / 2, 0], [0.8, h, -w / 2, 0]].forEach(function (side) {
+      var wall = new THREE.Mesh(new THREE.BoxGeometry(side[0], wallH, side[1]), wallMat);   // the sides that stay
+      wall.position.set(cx + side[2] * c + side[3] * n, base + 0.8 + wallH / 2, cz - side[2] * n + side[3] * c);
+      wall.rotation.y = turn; g.add(wall);
+    });
+  });
+
+  var part = c3.parts.filter(function (p) { return p.def[7] === c3.focus; })[0];
+  var each = part.def[6] / 3, base = (c3.roomFloor - 1) * each, wallH = Math.min(5, each - 0.6);
+  c3.roomList.forEach(function (r) {
+    var p1 = c3FromPx(r.x1, r.y1), p2 = c3FromPx(r.x2, r.y2);
+    var rw = p2[0] - p1[0], rh = p2[1] - p1[1], mx = (p1[0] + p2[0]) / 2, mz = (p1[1] + p2[1]) / 2;
+    var tile = new THREE.Mesh(new THREE.BoxGeometry(rw - 0.3, 0.2, rh - 0.3),
+      new THREE.MeshStandardMaterial({ color: r.chosen ? C3_FLOOR_GOLD : 0x7fb7b0, roughness: 0.8 }));
+    tile.position.set(mx, base + 0.9, mz); g.add(tile);
+    var edge = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(rw, wallH * 0.7, rh)),
+      new THREE.LineBasicMaterial({ color: r.chosen ? 0xffffff : 0xcfd6dc }));
+    edge.position.set(mx, base + 0.8 + wallH * 0.35, mz); g.add(edge);       // thin partition walls
+    if (r.chosen) { var pin = c3PinSprite(); pin.position.set(mx, base + 2.2, mz); g.add(pin); }
+    var label = c3NameSprite(r.name, r.chosen);
+    label.position.set(mx, base + wallH + (r.chosen ? 3 : 2), mz); g.add(label);
+  });
+  return g;
+}
 // "color" = the colorful look, "plan" = the white plan look
 function campus3dSetLook(look) { c3.look = look; c3Refresh(); }
 
 function c3Refresh() {
   if (!c3.scene) return;
   var plan = c3.look === "plan";
+  if (c3.trees) c3.trees.visible = !plan;                            // white Plan look: only the buildings, no trees
+  if (c3.roomView) { c3.world.remove(c3.roomView); c3.roomView = null; }
+  c3.labels = [];                                                    // the old name tags go with the old room view
+  var cut = c3.roomList && c3.roomList.length ? c3.roomFloor : 0;     // the floor that is cut open (0 = none)
   c3.parts.forEach(function (p) {
     var open = p.def[7] === c3.focus;
     p.body.visible = !open;
     p.floors.forEach(function (f, i) {
-      f.mesh.visible = open;
-      var on = c3.floor === i + 1;
+      f.mesh.visible = open && (!cut || i + 1 < cut);                 // room view: floors below stay, this one opens, above go
+      var on = c3.floor === i + 1 && !cut;
       f.mats.forEach(function (m) { m.color.setHex(on ? C3_FLOOR_GOLD : f.wall); });
     });
   });
+  if (cut && c3.focus) { c3.roomView = c3BuildRoomView(); c3.roomView.traverse(function (o) { o.frustumCulled = false; }); c3.world.add(c3.roomView); }
   c3.roofMats.forEach(function (m) { if (m.userData.color === undefined) m.userData.color = m.color.getHex(); m.color.setHex(plan ? 0xb9bec6 : m.userData.color); });
   if (c3.map) c3.map.triggerRepaint();
 }
